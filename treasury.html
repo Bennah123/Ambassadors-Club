@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Treasury Dashboard - SDA Church Embakasi Central Ambassadors Club">
+  <title>Treasury | SDA Embakasi Central Ambassadors</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/treasury.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- ==================== NAVIGATION ==================== -->
+  <nav class="navbar" id="navbar">
+    <a href="index.html" class="nav-brand">
+      <img src="assets/logos/sda-logo-white.png" alt="SDA Logo" id="navLogo">
+      <div>
+        <span>SDA Embakasi Central</span>
+        <small>Ambassadors Club</small>
+      </div>
+    </a>
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="members.html">Members</a></li>
+      <li><a href="choir.html">Choir</a></li>
+      <li><a href="activities.html">Activities</a></li>
+      <li><a href="treasury.html" class="active">Treasury</a></li>
+      <li><a href="schedule.html">Schedule</a></li>
+      <li><a href="about.html">About</a></li>
+    </ul>
+  </nav>
+
+  <!-- ==================== PAGE HEADER ==================== -->
+  <section class="page-header treasury-header">
+    <div class="page-header-content">
+      <span class="page-tag">Financial Stewardship</span>
+      <h1>Treasury Dashboard</h1>
+      <p>"He who is faithful in what is least is faithful also in much." — Luke 16:10</p>
+    </div>
+  </section>
+
+  <!-- ==================== SUMMARY CARDS ==================== -->
+  <div class="treasury-summary-container">
+    <div class="treasury-summary">
+      <div class="t-card t-balance">
+        <div class="t-icon-wrapper">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/>
+          </svg>
+        </div>
+        <div class="t-info">
+          <label>Current Balance</label>
+          <span class="t-amount" id="currentBalance">KES 45,200</span>
+          <span class="t-trend t-up">+12% from last month</span>
+        </div>
+      </div>
+
+      <div class="t-card t-income">
+        <div class="t-icon-wrapper">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+          </svg>
+        </div>
+        <div class="t-info">
+          <label>This Month (In)</label>
+          <span class="t-amount" id="monthIncome">KES 12,500</span>
+          <span class="t-trend t-up">+8% vs May</span>
+        </div>
+      </div>
+
+      <div class="t-card t-expense">
+        <div class="t-icon-wrapper">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/>
+          </svg>
+        </div>
+        <div class="t-info">
+          <label>This Month (Out)</label>
+          <span class="t-amount" id="monthExpense">KES 8,300</span>
+          <span class="t-trend t-down">-5% vs May</span>
+        </div>
+      </div>
+
+      <div class="t-card t-members">
+        <div class="t-icon-wrapper">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="t-info">
+          <label>Active Contributors</label>
+          <span class="t-amount" id="activeContributors">18 / 24</span>
+          <span class="t-trend">75% participation</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== CHARTS SECTION ==================== -->
+  <section class="charts-section">
+    <div class="charts-grid">
+      <div class="chart-box">
+        <div class="chart-header">
+          <h3>Monthly Contributions Trend</h3>
+          <select class="chart-filter" id="chartPeriod">
+            <option value="6">Last 6 Months</option>
+            <option value="12">Last 12 Months</option>
+          </select>
+        </div>
+        <div class="chart-canvas-wrapper">
+          <canvas id="contributionChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-box">
+        <div class="chart-header">
+          <h3>Expense Breakdown</h3>
+        </div>
+        <div class="chart-canvas-wrapper doughnut-wrapper">
+          <canvas id="expenseChart"></canvas>
+        </div>
+        <div class="chart-legend" id="expenseLegend"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CONTRIBUTIONS TABLE ==================== -->
+  <section class="contributions-section">
+    <div class="section-toolbar">
+      <div class="toolbar-left">
+        <h2>Contribution Records</h2>
+        <p class="toolbar-subtitle">Track all member contributions and offerings</p>
+      </div>
+      <div class="toolbar-right">
+        <div class="filter-group">
+          <label>Filter by Type</label>
+          <select id="filterType">
+            <option value="all">All Types</option>
+            <option value="sabbath">Sabbath Offering</option>
+            <option value="tithe">Tithe</option>
+            <option value="camp">Camp Fund</option>
+            <option value="building">Building Fund</option>
+            <option value="welfare">Welfare</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Month</label>
+          <select id="filterMonth">
+            <option value="all">All Months</option>
+            <option value="2026-06">June 2026</option>
+            <option value="2026-05">May 2026</option>
+            <option value="2026-04">April 2026</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="addContributionBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add Record
+        </button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table" id="contributionsTable">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Member</th>
+            <th>Type</th>
+            <th class="text-right">Amount (KES)</th>
+            <th>Method</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="contributionsTableBody">
+          <!-- Rendered via treasury.js -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-pagination">
+      <span class="page-info">Showing <strong>1-10</strong> of <strong>24</strong> records</span>
+      <div class="page-buttons">
+        <button class="page-btn" disabled>&larr;</button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <button class="page-btn">3</button>
+        <button class="page-btn">&rarr;</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== QUICK STATS ROW ==================== -->
+  <section class="quick-stats">
+    <div class="quick-stats-grid">
+      <div class="qs-item">
+        <span class="qs-label">Total Collected (YTD)</span>
+        <span class="qs-value">KES 245,800</span>
+      </div>
+      <div class="qs-item">
+        <span class="qs-label">Total Expenses (YTD)</span>
+        <span class="qs-value">KES 198,400</span>
+      </div>
+      <div class="qs-item">
+        <span class="qs-label">Camp Fund Balance</span>
+        <span class="qs-value">KES 67,500</span>
+      </div>
+      <div class="qs-item">
+        <span class="qs-label">Welfare Fund</span>
+        <span class="qs-value">KES 23,100</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== ADD CONTRIBUTION MODAL ==================== -->
+  <div class="modal" id="addContribModal">
+    <div class="modal-overlay"></div>
+    <div class="modal-content modal-lg">
+      <button class="modal-close" id="modalClose" aria-label="Close modal">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+      <div class="modal-header">
+        <h3>Add Contribution Record</h3>
+        <p>Record a new contribution from an Ambassadors Club member</p>
+      </div>
+      <form id="contribForm" class="modal-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="contribMember">Member Name *</label>
+            <select id="contribMember" required>
+              <option value="">Select Member...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="contribDate">Date *</label>
+            <input type="date" id="contribDate" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="contribType">Contribution Type *</label>
+            <select id="contribType" required>
+              <option value="">Select Type...</option>
+              <option value="sabbath">Sabbath Offering</option>
+              <option value="tithe">Tithe</option>
+              <option value="camp">Camp Fund</option>
+              <option value="building">Building Fund</option>
+              <option value="welfare">Welfare</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="contribAmount">Amount (KES) *</label>
+            <input type="number" id="contribAmount" min="1" placeholder="e.g. 500" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="contribMethod">Payment Method *</label>
+            <select id="contribMethod" required>
+              <option value="mpesa">M-Pesa</option>
+              <option value="cash">Cash</option>
+              <option value="bank">Bank Transfer</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="contribRef">Reference / Transaction ID</label>
+            <input type="text" id="contribRef" placeholder="e.g. MPESA12345">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="contribNotes">Notes</label>
+          <textarea id="contribNotes" rows="3" placeholder="Any additional notes..."></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" id="cancelContrib">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="assets/logos/sda-logo-white.png" alt="SDA Logo" class="footer-logo">
+        <div>
+          <h4>SDA Church Embakasi Central</h4>
+          <p>Ambassadors Club Youth Ministry</p>
+        </div>
+      </div>
+      <div class="footer-links">
+        <div class="link-group">
+          <h5>Quick Links</h5>
+          <a href="members.html">Members</a>
+          <a href="choir.html">Choir</a>
+          <a href="activities.html">Activities</a>
+          <a href="treasury.html">Treasury</a>
+        </div>
+        <div class="link-group">
+          <h5>Connect</h5>
+          <a href="schedule.html">Service Times</a>
+          <a href="about.html">About Us</a>
+          <a href="#">Contact</a>
+          <a href="#">Prayer Request</a>
+        </div>
+        <div class="link-group">
+          <h5>Location</h5>
+          <p>Embakasi, Nairobi</p>
+          <p>Kenya</p>
+          <p class="footer-verse">"Go ye into all the world"</p>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; <span class="current-year">2026</span> SDA Church Embakasi Central. All rights reserved.</p>
+      <p class="footer-credit">Built with love by the Ambassadors Club</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/treasury.js"></script>
+</body>
+</html>

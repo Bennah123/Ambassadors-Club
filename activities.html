@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Activities and Events - SDA Church Embakasi Central Ambassadors Club">
+  <title>Activities & Events | SDA Church Embakasi Central</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/activities.css">
+</head>
+<body>
+  <!-- ==================== NAVIGATION ==================== -->
+  <nav class="navbar" id="navbar">
+    <a href="index.html" class="nav-brand">
+      <img src="assets/logos/sda-logo-white.png" alt="SDA Logo" id="navLogo">
+      <div>
+        <span>SDA Embakasi Central</span>
+        <small>Ambassadors Club</small>
+      </div>
+    </a>
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="members.html">Members</a></li>
+      <li><a href="choir.html">Choir</a></li>
+      <li><a href="activities.html" class="active">Activities</a></li>
+      <li><a href="treasury.html">Treasury</a></li>
+      <li><a href="schedule.html">Schedule</a></li>
+      <li><a href="about.html">About</a></li>
+    </ul>
+  </nav>
+
+  <!-- ==================== PAGE HEADER ==================== -->
+  <section class="page-header activities-header">
+    <div class="page-header-content">
+      <span class="page-tag">Year-Round</span>
+      <h1>Activities & Events</h1>
+      <p>From Pathfinder camps to evangelistic series — every moment is an opportunity to serve, worship, and grow together.</p>
+    </div>
+  </section>
+
+  <!-- ==================== ACTIVITY CATEGORIES ==================== -->
+  <section class="categories-section">
+    <div class="categories-grid">
+      <div class="cat-card">
+        <div class="cat-icon-bg">&#9978;</div>
+        <div class="cat-content">
+          <h3>Camp Meetings</h3>
+          <p>Annual youth camps, Pathfinder camporees, and retreat weekends that strengthen faith and friendships.</p>
+          <span class="cat-count">4 events/year</span>
+        </div>
+      </div>
+      <div class="cat-card">
+        <div class="cat-icon-bg">&#128220;</div>
+        <div class="cat-content">
+          <h3>Bible Study Series</h3>
+          <p>Weekly Sabbath School, small groups, and evangelistic meetings to deepen understanding of God's Word.</p>
+          <span class="cat-count">Weekly</span>
+        </div>
+      </div>
+      <div class="cat-card">
+        <div class="cat-icon-bg">&#129309;</div>
+        <div class="cat-content">
+          <h3>Community Service</h3>
+          <p>Health outreach, visitation, charity drives, and mission work in Embakasi and surrounding areas.</p>
+          <span class="cat-count">Monthly</span>
+        </div>
+      </div>
+      <div class="cat-card">
+        <div class="cat-icon-bg">&#127881;</div>
+        <div class="cat-content">
+          <h3>Social Events</h3>
+          <p>Youth fellowships, vespers, talent shows, sports days, and celebration gatherings.</p>
+          <span class="cat-count">Bi-Monthly</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CALENDAR SECTION ==================== -->
+  <section class="calendar-section">
+    <div class="calendar-header-bar">
+      <div class="calendar-title-group">
+        <h2>Event Calendar</h2>
+        <p>Plan ahead and never miss an important date</p>
+      </div>
+      <div class="calendar-nav">
+        <button class="cal-nav-btn" id="prevMonth">&larr;</button>
+        <h3 id="calendarTitle">June 2026</h3>
+        <button class="cal-nav-btn" id="nextMonth">&rarr;</button>
+      </div>
+    </div>
+
+    <div class="calendar-wrapper">
+      <div class="calendar-grid" id="calendarGrid">
+        <!-- Rendered via activities.js -->
+      </div>
+    </div>
+
+    <div class="calendar-legend">
+      <span class="legend-item"><span class="legend-dot dot-camp"></span> Camp</span>
+      <span class="legend-item"><span class="legend-dot dot-service"></span> Service</span>
+      <span class="legend-item"><span class="legend-dot dot-social"></span> Social</span>
+      <span class="legend-item"><span class="legend-dot dot-study"></span> Bible Study</span>
+    </div>
+  </section>
+
+  <!-- ==================== UPCOMING EVENTS LIST ==================== -->
+  <section class="events-list-section">
+    <div class="section-header">
+      <span class="section-tag">Coming Up</span>
+      <h2>Upcoming Events</h2>
+      <p>Mark your calendar and join us in fellowship</p>
+      <div class="accent-line"></div>
+    </div>
+
+    <div class="events-timeline" id="eventsTimeline">
+      <!-- Rendered via activities.js -->
+    </div>
+  </section>
+
+  <!-- ==================== PAST HIGHLIGHTS ==================== -->
+  <section class="highlights-section">
+    <div class="section-header">
+      <span class="section-tag">Memories</span>
+      <h2>Past Highlights</h2>
+      <p>Looking back at moments that shaped our journey</p>
+      <div class="accent-line"></div>
+    </div>
+
+    <div class="highlights-grid">
+      <div class="highlight-card">
+        <div class="highlight-img" style="background: linear-gradient(135deg, #1a365d, #0f2744);">
+          <span class="highlight-year">2025</span>
+        </div>
+        <div class="highlight-body">
+          <span class="highlight-tag">Camp</span>
+          <h4>Youth Camp Meeting</h4>
+          <p>3-day retreat at Camp Site with 45+ youth in attendance. Worship, workshops, and team building.</p>
+        </div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-img" style="background: linear-gradient(135deg, #8b1538, #5c0e25);">
+          <span class="highlight-year">2025</span>
+        </div>
+        <div class="highlight-body">
+          <span class="highlight-tag">Outreach</span>
+          <h4>Community Health Day</h4>
+          <p>Free health screening for 200+ residents of Embakasi. Blood pressure, diabetes checks, and health education.</p>
+        </div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-img" style="background: linear-gradient(135deg, #6b8f71, #4a6b50);">
+          <span class="highlight-year">2024</span>
+        </div>
+        <div class="highlight-body">
+          <span class="highlight-tag">Music</span>
+          <h4>Choir Concert</h4>
+          <p>Special music concert featuring all voice sections. Raised KES 15,000 for church building fund.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="assets/logos/sda-logo-white.png" alt="SDA Logo" class="footer-logo">
+        <div>
+          <h4>SDA Church Embakasi Central</h4>
+          <p>Ambassadors Club Youth Ministry</p>
+        </div>
+      </div>
+      <div class="footer-links">
+        <div class="link-group">
+          <h5>Quick Links</h5>
+          <a href="members.html">Members</a>
+          <a href="choir.html">Choir</a>
+          <a href="activities.html">Activities</a>
+          <a href="treasury.html">Treasury</a>
+        </div>
+        <div class="link-group">
+          <h5>Connect</h5>
+          <a href="schedule.html">Service Times</a>
+          <a href="about.html">About Us</a>
+          <a href="#">Contact</a>
+          <a href="#">Prayer Request</a>
+        </div>
+        <div class="link-group">
+          <h5>Location</h5>
+          <p>Embakasi, Nairobi</p>
+          <p>Kenya</p>
+          <p class="footer-verse">"Go ye into all the world"</p>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; <span class="current-year">2026</span> SDA Church Embakasi Central. All rights reserved.</p>
+      <p class="footer-credit">Built with love by the Ambassadors Club</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/activities.js"></script>
+</body>
+</html>

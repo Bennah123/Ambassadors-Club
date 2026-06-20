@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Embakasi Central Choir - SDA Church Choir Ministry">
+  <title>Choir Ministry | SDA Church Embakasi Central</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/choir.css">
+</head>
+<body>
+  <!-- ==================== NAVIGATION ==================== -->
+  <nav class="navbar" id="navbar">
+    <a href="index.html" class="nav-brand">
+      <img src="assets/logos/sda-logo-white.png" alt="SDA Logo" id="navLogo">
+      <div>
+        <span>SDA Embakasi Central</span>
+        <small>Ambassadors Club</small>
+      </div>
+    </a>
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="members.html">Members</a></li>
+      <li><a href="choir.html" class="active">Choir</a></li>
+      <li><a href="activities.html">Activities</a></li>
+      <li><a href="treasury.html">Treasury</a></li>
+      <li><a href="schedule.html">Schedule</a></li>
+      <li><a href="about.html">About</a></li>
+    </ul>
+  </nav>
+
+  <!-- ==================== CHOIR HERO ==================== -->
+  <section class="choir-hero">
+    <div class="choir-hero-overlay"></div>
+    <div class="choir-hero-content">
+      <span class="choir-badge">Ministry of Music</span>
+      <h1>Embakasi Central Choir</h1>
+      <p class="choir-verse">"Make a joyful noise unto the Lord, all the earth" — Psalm 100:1</p>
+      <div class="choir-stats">
+        <div class="c-stat">
+          <span class="c-number" data-count="24">0</span>
+          <span class="c-label">Members</span>
+        </div>
+        <div class="c-stat">
+          <span class="c-number">4</span>
+          <span class="c-label">Voice Parts</span>
+        </div>
+        <div class="c-stat">
+          <span class="c-number">2</span>
+          <span class="c-label">Services/Week</span>
+        </div>
+        <div class="c-stat">
+          <span class="c-number">6+</span>
+          <span class="c-label">Years Active</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== VOICE SECTIONS ==================== -->
+  <section class="voice-sections">
+    <div class="section-header">
+      <span class="section-tag">Roster</span>
+      <h2>Voice Sections</h2>
+      <p>Our choir is organized into four distinct voice sections, each contributing to our harmonious worship</p>
+      <div class="accent-line"></div>
+    </div>
+
+    <div class="voice-tabs-container">
+      <div class="voice-tabs" id="voiceTabs">
+        <button class="voice-tab active" data-voice="soprano">
+          <span class="tab-icon">&#9836;</span>
+          <span class="tab-name">Soprano</span>
+          <span class="tab-count">6 members</span>
+        </button>
+        <button class="voice-tab" data-voice="alto">
+          <span class="tab-icon">&#9836;</span>
+          <span class="tab-name">Alto</span>
+          <span class="tab-count">6 members</span>
+        </button>
+        <button class="voice-tab" data-voice="tenor">
+          <span class="tab-icon">&#9836;</span>
+          <span class="tab-name">Tenor</span>
+          <span class="tab-count">6 members</span>
+        </button>
+        <button class="voice-tab" data-voice="bass">
+          <span class="tab-icon">&#9836;</span>
+          <span class="tab-name">Bass</span>
+          <span class="tab-count">6 members</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="voice-roster" id="voiceRoster">
+      <!-- Rendered via choir.js -->
+    </div>
+  </section>
+
+  <!-- ==================== REHEARSAL SCHEDULE ==================== -->
+  <section class="choir-schedule-section">
+    <div class="section-header">
+      <span class="section-tag">Practice Times</span>
+      <h2>Rehearsal Schedule</h2>
+      <p>Regular practice makes perfect praise. Join us for rehearsals and grow your musical gift.</p>
+      <div class="accent-line"></div>
+    </div>
+
+    <div class="schedule-cards">
+      <div class="schedule-card">
+        <div class="sc-icon-bg">&#127908;</div>
+        <div class="sc-content">
+          <h3>Main Choir Practice</h3>
+          <p class="sc-time">Saturdays, 2:00 PM — 4:00 PM</p>
+          <p class="sc-loc">Church Sanctuary</p>
+          <p class="sc-desc">Full choir rehearsal with all voice sections. Focus on upcoming Sabbath music and special programs.</p>
+          <span class="sc-tag">Weekly</span>
+        </div>
+      </div>
+
+      <div class="schedule-card">
+        <div class="sc-icon-bg">&#127929;</div>
+        <div class="sc-content">
+          <h3>Sectional Rehearsals</h3>
+          <p class="sc-time">Wednesdays, 6:00 PM — 7:30 PM</p>
+          <p class="sc-loc">Fellowship Hall</p>
+          <p class="sc-desc">Voice-specific training. Each section works on harmony, pitch, and blending under section leaders.</p>
+          <span class="sc-tag">Bi-Weekly</span>
+        </div>
+      </div>
+
+      <div class="schedule-card">
+        <div class="sc-icon-bg">&#127932;</div>
+        <div class="sc-content">
+          <h3>Special Program Prep</h3>
+          <p class="sc-time">As Announced</p>
+          <p class="sc-loc">Church Sanctuary</p>
+          <p class="sc-desc">Intensive rehearsals for camp meetings, musical concerts, evangelistic series, and church celebrations.</p>
+          <span class="sc-tag">Event-Based</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== REPERTOIRE ==================== -->
+  <section class="repertoire-section">
+    <div class="section-header">
+      <span class="section-tag">Our Music</span>
+      <h2>Choir Repertoire</h2>
+      <p>A selection of songs we minister during divine services and special programs</p>
+      <div class="accent-line"></div>
+    </div>
+
+    <div class="repertoire-list" id="repertoireList">
+      <!-- Rendered via choir.js -->
+    </div>
+  </section>
+
+  <!-- ==================== JOIN CTA ==================== -->
+  <section class="join-choir-cta">
+    <div class="join-content">
+      <h2>Have a Gift for Music?</h2>
+      <p>The Embakasi Central Choir is always looking for passionate voices to join our ministry. Whether you sing soprano, alto, tenor, or bass — there's a place for you.</p>
+      <a href="schedule.html" class="btn btn-primary btn-lg">
+        <span>Check Rehearsal Times</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="assets/logos/sda-logo-white.png" alt="SDA Logo" class="footer-logo">
+        <div>
+          <h4>SDA Church Embakasi Central</h4>
+          <p>Ambassadors Club Youth Ministry</p>
+        </div>
+      </div>
+      <div class="footer-links">
+        <div class="link-group">
+          <h5>Quick Links</h5>
+          <a href="members.html">Members</a>
+          <a href="choir.html">Choir</a>
+          <a href="activities.html">Activities</a>
+          <a href="treasury.html">Treasury</a>
+        </div>
+        <div class="link-group">
+          <h5>Connect</h5>
+          <a href="schedule.html">Service Times</a>
+          <a href="about.html">About Us</a>
+          <a href="#">Contact</a>
+          <a href="#">Prayer Request</a>
+        </div>
+        <div class="link-group">
+          <h5>Location</h5>
+          <p>Embakasi, Nairobi</p>
+          <p>Kenya</p>
+          <p class="footer-verse">"Go ye into all the world"</p>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; <span class="current-year">2026</span> SDA Church Embakasi Central. All rights reserved.</p>
+      <p class="footer-credit">Built with love by the Ambassadors Club</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/choir.js"></script>
+</body>
+</html>

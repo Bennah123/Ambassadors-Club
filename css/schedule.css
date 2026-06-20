@@ -1,0 +1,315 @@
+/* ============================================
+   SCHEDULE PAGE STYLES - SDA Embakasi Central
+   Ambassadors Club Website
+   ============================================ */
+
+/* ---- PAGE HEADER ---- */
+.schedule-header {
+  background: linear-gradient(135deg, var(--sda-navy) 0%, #0f2744 50%, #475569 100%);
+}
+
+/* ---- SCHEDULE TIMELINE ---- */
+.schedule-page {
+  padding: 4rem 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.schedule-timeline {
+  position: relative;
+  padding-left: 3rem;
+}
+
+.schedule-timeline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(to bottom, var(--sda-gold), var(--sda-navy), var(--accent-crimson));
+  border-radius: 4px;
+}
+
+.timeline-day {
+  margin-bottom: 4rem;
+  position: relative;
+}
+
+.timeline-day:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-day::before {
+  content: '';
+  position: absolute;
+  left: -3rem;
+  top: 1.5rem;
+  width: 16px;
+  height: 16px;
+  background: var(--sda-gold);
+  border-radius: 50%;
+  border: 4px solid var(--sda-cream);
+  transform: translateX(-6px);
+  box-shadow: 0 0 0 4px rgba(201, 162, 39, 0.2);
+}
+
+.day-marker {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-left: 0.5rem;
+}
+
+.day-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--sda-navy), var(--accent-crimson));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.day-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.day-name {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--sda-navy);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.day-date {
+  color: var(--sda-gold);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.day-events {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ---- EVENT CARDS ---- */
+.event-card {
+  background: var(--bg-card);
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid var(--border-light);
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.event-card:hover {
+  border-color: var(--sda-gold);
+  box-shadow: var(--shadow-md);
+  transform: translateX(4px);
+}
+
+.event-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--border-light);
+  transition: background 0.3s;
+}
+
+.event-card:hover::before {
+  background: var(--sda-gold);
+}
+
+.event-card.highlight::before {
+  background: var(--sda-gold);
+}
+
+.event-card.choir-card::before {
+  background: var(--accent-crimson);
+}
+
+.event-time {
+  min-width: 70px;
+  text-align: center;
+  padding-top: 0.3rem;
+}
+
+.time-start {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--sda-navy);
+  line-height: 1;
+}
+
+.time-ampm {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.event-details {
+  flex: 1;
+}
+
+.event-tag {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 50px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.tag-study { background: #dbeafe; color: #1e40af; }
+.tag-worship { background: #fef3c7; color: #92400e; }
+.tag-youth { background: #dcfce7; color: #166534; }
+.tag-choir { background: #fee2e2; color: #991b1b; }
+.tag-prayer { background: #ede9fe; color: #7c3aed; }
+
+.event-details h4 {
+  font-family: var(--font-display);
+  color: var(--sda-navy);
+  font-size: 1.15rem;
+  margin-bottom: 0.4rem;
+}
+
+.event-details p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+}
+
+.event-loc {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--sda-gold);
+  font-weight: 500;
+}
+
+/* ---- QUICK INFO ---- */
+.quick-info {
+  background: var(--bg-light);
+  padding: 4rem 2rem;
+}
+
+.quick-info-grid {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.qi-card {
+  background: var(--bg-card);
+  padding: 2rem;
+  border-radius: 16px;
+  border: 1px solid var(--border-light);
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.qi-card:hover {
+  border-color: var(--sda-gold);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+}
+
+.qi-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--sda-navy), var(--accent-crimson));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin: 0 auto 1rem;
+  color: white;
+}
+
+.qi-card h4 {
+  font-family: var(--font-display);
+  color: var(--sda-navy);
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.qi-card p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 768px) {
+  .schedule-page {
+    padding: 2rem 1rem;
+  }
+
+  .schedule-timeline {
+    padding-left: 2rem;
+  }
+
+  .timeline-day::before {
+    left: -2rem;
+    width: 12px;
+    height: 12px;
+    transform: translateX(-4px);
+  }
+
+  .day-marker {
+    gap: 0.75rem;
+  }
+
+  .day-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+
+  .day-name {
+    font-size: 1.3rem;
+  }
+
+  .event-card {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .event-time {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    min-width: auto;
+    text-align: left;
+  }
+
+  .time-start {
+    font-size: 1.2rem;
+  }
+}

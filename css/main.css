@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ---- SDA OFFICIAL COLOR PALETTE ---- */
+:root {
+  /* Primary SDA Colors */
+  --sda-navy:        #1a365d;    /* Official SDA dark blue */
+  --sda-gold:        #c9a227;    /* Official SDA gold/amber */
+  --sda-white:       #ffffff;
+  --sda-cream:       #f7f5f0;    /* Warm background */
+
+  /* Extended Palette */
+  --accent-crimson:  #8b1538;    /* Deep crimson for emphasis */
+  --accent-sage:     #6b8f71;    /* Natural green for growth themes */
+  --text-primary:    #1e293b;
+  --text-secondary:  #64748b;
+  --text-muted:      #94a3b8;
+  --bg-light:        #f8fafc;
+  --bg-card:         #ffffff;
+  --border-light:    #e2e8f0;
+  --shadow-sm:       0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md:       0 4px 6px -1px rgba(0,0,0,0.1);
+  --shadow-lg:       0 10px 15px -3px rgba(0,0,0,0.1);
+
+  /* Typography */
+  --font-display:    'Playfair Display', Georgia, serif;
+  --font-body:       'Inter', system-ui, sans-serif;
+
+  /* Spacing Scale */
+  --space-1: 0.25rem;  --space-2: 0.5rem;   --space-3: 0.75rem;
+  --space-4: 1rem;     --space-6: 1.5rem;   --space-8: 2rem;
+  --space-12: 3rem;    --space-16: 4rem;    --space-24: 6rem;
+}
+
+/* ---- RESET & BASE ---- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background: var(--sda-cream);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- NAVIGATION ---- */
+.navbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(26, 54, 93, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 2px solid var(--sda-gold);
+  padding: 0.75rem 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-brand {
+  display: flex; align-items: center; gap: 0.75rem;
+  color: var(--sda-white); text-decoration: none;
+}
+.nav-brand img { height: 42px; width: auto; }
+.nav-brand span {
+  font-family: var(--font-display); font-size: 1.1rem; font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.nav-brand small {
+  display: block; font-family: var(--font-body); font-size: 0.7rem;
+  color: var(--sda-gold); text-transform: uppercase; letter-spacing: 1px;
+}
+.nav-links { display: flex; gap: 0.5rem; list-style: none; }
+.nav-links a {
+  color: rgba(255,255,255,0.85); text-decoration: none;
+  padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.9rem;
+  font-weight: 500; transition: all 0.2s;
+}
+.nav-links a:hover, .nav-links a.active {
+  background: rgba(201, 162, 39, 0.15); color: var(--sda-gold);
+}
+
+/* ---- HERO SECTION ---- */
+.hero {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--sda-navy) 0%, #0f2744 100%);
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 8rem 2rem 4rem;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: url('../assets/images/hero-bg.jpg') center/cover;
+  opacity: 0.15;
+}
+.hero-content { position: relative; z-index: 1; max-width: 800px; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  background: rgba(201, 162, 39, 0.15); color: var(--sda-gold);
+  padding: 0.5rem 1.25rem; border-radius: 50px;
+  font-size: 0.85rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 1px; border: 1px solid rgba(201, 162, 39, 0.3);
+  margin-bottom: 1.5rem;
+}
+.hero h1 {
+  font-family: var(--font-display); font-size: clamp(2.5rem, 5vw, 4rem);
+  color: var(--sda-white); line-height: 1.1; margin-bottom: 1rem;
+}
+.hero h1 span { color: var(--sda-gold); }
+.hero-subtitle {
+  font-size: 1.25rem; color: rgba(255,255,255,0.7);
+  max-width: 600px; margin: 0 auto 2rem;
+}
+.hero-cta {
+  display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.875rem 2rem; border-radius: 8px; font-weight: 600;
+  font-size: 0.95rem; text-decoration: none; transition: all 0.2s;
+  cursor: pointer; border: none;
+}
+.btn-primary {
+  background: var(--sda-gold); color: var(--sda-navy);
+}
+.btn-primary:hover { background: #d4af37; transform: translateY(-2px); }
+.btn-outline {
+  background: transparent; color: var(--sda-white);
+  border: 2px solid rgba(255,255,255,0.3);
+}
+.btn-outline:hover { border-color: var(--sda-gold); color: var(--sda-gold); }
+
+/* ---- SECTION HEADERS ---- */
+.section-header {
+  text-align: center; padding: var(--space-16) var(--space-4) var(--space-8);
+}
+.section-header h2 {
+  font-family: var(--font-display); font-size: 2.5rem;
+  color: var(--sda-navy); margin-bottom: 0.75rem;
+}
+.section-header p {
+  color: var(--text-secondary); font-size: 1.1rem; max-width: 600px;
+  margin: 0 auto;
+}
+.section-header .accent-line {
+  width: 60px; height: 3px; background: var(--sda-gold);
+  margin: 1rem auto 0; border-radius: 2px;
+}
+
+/* ---- FOOTER ---- */
+.footer {
+  background: var(--sda-navy); color: rgba(255,255,255,0.7);
+  padding: 3rem 2rem 1.5rem; text-align: center;
+  border-top: 3px solid var(--sda-gold);
+}
+.footer-logos { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1.5rem; }
+.footer-logos img { height: 50px; opacity: 0.8; }
+.footer p { font-size: 0.9rem; margin-bottom: 0.5rem; }
+.footer .verse {
+  font-style: italic; color: var(--sda-gold); font-family: var(--font-display);
+  margin-top: 1rem;
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 768px) {
+  .nav-links { display: none; } /* Add hamburger menu logic in JS */
+  .hero { padding-top: 6rem; }
+  .hero-cta { flex-direction: column; align-items: center; }
+}

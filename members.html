@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Meet the Ambassadors of SDA Church Embakasi Central - Youth Ministry Members">
+  <title>Ambassadors Members | SDA Church Embakasi Central</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/members.css">
+</head>
+<body>
+  <!-- ==================== NAVIGATION ==================== -->
+  <nav class="navbar" id="navbar">
+    <a href="index.html" class="nav-brand">
+      <img src="assets/logos/sda-logo-white.png" alt="SDA Logo" id="navLogo">
+      <div>
+        <span>SDA Embakasi Central</span>
+        <small>Ambassadors Club</small>
+      </div>
+    </a>
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="members.html" class="active">Members</a></li>
+      <li><a href="choir.html">Choir</a></li>
+      <li><a href="activities.html">Activities</a></li>
+      <li><a href="treasury.html">Treasury</a></li>
+      <li><a href="schedule.html">Schedule</a></li>
+      <li><a href="about.html">About</a></li>
+    </ul>
+  </nav>
+
+  <!-- ==================== PAGE HEADER ==================== -->
+  <section class="page-header">
+    <div class="page-header-content">
+      <span class="page-tag">The Team</span>
+      <h1>The Ambassadors</h1>
+      <p>Meet the youth of SDA Church Embakasi Central — ambassadors for Christ in our community.</p>
+    </div>
+  </section>
+
+  <!-- ==================== MEMBERS TOOLBAR ==================== -->
+  <div class="members-toolbar-container">
+    <div class="members-toolbar">
+      <div class="search-box">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" id="memberSearch" placeholder="Search by name, department, or gift...">
+      </div>
+      <div class="filter-tabs" id="filterTabs">
+        <button class="filter-btn active" data-filter="all">All Members</button>
+        <button class="filter-btn" data-filter="choir">Choir</button>
+        <button class="filter-btn" data-filter="ushering">Ushering</button>
+        <button class="filter-btn" data-filter="treasury">Treasury</button>
+        <button class="filter-btn" data-filter="welfare">Welfare</button>
+        <button class="filter-btn" data-filter="media">Media</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MEMBERS GRID ==================== -->
+  <main class="members-page">
+    <div class="members-grid" id="membersGrid">
+      <!-- Rendered dynamically via members.js -->
+    </div>
+
+    <div class="no-results" id="noResults" style="display: none;">
+      <div class="no-results-icon">&#128269;</div>
+      <h3>No members found</h3>
+      <p>Try adjusting your search or filter criteria.</p>
+    </div>
+  </main>
+
+  <!-- ==================== MEMBER DETAIL MODAL ==================== -->
+  <div class="modal" id="memberModal">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <button class="modal-close" id="modalClose" aria-label="Close modal">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="assets/logos/sda-logo-white.png" alt="SDA Logo" class="footer-logo">
+        <div>
+          <h4>SDA Church Embakasi Central</h4>
+          <p>Ambassadors Club Youth Ministry</p>
+        </div>
+      </div>
+      <div class="footer-links">
+        <div class="link-group">
+          <h5>Quick Links</h5>
+          <a href="members.html">Members</a>
+          <a href="choir.html">Choir</a>
+          <a href="activities.html">Activities</a>
+          <a href="treasury.html">Treasury</a>
+        </div>
+        <div class="link-group">
+          <h5>Connect</h5>
+          <a href="schedule.html">Service Times</a>
+          <a href="about.html">About Us</a>
+          <a href="#">Contact</a>
+          <a href="#">Prayer Request</a>
+        </div>
+        <div class="link-group">
+          <h5>Location</h5>
+          <p>Embakasi, Nairobi</p>
+          <p>Kenya</p>
+          <p class="footer-verse">"Go ye into all the world"</p>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; <span class="current-year">2026</span> SDA Church Embakasi Central. All rights reserved.</p>
+      <p class="footer-credit">Built with love by the Ambassadors Club</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/members.js"></script>
+</body>
+</html>
