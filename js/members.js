@@ -1,108 +1,65 @@
-// ============================================
-// MEMBERS PAGE JAVASCRIPT - SDA Embakasi Central
-// Ambassadors Club Website
-// ============================================
-
-// ---- DEMO MEMBERS DATA ----
-// Replace this with your actual Ambassadors Club member data
-const membersData = [
+const fallbackMembersData = [
   {
-    id: 1,
-    firstName: "John",
-    lastName: "Kamau",
-    role: "Youth Leader",
-    departments: ["choir", "treasury"],
-    joined: "2022",
-    gift: "Leadership",
-    phone: "+254 712 345 678",
+    id: 1, firstName: "John", lastName: "Kamau",
+    role: "Youth Leader", departments: ["choir", "treasury"],
+    joined: "2022", gift: "Leadership", phone: "+254 712 345 678",
     email: "john.kamau@email.com",
     bio: "Passionate about youth ministry and financial stewardship. Leads the Ambassadors Club with vision and dedication."
   },
   {
-    id: 2,
-    firstName: "Sarah",
-    lastName: "Wanjiku",
-    role: "Choir Director",
-    departments: ["choir", "media"],
-    joined: "2021",
-    gift: "Music",
-    phone: "+254 723 456 789",
+    id: 2, firstName: "Sarah", lastName: "Wanjiku",
+    role: "Choir Director", departments: ["choir", "media"],
+    joined: "2021", gift: "Music", phone: "+254 723 456 789",
     email: "sarah.w@email.com",
     bio: "Gifted vocalist and choir leader. Organizes rehearsals and special music programs for divine services."
   },
   {
-    id: 3,
-    firstName: "Peter",
-    lastName: "Ochieng",
-    role: "Treasurer",
-    departments: ["treasury", "welfare"],
-    joined: "2023",
-    gift: "Administration",
-    phone: "+254 734 567 890",
+    id: 3, firstName: "Peter", lastName: "Ochieng",
+    role: "Treasurer", departments: ["treasury", "welfare"],
+    joined: "2023", gift: "Administration", phone: "+254 734 567 890",
     email: "peter.o@email.com",
     bio: "Detail-oriented and trustworthy. Manages club finances and welfare contributions with integrity."
   },
   {
-    id: 4,
-    firstName: "Grace",
-    lastName: "Muthoni",
-    role: "Welfare Coordinator",
-    departments: ["welfare", "ushering"],
-    joined: "2022",
-    gift: "Hospitality",
-    phone: "+254 745 678 901",
+    id: 4, firstName: "Grace", lastName: "Muthoni",
+    role: "Welfare Coordinator", departments: ["welfare", "ushering"],
+    joined: "2022", gift: "Hospitality", phone: "+254 745 678 901",
     email: "grace.m@email.com",
     bio: "Heart for service and community care. Coordinates outreach programs and member support initiatives."
   },
   {
-    id: 5,
-    firstName: "David",
-    lastName: "Mutua",
-    role: "Media Lead",
-    departments: ["media", "choir"],
-    joined: "2023",
-    gift: "Creativity",
-    phone: "+254 756 789 012",
+    id: 5, firstName: "David", lastName: "Mutua",
+    role: "Media Lead", departments: ["media", "choir"],
+    joined: "2023", gift: "Creativity", phone: "+254 756 789 012",
     email: "david.m@email.com",
     bio: "Tech-savvy creative handling sound, visuals, and social media for the club and church programs."
   },
   {
-    id: 6,
-    firstName: "Esther",
-    lastName: "Achieng",
-    role: "Ushering Lead",
-    departments: ["ushering", "welfare"],
-    joined: "2021",
-    gift: "Service",
-    phone: "+254 767 890 123",
+    id: 6, firstName: "Esther", lastName: "Achieng",
+    role: "Ushering Lead", departments: ["ushering", "welfare"],
+    joined: "2021", gift: "Service", phone: "+254 767 890 123",
     email: "esther.a@email.com",
     bio: "Welcoming and organized. Ensures smooth flow during services and special church events."
   },
   {
-    id: 7,
-    firstName: "Michael",
-    lastName: "Kipchirchir",
-    role: "Sabbath School Teacher",
-    departments: ["choir"],
-    joined: "2024",
-    gift: "Teaching",
-    phone: "+254 778 901 234",
+    id: 7, firstName: "Michael", lastName: "Kipchirchir",
+    role: "Sabbath School Teacher", departments: ["choir"],
+    joined: "2024", gift: "Teaching", phone: "+254 778 901 234",
     email: "michael.k@email.com",
     bio: "Youth Sabbath School teacher with a passion for Bible study and discipleship."
   },
   {
-    id: 8,
-    firstName: "Faith",
-    lastName: "Njeri",
-    role: "Events Coordinator",
-    departments: ["media", "ushering"],
-    joined: "2023",
-    gift: "Organization",
-    phone: "+254 789 012 345",
+    id: 8, firstName: "Faith", lastName: "Njeri",
+    role: "Events Coordinator", departments: ["media", "ushering"],
+    joined: "2023", gift: "Organization", phone: "+254 789 012 345",
     email: "faith.n@email.com",
     bio: "Plans and coordinates club events, camps, and fellowship activities throughout the year."
   }
 ];
+
+// ---- ACTIVE DATA (will be populated from Supabase or fallback) ----
+let membersData = [...fallbackMembersData];
+let isSupabaseConnected = false;
 
 // ---- DEPARTMENT LABELS ----
 const deptLabels = {
@@ -112,6 +69,46 @@ const deptLabels = {
   welfare: "Welfare",
   media: "Media"
 };
+
+// ---- LOAD MEMBERS FROM SUPABASE ----
+async function loadMembersFromSupabase() {
+  // Check if Supabase is available
+  if (typeof supabaseClient === 'undefined') {
+    console.log('Supabase not configured. Using fallback data.');
+    return false;
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('members')
+      .select('*')
+      .order('id', { ascending: true });
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      membersData = data.map(m => ({
+        id: m.id,
+        firstName: m.first_name,
+        lastName: m.last_name,
+        role: m.role,
+        departments: m.departments || [],
+        joined: m.joined_year,
+        gift: m.gift,
+        phone: m.phone,
+        email: m.email,
+        bio: m.bio
+      }));
+      isSupabaseConnected = true;
+      console.log(`✅ Loaded ${data.length} members from Supabase`);
+      return true;
+    }
+  } catch (err) {
+    console.warn('Supabase fetch failed:', err.message);
+  }
+
+  return false;
+}
 
 // ---- RENDER MEMBERS ----
 function renderMembers(filter = 'all', search = '') {
@@ -227,7 +224,10 @@ function closeMemberModal() {
 }
 
 // ---- EVENT LISTENERS ----
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Try to load from Supabase first, fallback to local data
+  await loadMembersFromSupabase();
+
   // Initial render
   renderMembers();
 
@@ -235,11 +235,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const filterButtons = document.querySelectorAll('.filter-btn');
   filterButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-      // Update active state
       filterButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
-      // Render with filter
       const filter = btn.dataset.filter;
       const search = document.getElementById('memberSearch')?.value || '';
       renderMembers(filter, search);

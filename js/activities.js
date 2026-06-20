@@ -1,10 +1,4 @@
-// ============================================
-// ACTIVITIES PAGE JAVASCRIPT - SDA Embakasi Central
-// Ambassadors Club Website
-// ============================================
-
-// ---- EVENTS DATA ----
-const eventsData = [
+const fallbackEventsData = [
   { date: '2026-06-28', title: 'Youth Camp Meeting', type: 'camp', typeLabel: 'Camp', time: '8:00 AM', location: 'Camp Site', description: 'Annual weekend retreat. Worship, workshops, team building, and spiritual growth.' },
   { date: '2026-07-05', title: 'Community Health Outreach', type: 'service', typeLabel: 'Service', time: '9:00 AM', location: 'Embakasi Community Center', description: 'Free health screening and wellness education for the local community.' },
   { date: '2026-07-12', title: 'Ambassadors Fellowship Night', type: 'social', typeLabel: 'Social', time: '6:00 PM', location: 'Church Fellowship Hall', description: 'An evening of music, games, food, and bonding for all club members.' },
@@ -13,12 +7,52 @@ const eventsData = [
   { date: '2026-08-02', title: 'Sports Day & Picnic', type: 'social', typeLabel: 'Social', time: '9:00 AM', location: 'Embakasi Grounds', description: 'Football, volleyball, athletics, and picnic for all Ambassadors members.' }
 ];
 
+// ---- ACTIVE DATA ----
+let eventsData = [...fallbackEventsData];
+let isSupabaseConnected = false;
+
 const eventTypeColors = {
   camp: '#1e40af',
   service: '#166534',
   social: '#92400e',
   study: '#7c3aed'
 };
+
+// ---- LOAD FROM SUPABASE ----
+async function loadEventsFromSupabase() {
+  if (typeof supabaseClient === 'undefined') {
+    console.log('Supabase not configured. Using fallback data.');
+    return false;
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('events')
+      .select('*')
+      .order('event_date', { ascending: true });
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      eventsData = data.map(e => ({
+        date: e.event_date,
+        title: e.title,
+        type: e.event_type || 'other',
+        typeLabel: e.event_type ? e.event_type.charAt(0).toUpperCase() + e.event_type.slice(1) : 'Other',
+        time: e.time || 'TBD',
+        location: e.location || 'TBD',
+        description: e.description || ''
+      }));
+      isSupabaseConnected = true;
+      console.log(`✅ Loaded ${data.length} events from Supabase`);
+      return true;
+    }
+  } catch (err) {
+    console.warn('Supabase fetch failed:', err.message);
+  }
+
+  return false;
+}
 
 // ---- CALENDAR STATE ----
 let currentMonth = new Date().getMonth();
@@ -121,7 +155,10 @@ function renderEventsTimeline() {
 }
 
 // ---- EVENT LISTENERS ----
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Load from Supabase or use fallback
+  await loadEventsFromSupabase();
+
   // Render calendar
   renderCalendar();
 

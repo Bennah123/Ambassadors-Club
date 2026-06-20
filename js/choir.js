@@ -1,10 +1,4 @@
-// ============================================
-// CHOIR PAGE JAVASCRIPT - SDA Embakasi Central
-// Ambassadors Club Website
-// ============================================
-
-// ---- CHOIR ROSTER DATA ----
-const choirRoster = {
+const fallbackChoirRoster = {
   soprano: [
     { firstName: "Sarah", lastName: "Wanjiku", role: "Section Leader" },
     { firstName: "Grace", lastName: "Muthoni", role: "Member" },
@@ -39,12 +33,58 @@ const choirRoster = {
   ]
 };
 
+// ---- ACTIVE DATA ----
+let choirRoster = { ...fallbackChoirRoster };
+let isSupabaseConnected = false;
+
 const voicePartLabels = {
   soprano: "Soprano",
   alto: "Alto",
   tenor: "Tenor",
   bass: "Bass"
 };
+
+// ---- LOAD FROM SUPABASE ----
+async function loadChoirFromSupabase() {
+  if (typeof supabaseClient === 'undefined') {
+    console.log('Supabase not configured. Using fallback data.');
+    return false;
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('choir_members')
+      .select('*')
+      .order('voice_part', { ascending: true })
+      .order('role', { ascending: false });
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      // Organize by voice part
+      choirRoster = { soprano: [], alto: [], tenor: [], bass: [] };
+
+      data.forEach(member => {
+        const part = member.voice_part.toLowerCase();
+        if (choirRoster[part]) {
+          choirRoster[part].push({
+            firstName: member.first_name,
+            lastName: member.last_name,
+            role: member.role || 'Member'
+          });
+        }
+      });
+
+      isSupabaseConnected = true;
+      console.log(`✅ Loaded ${data.length} choir members from Supabase`);
+      return true;
+    }
+  } catch (err) {
+    console.warn('Supabase fetch failed:', err.message);
+  }
+
+  return false;
+}
 
 // ---- REPERTOIRE DATA ----
 const repertoireData = [
@@ -132,7 +172,10 @@ function animateCount(element, target) {
 }
 
 // ---- EVENT LISTENERS ----
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Load from Supabase or fallback
+  await loadChoirFromSupabase();
+
   // Render initial roster (soprano)
   renderVoiceRoster('soprano');
 

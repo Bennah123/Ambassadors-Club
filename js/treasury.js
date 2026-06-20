@@ -1,10 +1,4 @@
-// ============================================
-// TREASURY PAGE JAVASCRIPT - SDA Embakasi Central
-// Ambassadors Club Website
-// ============================================
-
-// ---- CONTRIBUTIONS DATA ----
-const contributionsData = [
+const fallbackContributionsData = [
   { id: 1, date: '2026-06-14', member: 'John Kamau', type: 'sabbath', amount: 500, method: 'mpesa', status: 'confirmed', ref: 'MPESA12345' },
   { id: 2, date: '2026-06-14', member: 'Sarah Wanjiku', type: 'tithe', amount: 2000, method: 'mpesa', status: 'confirmed', ref: 'MPESA12346' },
   { id: 3, date: '2026-06-07', member: 'Peter Ochieng', type: 'camp', amount: 1500, method: 'cash', status: 'confirmed', ref: 'CASH001' },
@@ -16,6 +10,10 @@ const contributionsData = [
   { id: 9, date: '2026-05-17', member: 'John Kamau', type: 'camp', amount: 2000, method: 'mpesa', status: 'confirmed', ref: 'MPESA12350' },
   { id: 10, date: '2026-05-17', member: 'Sarah Wanjiku', type: 'welfare', amount: 500, method: 'cash', status: 'confirmed', ref: 'CASH003' }
 ];
+
+// ---- ACTIVE DATA ----
+let contributionsData = [...fallbackContributionsData];
+let isSupabaseConnected = false;
 
 const typeLabels = {
   sabbath: 'Sabbath Offering',
@@ -36,6 +34,43 @@ const memberList = [
   'John Kamau', 'Sarah Wanjiku', 'Peter Ochieng', 'Grace Muthoni',
   'David Mutua', 'Esther Achieng', 'Michael Kipchirchir', 'Faith Njeri'
 ];
+
+// ---- LOAD FROM SUPABASE ----
+async function loadContributionsFromSupabase() {
+  if (typeof supabaseClient === 'undefined') {
+    console.log('Supabase not configured. Using fallback data.');
+    return false;
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('contributions')
+      .select('*')
+      .order('contribution_date', { ascending: false });
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      contributionsData = data.map(c => ({
+        id: c.id,
+        date: c.contribution_date,
+        member: c.member_name,
+        type: c.contribution_type,
+        amount: c.amount,
+        method: c.payment_method,
+        status: c.status,
+        ref: c.reference || 'N/A'
+      }));
+      isSupabaseConnected = true;
+      console.log(`✅ Loaded ${data.length} contributions from Supabase`);
+      return true;
+    }
+  } catch (err) {
+    console.warn('Supabase fetch failed:', err.message);
+  }
+
+  return false;
+}
 
 // ---- RENDER CONTRIBUTIONS TABLE ----
 function renderContributions(filterType = 'all', filterMonth = 'all') {
@@ -78,6 +113,20 @@ function renderContributions(filterType = 'all', filterMonth = 'all') {
       </td>
     </tr>
   `).join('');
+
+  // Update summary cards (simple calculation)
+  updateSummaryCards();
+}
+
+function updateSummaryCards() {
+  const total = contributionsData.reduce((sum, c) => sum + c.amount, 0);
+  const confirmed = contributionsData.filter(c => c.status === 'confirmed').length;
+
+  const balanceEl = document.getElementById('currentBalance');
+  if (balanceEl) balanceEl.textContent = `KES ${total.toLocaleString()}`;
+
+  const contributorsEl = document.getElementById('activeContributors');
+  if (contributorsEl) contributorsEl.textContent = `${confirmed} / ${contributionsData.length}`;
 }
 
 function formatDate(dateStr) {
@@ -193,6 +242,11 @@ function populateMemberSelect() {
   const select = document.getElementById('contribMember');
   if (!select) return;
 
+  // Clear existing options except first
+  while (select.options.length > 1) {
+    select.remove(1);
+  }
+
   memberList.forEach(member => {
     const option = document.createElement('option');
     option.value = member;
@@ -224,8 +278,39 @@ function closeModal() {
   setDefaultDate();
 }
 
+// ---- SAVE TO SUPABASE (if connected) ----
+async function saveContributionToSupabase(data) {
+  if (typeof supabaseClient === 'undefined' || !isSupabaseConnected) {
+    return false; // Will use local data only
+  }
+
+  try {
+    const { data: result, error } = await supabaseClient
+      .from('contributions')
+      .insert([{
+        member_name: data.member,
+        contribution_type: data.type,
+        amount: data.amount,
+        payment_method: data.method,
+        contribution_date: data.date,
+        reference: data.ref || 'N/A',
+        notes: data.notes || '',
+        status: 'confirmed'
+      }]);
+
+    if (error) throw error;
+    return true;
+  } catch (err) {
+    console.error('Failed to save to Supabase:', err);
+    return false;
+  }
+}
+
 // ---- EVENT LISTENERS ----
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Load from Supabase or fallback
+  await loadContributionsFromSupabase();
+
   // Render initial table
   renderContributions();
 
@@ -287,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Form submit
   const form = document.getElementById('contribForm');
   if (form) {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const member = document.getElementById('contribMember').value;
@@ -296,13 +381,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const amount = parseInt(document.getElementById('contribAmount').value);
       const method = document.getElementById('contribMethod').value;
       const ref = document.getElementById('contribRef').value || 'N/A';
+      const notes = document.getElementById('contribNotes')?.value || '';
 
       if (!member || !date || !type || !amount) {
         alert('Please fill in all required fields.');
         return;
       }
 
-      // Add new record
+      // Add new record locally
       const newRecord = {
         id: contributionsData.length + 1,
         date: date,
@@ -315,6 +401,17 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       contributionsData.unshift(newRecord);
+
+      // Try to save to Supabase
+      const savedToSupabase = await saveContributionToSupabase({
+        member, date, type, amount, method, ref, notes
+      });
+
+      if (savedToSupabase) {
+        console.log('✅ Saved to Supabase');
+      } else {
+        console.log('💾 Saved locally only (Supabase not connected)');
+      }
 
       // Re-render
       const typeFilter = document.getElementById('filterType')?.value || 'all';
