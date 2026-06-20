@@ -1,63 +1,62 @@
 // ============================================
-// HOMEPAGE JAVASCRIPT - SDA Embakasi Central
-// Ambassadors Club Website
+// HOME.JS - Homepage logic
+// SDA Embakasi Central – Ambassadors Club
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Animate hero stats counter
+
   animateCounters();
-
-  // Populate upcoming events
   populateUpcomingEvents();
-
-  // Add scroll-triggered animations
   initScrollAnimations();
-
-  // Parallax effect for hero
   initHeroParallax();
+  initNavbarScroll();
+  // NOTE: Mobile menu toggle removed from here — it is handled in main.js.
+  // Having it in both files caused the menu to open and immediately close.
+
 });
 
-// ---- COUNTER ANIMATION ----
+// ============================================================
+// COUNTER ANIMATION
+// ============================================================
 function animateCounters() {
   const counters = document.querySelectorAll('.h-number');
+  if (!counters.length) return;
 
-  const observerOptions = {
-    threshold: 0.5,
-    rootMargin: '0px'
-  };
-
-  const counterObserver = new IntersectionObserver((entries) => {
+  const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        const target = entry.target;
-        const countTo = parseInt(target.dataset.count);
-        animateCount(target, countTo);
-        counterObserver.unobserve(target);
+        animateCount(entry.target, parseInt(entry.target.dataset.count, 10));
+        observer.unobserve(entry.target);
       }
     });
-  }, observerOptions);
+  }, { threshold: 0.5 });
 
-  counters.forEach(counter => counterObserver.observe(counter));
+  counters.forEach(counter => observer.observe(counter));
 }
 
 function animateCount(element, target) {
-  let current = 0;
-  const increment = target / 50;
-  const duration = 1500;
-  const stepTime = duration / 50;
+  // BUG FIX: original used a fixed 50-step setInterval regardless of target
+  // value — for target=3 each step was 0.06, so it would show "0" for almost
+  // all steps. Now we use requestAnimationFrame with easing for smooth results
+  // at any target value.
+  const duration = 1500; // ms
+  const start = performance.now();
 
-  const timer = setInterval(() => {
-    current += increment;
-    if (current >= target) {
-      element.textContent = target;
-      clearInterval(timer);
-    } else {
-      element.textContent = Math.floor(current);
-    }
-  }, stepTime);
+  function step(now) {
+    const elapsed  = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    // Ease-out cubic
+    const eased = 1 - Math.pow(1 - progress, 3);
+    element.textContent = Math.round(eased * target);
+    if (progress < 1) requestAnimationFrame(step);
+  }
+
+  requestAnimationFrame(step);
 }
 
-// ---- UPCOMING EVENTS ----
+// ============================================================
+// UPCOMING EVENTS
+// ============================================================
 const upcomingEventsData = [
   {
     day: '28',
@@ -89,137 +88,128 @@ function populateUpcomingEvents() {
   const container = document.getElementById('upcomingEvents');
   if (!container) return;
 
+  // BUG FIX: innerHTML was set all at once — if the data array were ever empty
+  // the container would just be blank with no feedback. Added empty-state.
+  if (!upcomingEventsData.length) {
+    container.innerHTML = '<p class="no-events">No upcoming events. Check back soon!</p>';
+    return;
+  }
+
   container.innerHTML = upcomingEventsData.map(event => `
     <div class="event-preview-card">
       <div class="epc-date">
-        <span class="day">${event.day}</span>
-        <span class="month-year">${event.month}</span>
+        <span class="day">${escapeHTML(event.day)}</span>
+        <span class="month-year">${escapeHTML(event.month)}</span>
       </div>
       <div class="epc-body">
-        <span class="epc-tag ${event.tag}">${event.tagLabel}</span>
-        <h4>${event.title}</h4>
-        <p>${event.description}</p>
+        <span class="epc-tag ${escapeHTML(event.tag)}">${escapeHTML(event.tagLabel)}</span>
+        <h4>${escapeHTML(event.title)}</h4>
+        <p>${escapeHTML(event.description)}</p>
       </div>
     </div>
   `).join('');
 }
 
-// ---- SCROLL ANIMATIONS ----
+/** Prevent XSS when injecting dynamic strings into innerHTML */
+function escapeHTML(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ============================================================
+// SCROLL-TRIGGERED ANIMATIONS
+// ============================================================
 function initScrollAnimations() {
   const animatedElements = document.querySelectorAll(
     '.mission-text, .mission-card, .feature-card, .event-preview-card, .testimonial-content'
   );
+  if (!animatedElements.length) return;
 
-  const observerOptions = {
-    threshold: 0.15,
-    rootMargin: '0px 0px -50px 0px'
-  };
+  // Set initial hidden state via style (JS-driven, so no FOUC)
+  animatedElements.forEach((el, index) => {
+    el.style.opacity    = '0';
+    el.style.transform  = 'translateY(30px)';
+    // Stagger delay capped at 0.4s so later items don't feel sluggish
+    const delay = Math.min(index * 0.08, 0.4);
+    el.style.transition = `opacity 0.6s ease ${delay}s, transform 0.6s ease ${delay}s`;
+  });
 
-  const scrollObserver = new IntersectionObserver((entries) => {
+  const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        entry.target.style.opacity = '1';
+        entry.target.style.opacity   = '1';
         entry.target.style.transform = 'translateY(0)';
-        scrollObserver.unobserve(entry.target);
+        observer.unobserve(entry.target);
       }
     });
-  }, observerOptions);
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
 
-  animatedElements.forEach((el, index) => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(30px)';
-    el.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
-    scrollObserver.observe(el);
-  });
+  animatedElements.forEach(el => observer.observe(el));
 }
 
-// ---- HERO PARALLAX ----
+// ============================================================
+// HERO PARALLAX
+// ============================================================
 function initHeroParallax() {
   const hero = document.querySelector('.hero');
   if (!hero) return;
 
+  // BUG FIX: original ran parallax even on mobile, causing janky layout on
+  // small screens where the hero already fills the viewport. Disabled below
+  // 768 px via a media-query check that re-evaluates on resize.
+  let enabled = window.innerWidth >= 768;
+
+  window.addEventListener('resize', () => {
+    enabled = window.innerWidth >= 768;
+    if (!enabled) {
+      const heroContent = hero.querySelector('.hero-content');
+      if (heroContent) {
+        heroContent.style.transform = 'none';
+        heroContent.style.opacity   = '1';
+      }
+    }
+  }, { passive: true });
+
   let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!enabled || ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const scrolled    = window.pageYOffset;
+      const heroContent = hero.querySelector('.hero-content');
+      if (heroContent && scrolled < window.innerHeight) {
+        heroContent.style.transform = `translateY(${scrolled * 0.15}px)`;
+        heroContent.style.opacity   = String(1 - (scrolled / window.innerHeight) * 0.6);
+      }
+      ticking = false;
+    });
+  }, { passive: true });
+}
+
+// ============================================================
+// NAVBAR SCROLL EFFECT
+// ============================================================
+// BUG FIX: original code in home.js duplicated the scroll listener already
+// in main.js, creating two competing handlers modifying `.navbar` styles.
+// Consolidated here into one handler that handles both shadow (main.js concern)
+// and background opacity (home-specific concern).
+function initNavbarScroll() {
+  const navbar = document.getElementById('navbar');
+  if (!navbar) return;
 
   window.addEventListener('scroll', () => {
-    if (!ticking) {
-      window.requestAnimationFrame(() => {
-        const scrolled = window.pageYOffset;
-        const rate = scrolled * 0.3;
-
-        const heroContent = hero.querySelector('.hero-content');
-        if (heroContent && scrolled < window.innerHeight) {
-          heroContent.style.transform = `translateY(${rate * 0.5}px)`;
-          heroContent.style.opacity = 1 - (scrolled / window.innerHeight) * 0.5;
-        }
-
-        ticking = false;
-      });
-      ticking = true;
-    }
-  });
-}
-
-// ---- NAVBAR SCROLL EFFECT ----
-let lastScroll = 0;
-const navbar = document.getElementById('navbar');
-
-window.addEventListener('scroll', () => {
-  const currentScroll = window.pageYOffset;
-
-  if (currentScroll > 100) {
-    navbar.style.background = 'rgba(26, 54, 93, 0.98)';
-    navbar.style.backdropFilter = 'blur(12px)';
-  } else {
-    navbar.style.background = 'rgba(26, 54, 93, 0.95)';
-    navbar.style.backdropFilter = 'blur(10px)';
-  }
-
-  lastScroll = currentScroll;
-});
-
-// ---- MOBILE MENU TOGGLE ----
-const mobileToggle = document.getElementById('mobileToggle');
-const navLinks = document.getElementById('navLinks');
-
-if (mobileToggle && navLinks) {
-  mobileToggle.addEventListener('click', () => {
-    navLinks.classList.toggle('mobile-open');
-
-    // Animate hamburger to X
-    const spans = mobileToggle.querySelectorAll('span');
-    if (navLinks.classList.contains('mobile-open')) {
-      spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
-      spans[1].style.opacity = '0';
-      spans[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
+    const scrolled = window.pageYOffset;
+    if (scrolled > 100) {
+      navbar.style.background      = 'rgba(26, 54, 93, 0.98)';
+      navbar.style.backdropFilter  = 'blur(14px)';
+      navbar.style.boxShadow       = '0 4px 24px rgba(0,0,0,0.25)';
     } else {
-      spans[0].style.transform = 'none';
-      spans[1].style.opacity = '1';
-      spans[2].style.transform = 'none';
+      navbar.style.background      = 'rgba(26, 54, 93, 0.95)';
+      navbar.style.backdropFilter  = 'blur(10px)';
+      navbar.style.boxShadow       = 'none';
     }
-  });
-
-  // Close menu when clicking a link
-  navLinks.querySelectorAll('a').forEach(link => {
-    link.addEventListener('click', () => {
-      navLinks.classList.remove('mobile-open');
-      const spans = mobileToggle.querySelectorAll('span');
-      spans[0].style.transform = 'none';
-      spans[1].style.opacity = '1';
-      spans[2].style.transform = 'none';
-    });
-  });
+  }, { passive: true });
 }
-
-// ---- SMOOTH SCROLL FOR ANCHOR LINKS ----
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-  anchor.addEventListener('click', function(e) {
-    e.preventDefault();
-    const target = document.querySelector(this.getAttribute('href'));
-    if (target) {
-      target.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-    }
-  });
-});

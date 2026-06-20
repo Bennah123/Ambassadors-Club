@@ -2,15 +2,12 @@
 
 /* ---- SDA OFFICIAL COLOR PALETTE ---- */
 :root {
-  /* Primary SDA Colors */
-  --sda-navy:        #1a365d;    /* Official SDA dark blue */
-  --sda-gold:        #c9a227;    /* Official SDA gold/amber */
+  --sda-navy:        #1a365d;
+  --sda-gold:        #c9a227;
   --sda-white:       #ffffff;
-  --sda-cream:       #f7f5f0;    /* Warm background */
-
-  /* Extended Palette */
-  --accent-crimson:  #8b1538;    /* Deep crimson for emphasis */
-  --accent-sage:     #6b8f71;    /* Natural green for growth themes */
+  --sda-cream:       #f7f5f0;
+  --accent-crimson:  #8b1538;
+  --accent-sage:     #6b8f71;
   --text-primary:    #1e293b;
   --text-secondary:  #64748b;
   --text-muted:      #94a3b8;
@@ -20,12 +17,8 @@
   --shadow-sm:       0 1px 2px rgba(0,0,0,0.05);
   --shadow-md:       0 4px 6px -1px rgba(0,0,0,0.1);
   --shadow-lg:       0 10px 15px -3px rgba(0,0,0,0.1);
-
-  /* Typography */
   --font-display:    'Playfair Display', Georgia, serif;
   --font-body:       'Inter', system-ui, sans-serif;
-
-  /* Spacing Scale */
   --space-1: 0.25rem;  --space-2: 0.5rem;   --space-3: 0.75rem;
   --space-4: 1rem;     --space-6: 1.5rem;   --space-8: 2rem;
   --space-12: 3rem;    --space-16: 4rem;    --space-24: 6rem;
@@ -50,6 +43,7 @@ body {
   border-bottom: 2px solid var(--sda-gold);
   padding: 0.75rem 2rem;
   display: flex; align-items: center; justify-content: space-between;
+  transition: background 0.3s, box-shadow 0.3s;
 }
 .nav-brand {
   display: flex; align-items: center; gap: 0.75rem;
@@ -70,7 +64,8 @@ body {
   padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.9rem;
   font-weight: 500; transition: all 0.2s;
 }
-.nav-links a:hover, .nav-links a.active {
+.nav-links a:hover,
+.nav-links a.active {
   background: rgba(201, 162, 39, 0.15); color: var(--sda-gold);
 }
 
@@ -87,7 +82,10 @@ body {
   background: url('../assets/images/hero-bg.jpg') center/cover;
   opacity: 0.15;
 }
-.hero-content { position: relative; z-index: 1; max-width: 800px; }
+.hero-content { position: relative; z-index: 2; max-width: 800px; }
+/* BUG FIX: hero-content z-index was 1, same as hero overlays — bumped to 2
+   so content always sits above .hero-bg-overlay and .hero-particles */
+
 .hero-badge {
   display: inline-flex; align-items: center; gap: 0.5rem;
   background: rgba(201, 162, 39, 0.15); color: var(--sda-gold);
@@ -102,25 +100,25 @@ body {
 }
 .hero h1 span { color: var(--sda-gold); }
 .hero-subtitle {
-  font-size: 1.25rem; color: rgba(255,255,255,0.7);
-  max-width: 600px; margin: 0 auto 2rem;
+  font-size: 1.15rem; color: rgba(255,255,255,0.75);
+  max-width: 600px; margin: 0 auto 2rem; line-height: 1.7;
 }
 .hero-cta {
   display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
 }
+
+/* ---- BUTTONS ---- */
 .btn {
   display: inline-flex; align-items: center; gap: 0.5rem;
   padding: 0.875rem 2rem; border-radius: 8px; font-weight: 600;
   font-size: 0.95rem; text-decoration: none; transition: all 0.2s;
   cursor: pointer; border: none;
 }
-.btn-primary {
-  background: var(--sda-gold); color: var(--sda-navy);
-}
-.btn-primary:hover { background: #d4af37; transform: translateY(-2px); }
+.btn-primary { background: var(--sda-gold); color: var(--sda-navy); }
+.btn-primary:hover { background: #d4af37; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(201,162,39,0.35); }
 .btn-outline {
   background: transparent; color: var(--sda-white);
-  border: 2px solid rgba(255,255,255,0.3);
+  border: 2px solid rgba(255,255,255,0.35);
 }
 .btn-outline:hover { border-color: var(--sda-gold); color: var(--sda-gold); }
 
@@ -143,21 +141,52 @@ body {
 
 /* ---- FOOTER ---- */
 .footer {
-  background: var(--sda-navy); color: rgba(255,255,255,0.7);
-  padding: 3rem 2rem 1.5rem; text-align: center;
+  background: var(--sda-navy);
+  padding: 3rem 2rem 1.5rem;
   border-top: 3px solid var(--sda-gold);
 }
-.footer-logos { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1.5rem; }
-.footer-logos img { height: 50px; opacity: 0.8; }
-.footer p { font-size: 0.9rem; margin-bottom: 0.5rem; }
-.footer .verse {
-  font-style: italic; color: var(--sda-gold); font-family: var(--font-display);
-  margin-top: 1rem;
+
+/* ---- TOAST NOTIFICATION ---- */
+/* Used by showToast() in main.js */
+.toast-notification {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  padding: 0.875rem 1.5rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: white;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  max-width: 320px;
+}
+.toast-notification.toast-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.toast-info    { background: var(--sda-navy); }
+.toast-success { background: #166534; }
+.toast-warning { background: #92400e; }
+.toast-error   { background: #991b1b; }
+
+/* ---- NO-EVENTS PLACEHOLDER ---- */
+.no-events {
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 2rem;
+  grid-column: 1 / -1;
 }
 
 /* ---- RESPONSIVE ---- */
 @media (max-width: 768px) {
-  .nav-links { display: none; } /* Add hamburger menu logic in JS */
+  /* BUG FIX: `display: none` on .nav-links hides the menu permanently on
+     mobile even after JS adds `.mobile-open`. Removed — visibility is handled
+     via the transform/opacity rules in home.css. */
   .hero { padding-top: 6rem; }
   .hero-cta { flex-direction: column; align-items: center; }
 }
