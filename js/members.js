@@ -1,6 +1,6 @@
 // ============================================================
 //  AMBASSADORS MEMBERS — members.js
-//  Data layer: Supabase (primary) → localStorage → hardcoded
+//  Data layer: Supabase → localStorage cache
 // ============================================================
 
 const ADMIN_PASSWORD = 'ambassadors2026'; // ← change this!
@@ -41,15 +41,15 @@ function toSupabaseRow(m) {
 function fromSupabaseRow(m) {
   return {
     id:          m.id,
-    firstName:   m.first_name,
-    lastName:    m.last_name,
-    role:        m.role,
+    firstName:   m.first_name  || '',
+    lastName:    m.last_name   || '',
+    role:        m.role        || '',
     departments: m.departments || [],
-    joined:      m.joined_year,
-    gift:        m.gift   || '',
-    phone:       m.phone  || '',
-    email:       m.email  || '',
-    bio:         m.bio    || ''
+    joined:      m.joined_year || '',
+    gift:        m.gift        || '',
+    phone:       m.phone       || '',
+    email:       m.email       || '',
+    bio:         m.bio         || ''
   };
 }
 
@@ -67,18 +67,18 @@ async function loadMembers() {
 
       if (error) throw error;
 
-      if (data && data.length > 0) {
-        membersData = data.map(fromSupabaseRow);
-        console.log(`✅ Loaded ${membersData.length} members from Supabase`);
-        return;
-      }
+      membersData = (data || []).map(fromSupabaseRow);
+      saveLocalCache();
+      console.log(`✅ Loaded ${membersData.length} members from Supabase`);
+      return;
+
     } catch (err) {
       console.warn('Supabase load failed:', err.message);
       showToast('Could not reach database — showing cached data', 'error');
     }
   }
 
-  // localStorage fallback (offline cache)
+  // localStorage fallback (offline cache only)
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -88,9 +88,9 @@ async function loadMembers() {
     }
   } catch { /* ignore */ }
 
-  // Last resort — hardcoded data
-  membersData = getHardcodedFallback();
-  console.log('ℹ️ Using hardcoded fallback');
+  // Nothing available
+  membersData = [];
+  console.log('ℹ️ No member data available');
 }
 
 function saveLocalCache() {
@@ -98,22 +98,20 @@ function saveLocalCache() {
 }
 
 // ============================================================
-//  SUPABASE WRITE OPERATIONS
+//  SUPABASE — MEMBERS CRUD
 // ============================================================
 
 async function supabaseInsert(memberObj) {
-  if (!hasSupabase()) return null;
   const { data, error } = await supabaseClient
     .from('members')
     .insert([toSupabaseRow(memberObj)])
     .select()
     .single();
   if (error) throw error;
-  return fromSupabaseRow(data); // returns member with real DB id
+  return fromSupabaseRow(data);
 }
 
 async function supabaseUpdate(id, memberObj) {
-  if (!hasSupabase()) return;
   const { error } = await supabaseClient
     .from('members')
     .update(toSupabaseRow(memberObj))
@@ -121,13 +119,62 @@ async function supabaseUpdate(id, memberObj) {
   if (error) throw error;
 }
 
-async function supabaseDelete(id) {
-  if (!hasSupabase()) return;
+async function supabaseDeleteMember(id) {
   const { error } = await supabaseClient
     .from('members')
     .delete()
     .eq('id', id);
   if (error) throw error;
+}
+
+// ============================================================
+//  CHOIR SYNC — auto-manages choir_members table
+// ============================================================
+
+/**
+ * Called after every member save.
+ * If member is in choir dept  → upsert into choir_members (voice_part stays null until set in choir page)
+ * If member removed from choir → delete from choir_members
+ * Uses member's full name as the link key (first_name + last_name match)
+ */
+async function syncMemberToChoir(member, previousDepts = []) {
+  if (!hasSupabase()) return;
+
+  const isInChoir  = (member.departments || []).includes('choir');
+  const wasInChoir = (previousDepts      || []).includes('choir');
+
+  if (isInChoir) {
+    // Check if they already exist in choir_members
+    const { data: existing } = await supabaseClient
+      .from('choir_members')
+      .select('id, voice_part')
+      .eq('first_name', member.firstName)
+      .eq('last_name',  member.lastName)
+      .maybeSingle();
+
+    if (!existing) {
+      // Add to choir with no voice part assigned yet
+      await supabaseClient
+        .from('choir_members')
+        .insert([{
+          first_name: member.firstName,
+          last_name:  member.lastName,
+          voice_part: null,   // admin assigns this on the choir page
+          role:       'Member'
+        }]);
+      console.log(`✅ ${member.firstName} ${member.lastName} added to choir_members`);
+    }
+    // If they already exist, leave them alone (don't overwrite voice_part/role set by choir admin)
+
+  } else if (wasInChoir && !isInChoir) {
+    // Choir dept was removed — remove from choir_members
+    await supabaseClient
+      .from('choir_members')
+      .delete()
+      .eq('first_name', member.firstName)
+      .eq('last_name',  member.lastName);
+    console.log(`🗑️ ${member.firstName} ${member.lastName} removed from choir_members`);
+  }
 }
 
 // ============================================================
@@ -275,17 +322,12 @@ function adminLogout() {
 function updateAdminUI() {
   const bar      = document.getElementById('adminBar');
   const loginBtn = document.getElementById('adminLoginBtn');
-
   if (bar) {
-    // Force visibility — override any conflicting CSS
     bar.style.cssText = isAdmin
       ? 'display:flex !important; align-items:center; gap:1rem; background:#1a365d; color:white; padding:0.6rem 2rem; font-size:0.85rem; position:relative; z-index:9999;'
       : 'display:none !important;';
   }
-
-  if (loginBtn) {
-    loginBtn.style.display = isAdmin ? 'none' : 'inline-block';
-  }
+  if (loginBtn) loginBtn.style.display = isAdmin ? 'none' : 'inline-block';
 }
 
 // ============================================================
@@ -325,15 +367,11 @@ function populateMemberForm(m) {
   document.getElementById('fEmail').value     = m?.email     || '';
   document.getElementById('fJoined').value    = m?.joined    || new Date().getFullYear();
   document.getElementById('fBio').value       = m?.bio       || '';
-
   ALL_DEPTS.forEach(d => {
     const cb = document.getElementById('fDept_' + d);
     if (cb) cb.checked = m ? (m.departments || []).includes(d) : false;
   });
-
   document.getElementById('memberFormError').textContent = '';
-
-  // Show/hide loading state on save button
   const saveBtn = document.getElementById('memberFormSave');
   if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Member'; }
 }
@@ -352,13 +390,11 @@ async function saveMemberForm() {
   const errEl   = document.getElementById('memberFormError');
   const saveBtn = document.getElementById('memberFormSave');
 
-  // Validate
   if (!firstName || !lastName) { errEl.textContent = 'First and last name are required.'; return; }
   if (!role)                    { errEl.textContent = 'Role is required.'; return; }
   if (departments.length === 0) { errEl.textContent = 'Select at least one department.'; return; }
   errEl.textContent = '';
 
-  // Loading state
   saveBtn.disabled    = true;
   saveBtn.textContent = 'Saving…';
 
@@ -367,22 +403,27 @@ async function saveMemberForm() {
   try {
     if (editingMemberId !== null) {
       // ── UPDATE ──
+      const previousMember = membersData.find(x => x.id === editingMemberId);
+      const previousDepts  = previousMember?.departments || [];
+
       await supabaseUpdate(editingMemberId, memberObj);
 
       const idx = membersData.findIndex(x => x.id === editingMemberId);
       if (idx !== -1) membersData[idx] = { ...membersData[idx], ...memberObj };
 
+      // Sync choir membership based on dept change
+      await syncMemberToChoir(memberObj, previousDepts);
+
       showToast(`${firstName} ${lastName} updated ✓`, 'success');
 
     } else {
       // ── INSERT ──
-      if (hasSupabase()) {
-        const saved = await supabaseInsert(memberObj);
-        membersData.push(saved); // use real DB id
-      } else {
-        const newId = membersData.length > 0 ? Math.max(...membersData.map(x => x.id)) + 1 : 1;
-        membersData.push({ id: newId, ...memberObj });
-      }
+      const saved = await supabaseInsert(memberObj);
+      membersData.push(saved);
+
+      // If choir dept selected, add to choir_members
+      await syncMemberToChoir(saved, []);
+
       showToast(`${firstName} ${lastName} added ✓`, 'success');
     }
 
@@ -392,7 +433,7 @@ async function saveMemberForm() {
 
   } catch (err) {
     console.error('Save failed:', err);
-    errEl.textContent = `Save failed: ${err.message}`;
+    errEl.textContent   = `Save failed: ${err.message}`;
     saveBtn.disabled    = false;
     saveBtn.textContent = 'Save Member';
   }
@@ -408,11 +449,22 @@ async function deleteMember(id) {
   if (!confirm(`Remove ${m.firstName} ${m.lastName} from the members list?\n\nThis cannot be undone.`)) return;
 
   try {
-    await supabaseDelete(id);
+    await supabaseDeleteMember(id);
+
+    // Also remove from choir if they were a choir member
+    if ((m.departments || []).includes('choir') && hasSupabase()) {
+      await supabaseClient
+        .from('choir_members')
+        .delete()
+        .eq('first_name', m.firstName)
+        .eq('last_name',  m.lastName);
+    }
+
     membersData = membersData.filter(x => x.id !== id);
     saveLocalCache();
     renderMembers(currentFilter(), currentSearch());
     showToast(`${m.firstName} ${m.lastName} removed`, 'error');
+
   } catch (err) {
     console.error('Delete failed:', err);
     showToast(`Delete failed: ${err.message}`, 'error');
@@ -444,13 +496,11 @@ function currentSearch() {
 function showToast(msg, type = 'info') {
   const existing = document.getElementById('sdaToast');
   if (existing) existing.remove();
-
   const toast = document.createElement('div');
   toast.id        = 'sdaToast';
   toast.className = `sda-toast sda-toast--${type}`;
   toast.textContent = msg;
   document.body.appendChild(toast);
-
   requestAnimationFrame(() => toast.classList.add('sda-toast--show'));
   setTimeout(() => {
     toast.classList.remove('sda-toast--show');
@@ -474,7 +524,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateAdminUI();
   renderMembers();
 
-  // Filter buttons
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -483,18 +532,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Search
   document.getElementById('memberSearch')?.addEventListener('input',
     debounce(e => renderMembers(currentFilter(), e.target.value), 300));
 
-  // Member detail modal
   document.getElementById('modalClose')?.addEventListener('click', closeMemberModal);
   document.getElementById('memberModal')?.addEventListener('click', e => {
     if (e.target === e.currentTarget || e.target.classList.contains('modal-overlay'))
       closeMemberModal();
   });
 
-  // Form modal
   document.getElementById('memberFormClose')?.addEventListener('click', closeMemberFormModal);
   document.getElementById('memberFormModal')?.addEventListener('click', e => {
     if (e.target === e.currentTarget || e.target.classList.contains('modal-overlay'))
@@ -502,29 +548,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   document.getElementById('memberFormSave')?.addEventListener('click', saveMemberForm);
 
-  // Admin controls
   document.getElementById('adminLoginBtn')?.addEventListener('click', promptAdminLogin);
   document.getElementById('adminLogoutBtn')?.addEventListener('click', adminLogout);
   document.getElementById('adminAddBtn')?.addEventListener('click', openAddModal);
 
-  // Escape key
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') { closeMemberModal(); closeMemberFormModal(); }
   });
 });
-
-// ============================================================
-//  HARDCODED FALLBACK
-// ============================================================
-function getHardcodedFallback() {
-  return [
-    { id:1,firstName:"John",lastName:"Kamau",role:"Youth Leader",departments:["choir","treasury"],joined:"2022",gift:"Leadership",phone:"+254 712 345 678",email:"john.kamau@email.com",bio:"Passionate about youth ministry and financial stewardship." },
-    { id:2,firstName:"Sarah",lastName:"Wanjiku",role:"Choir Director",departments:["choir","media"],joined:"2021",gift:"Music",phone:"+254 723 456 789",email:"sarah.w@email.com",bio:"Gifted vocalist and choir leader. Organizes rehearsals and special music programs." },
-    { id:3,firstName:"Peter",lastName:"Ochieng",role:"Treasurer",departments:["treasury","welfare"],joined:"2023",gift:"Administration",phone:"+254 734 567 890",email:"peter.o@email.com",bio:"Detail-oriented and trustworthy. Manages club finances with integrity." },
-    { id:4,firstName:"Grace",lastName:"Muthoni",role:"Welfare Coordinator",departments:["welfare","ushering"],joined:"2022",gift:"Hospitality",phone:"+254 745 678 901",email:"grace.m@email.com",bio:"Heart for service and community care. Coordinates outreach programs." },
-    { id:5,firstName:"David",lastName:"Mutua",role:"Media Lead",departments:["media","choir"],joined:"2023",gift:"Creativity",phone:"+254 756 789 012",email:"david.m@email.com",bio:"Tech-savvy creative handling sound, visuals, and social media." },
-    { id:6,firstName:"Esther",lastName:"Achieng",role:"Ushering Lead",departments:["ushering","welfare"],joined:"2021",gift:"Service",phone:"+254 767 890 123",email:"esther.a@email.com",bio:"Welcoming and organized. Ensures smooth flow during services." },
-    { id:7,firstName:"Michael",lastName:"Kipchirchir",role:"Sabbath School Teacher",departments:["choir"],joined:"2024",gift:"Teaching",phone:"+254 778 901 234",email:"michael.k@email.com",bio:"Youth Sabbath School teacher with a passion for Bible study." },
-    { id:8,firstName:"Faith",lastName:"Njeri",role:"Events Coordinator",departments:["media","ushering"],joined:"2023",gift:"Organization",phone:"+254 789 012 345",email:"faith.n@email.com",bio:"Plans and coordinates club events, camps, and fellowship activities." }
-  ];
-}

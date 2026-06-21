@@ -1,21 +1,23 @@
 // ============================================================
 //  CHOIR PAGE — choir.js
-//  Data layer: Supabase (primary) → localStorage → hardcoded
+//  Data layer: Supabase → localStorage cache
+//  Members with no voice_part assigned show in "Unassigned" tab
 // ============================================================
 
-const CHOIR_ADMIN_PASSWORD = 'ambassadors2026'; // ← same as members, change if needed
+const CHOIR_ADMIN_PASSWORD = 'ambassadors2026';
 const CHOIR_STORAGE_KEY    = 'sda_choir_data';
 
 const voicePartLabels = {
-  soprano: 'Soprano',
-  alto:    'Alto',
-  tenor:   'Tenor',
-  bass:    'Bass'
+  soprano:    'Soprano',
+  alto:       'Alto',
+  tenor:      'Tenor',
+  bass:       'Bass',
+  unassigned: 'Unassigned'
 };
-const ALL_PARTS = Object.keys(voicePartLabels);
+const VOICE_PARTS = ['soprano', 'alto', 'tenor', 'bass']; // excludes unassigned
 
 // ---- STATE ----
-let choirRoster     = { soprano: [], alto: [], tenor: [], bass: [] };
+let choirRoster     = { soprano: [], alto: [], tenor: [], bass: [], unassigned: [] };
 let isAdmin         = false;
 let editingMemberId = null;
 let activeVoice     = 'soprano';
@@ -29,12 +31,13 @@ function hasSupabase() {
 }
 
 function fromSupabaseRow(m) {
+  const part = (m.voice_part || '').toLowerCase();
   return {
     id:        m.id,
     firstName: m.first_name  || '',
     lastName:  m.last_name   || '',
-    voicePart: (m.voice_part || '').toLowerCase(),
-    role:      m.role        || 'Member'
+    voicePart: VOICE_PARTS.includes(part) ? part : 'unassigned',
+    role:      m.role || 'Member'
   };
 }
 
@@ -42,7 +45,7 @@ function toSupabaseRow(m) {
   return {
     first_name: m.firstName,
     last_name:  m.lastName,
-    voice_part: m.voicePart,
+    voice_part: m.voicePart === 'unassigned' ? null : m.voicePart,
     role:       m.role
   };
 }
@@ -57,51 +60,47 @@ async function loadChoir() {
       const { data, error } = await supabaseClient
         .from('choir_members')
         .select('*')
-        .order('voice_part', { ascending: true })
-        .order('role',       { ascending: false });
+        .order('last_name', { ascending: true });
 
       if (error) throw error;
 
-      if (data && data.length > 0) {
-        buildRosterFromArray(data.map(fromSupabaseRow));
-        saveLocalCache();
-        console.log(`✅ Loaded ${data.length} choir members from Supabase`);
-        return;
-      }
+      buildRosterFromArray((data || []).map(fromSupabaseRow));
+      saveLocalCache();
+      console.log(`✅ Loaded ${(data || []).length} choir members from Supabase`);
+      return;
+
     } catch (err) {
       console.warn('Supabase choir load failed:', err.message);
       showToast('Could not reach database — showing cached data', 'error');
     }
   }
 
-  // localStorage fallback
+  // localStorage fallback (offline cache only)
   try {
     const stored = localStorage.getItem(CHOIR_STORAGE_KEY);
     if (stored) {
-      const flat = JSON.parse(stored);
-      buildRosterFromArray(flat);
-      console.log('ℹ️ Loaded choir from localStorage');
+      buildRosterFromArray(JSON.parse(stored));
+      console.log('ℹ️ Loaded choir from localStorage cache');
       return;
     }
   } catch { /* ignore */ }
 
-  // Hardcoded fallback
-  buildRosterFromArray(getHardcodedFallback());
-  console.log('ℹ️ Using hardcoded choir fallback');
+  // Nothing available
+  buildRosterFromArray([]);
+  console.log('ℹ️ No choir data available');
 }
 
-/** Takes a flat array of members and populates choirRoster by voice part */
 function buildRosterFromArray(members) {
-  choirRoster = { soprano: [], alto: [], tenor: [], bass: [] };
+  choirRoster = { soprano: [], alto: [], tenor: [], bass: [], unassigned: [] };
   members.forEach(m => {
-    const part = (m.voicePart || '').toLowerCase();
-    if (choirRoster[part]) choirRoster[part].push(m);
+    const part = m.voicePart || 'unassigned';
+    if (choirRoster[part] !== undefined) choirRoster[part].push(m);
+    else choirRoster.unassigned.push(m);
   });
 }
 
-/** Returns a single flat array of all choir members */
 function flatRoster() {
-  return ALL_PARTS.flatMap(p => choirRoster[p]);
+  return [...VOICE_PARTS, 'unassigned'].flatMap(p => choirRoster[p]);
 }
 
 function saveLocalCache() {
@@ -113,7 +112,6 @@ function saveLocalCache() {
 // ============================================================
 
 async function supabaseInsert(memberObj) {
-  if (!hasSupabase()) return null;
   const { data, error } = await supabaseClient
     .from('choir_members')
     .insert([toSupabaseRow(memberObj)])
@@ -124,7 +122,6 @@ async function supabaseInsert(memberObj) {
 }
 
 async function supabaseUpdate(id, memberObj) {
-  if (!hasSupabase()) return;
   const { error } = await supabaseClient
     .from('choir_members')
     .update(toSupabaseRow(memberObj))
@@ -133,7 +130,6 @@ async function supabaseUpdate(id, memberObj) {
 }
 
 async function supabaseDelete(id) {
-  if (!hasSupabase()) return;
   const { error } = await supabaseClient
     .from('choir_members')
     .delete()
@@ -153,26 +149,40 @@ function renderVoiceRoster(voice) {
   const members   = choirRoster[voice] || [];
   const partLabel = voicePartLabels[voice] || voice;
 
-  // Update tab counts
-  ALL_PARTS.forEach(p => {
-    const tab = document.querySelector(`.voice-tab[data-voice="${p}"] .tab-count`);
-    if (tab) tab.textContent = `${choirRoster[p].length} member${choirRoster[p].length !== 1 ? 's' : ''}`;
+  // Update tab counts (all tabs including unassigned)
+  [...VOICE_PARTS, 'unassigned'].forEach(p => {
+    const countEl = document.querySelector(`.voice-tab[data-voice="${p}"] .tab-count`);
+    if (countEl) {
+      const n = choirRoster[p].length;
+      countEl.textContent = `${n} member${n !== 1 ? 's' : ''}`;
+    }
   });
 
-  // Update hero member count
-  const countEl = document.querySelector('.c-number[data-count]');
-  if (countEl) countEl.textContent = flatRoster().length;
+  // Update unassigned tab visibility — only show if there are unassigned members
+  const unassignedTab = document.querySelector('.voice-tab[data-voice="unassigned"]');
+  if (unassignedTab) {
+    unassignedTab.style.display = choirRoster.unassigned.length > 0 ? 'flex' : 'none';
+  }
 
+  // Update hero member count (assigned only)
+  const countEl = document.querySelector('.c-number[data-count]');
+  if (countEl) countEl.textContent = VOICE_PARTS.flatMap(p => choirRoster[p]).length;
+
+  // Empty state
   if (members.length === 0) {
     container.innerHTML = `
       <div class="choir-empty">
-        <p>No ${partLabel} members yet.${isAdmin ? ' Use "+ Add Member" to add one.' : ''}</p>
+        <p>No ${partLabel} members yet.
+        ${voice === 'unassigned'
+          ? 'New choir members added from the Members page will appear here until you assign their voice part.'
+          : isAdmin ? `Use "+ Add Member" to add one, or assign voice parts from the <a href="members.html">Members page</a>.` : ''}
+        </p>
       </div>`;
     return;
   }
 
   container.innerHTML = members.map(m => `
-    <div class="choir-member-card">
+    <div class="choir-member-card" style="position:relative;">
       ${isAdmin ? `
         <div class="admin-card-actions" onclick="event.stopPropagation()">
           <button class="admin-card-btn" onclick="openEditModal(${m.id})" title="Edit">✏️</button>
@@ -180,7 +190,14 @@ function renderVoiceRoster(voice) {
         </div>` : ''}
       <div class="cm-avatar">${getInitials(m.firstName, m.lastName)}</div>
       <h4>${escHtml(m.firstName)} ${escHtml(m.lastName)}</h4>
-      <span class="cm-part">${partLabel} &middot; ${escHtml(m.role)}</span>
+      <span class="cm-part">
+        ${voice === 'unassigned'
+          ? '<em style="color:var(--text-muted)">Voice not assigned</em>'
+          : `${partLabel} &middot; ${escHtml(m.role)}`}
+      </span>
+      ${voice === 'unassigned' && isAdmin
+        ? `<button class="assign-voice-btn" onclick="openEditModal(${m.id})">Assign Voice Part</button>`
+        : ''}
     </div>
   `).join('');
 }
@@ -229,7 +246,6 @@ function adminLogout() {
 function updateAdminUI() {
   const bar      = document.getElementById('adminBar');
   const loginBtn = document.getElementById('adminLoginBtn');
-
   if (bar) {
     bar.style.cssText = isAdmin
       ? 'display:flex !important; align-items:center; gap:1rem; background:#1a365d; color:white; padding:0.6rem 2rem; font-size:0.85rem; position:relative; z-index:9999;'
@@ -269,10 +285,9 @@ function closeChoirFormModal() {
 function populateForm(m) {
   document.getElementById('cfFirstName').value = m?.firstName || '';
   document.getElementById('cfLastName').value  = m?.lastName  || '';
-  document.getElementById('cfVoicePart').value = m?.voicePart || activeVoice;
-  document.getElementById('cfRole').value      = m?.role      || 'Member';
+  document.getElementById('cfVoicePart').value = m?.voicePart === 'unassigned' ? '' : (m?.voicePart || '');
+  document.getElementById('cfRole').value      = m?.role || 'Member';
   document.getElementById('choirFormError').textContent = '';
-
   const saveBtn = document.getElementById('choirFormSave');
   if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Member'; }
 }
@@ -280,14 +295,13 @@ function populateForm(m) {
 async function saveChoirForm() {
   const firstName = document.getElementById('cfFirstName').value.trim();
   const lastName  = document.getElementById('cfLastName').value.trim();
-  const voicePart = document.getElementById('cfVoicePart').value;
-  const role      = document.getElementById('cfRole').value.trim() || 'Member';
+  const voicePart = document.getElementById('cfVoicePart').value || 'unassigned';
+  const role      = document.getElementById('cfRole').value || 'Member';
 
   const errEl   = document.getElementById('choirFormError');
   const saveBtn = document.getElementById('choirFormSave');
 
   if (!firstName || !lastName) { errEl.textContent = 'First and last name are required.'; return; }
-  if (!voicePart)              { errEl.textContent = 'Please select a voice part.'; return; }
   errEl.textContent = '';
 
   saveBtn.disabled    = true;
@@ -300,12 +314,11 @@ async function saveChoirForm() {
       // UPDATE
       await supabaseUpdate(editingMemberId, memberObj);
 
-      // Update in local roster
-      ALL_PARTS.forEach(p => {
+      // Remove from old part, add to new part
+      [...VOICE_PARTS, 'unassigned'].forEach(p => {
         const idx = choirRoster[p].findIndex(x => x.id === editingMemberId);
-        if (idx !== -1) choirRoster[p].splice(idx, 1); // remove from old part
+        if (idx !== -1) choirRoster[p].splice(idx, 1);
       });
-      if (!choirRoster[voicePart]) choirRoster[voicePart] = [];
       choirRoster[voicePart].push({ id: editingMemberId, ...memberObj });
 
       showToast(`${firstName} ${lastName} updated ✓`, 'success');
@@ -314,12 +327,10 @@ async function saveChoirForm() {
       // INSERT
       if (hasSupabase()) {
         const saved = await supabaseInsert(memberObj);
-        if (!choirRoster[voicePart]) choirRoster[voicePart] = [];
         choirRoster[voicePart].push(saved);
       } else {
         const all   = flatRoster();
         const newId = all.length > 0 ? Math.max(...all.map(x => x.id)) + 1 : 1;
-        if (!choirRoster[voicePart]) choirRoster[voicePart] = [];
         choirRoster[voicePart].push({ id: newId, ...memberObj });
       }
       showToast(`${firstName} ${lastName} added ✓`, 'success');
@@ -328,9 +339,12 @@ async function saveChoirForm() {
     saveLocalCache();
     closeChoirFormModal();
 
-    // Switch to the tab of the saved member
-    document.querySelectorAll('.voice-tab').forEach(t => t.classList.remove('active'));
-    document.querySelector(`.voice-tab[data-voice="${voicePart}"]`)?.classList.add('active');
+    // Switch to the saved member's tab
+    const targetTab = document.querySelector(`.voice-tab[data-voice="${voicePart}"]`);
+    if (targetTab) {
+      document.querySelectorAll('.voice-tab').forEach(t => t.classList.remove('active'));
+      targetTab.classList.add('active');
+    }
     renderVoiceRoster(voicePart);
 
   } catch (err) {
@@ -348,16 +362,16 @@ async function saveChoirForm() {
 async function deleteChoirMember(id) {
   const m = flatRoster().find(x => x.id === id);
   if (!m) return;
-  if (!confirm(`Remove ${m.firstName} ${m.lastName} from the choir?\n\nThis cannot be undone.`)) return;
+  if (!confirm(`Remove ${m.firstName} ${m.lastName} from the choir?\n\nThis will not remove them from the Members page.`)) return;
 
   try {
     await supabaseDelete(id);
-    ALL_PARTS.forEach(p => {
+    [...VOICE_PARTS, 'unassigned'].forEach(p => {
       choirRoster[p] = choirRoster[p].filter(x => x.id !== id);
     });
     saveLocalCache();
     renderVoiceRoster(activeVoice);
-    showToast(`${m.firstName} ${m.lastName} removed`, 'error');
+    showToast(`${m.firstName} ${m.lastName} removed from choir`, 'error');
   } catch (err) {
     console.error('Delete failed:', err);
     showToast(`Delete failed: ${err.message}`, 'error');
@@ -369,18 +383,17 @@ async function deleteChoirMember(id) {
 // ============================================================
 
 function animateCounters() {
-  const counters  = document.querySelectorAll('.c-number[data-count]');
-  const observer  = new IntersectionObserver(entries => {
+  const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         const el  = entry.target;
-        const end = flatRoster().length || parseInt(el.dataset.count) || 0;
+        const end = VOICE_PARTS.flatMap(p => choirRoster[p]).length || parseInt(el.dataset.count) || 0;
         animateCount(el, end);
         observer.unobserve(el);
       }
     });
   }, { threshold: 0.5 });
-  counters.forEach(c => observer.observe(c));
+  document.querySelectorAll('.c-number[data-count]').forEach(c => observer.observe(c));
 }
 
 function animateCount(el, target) {
@@ -389,7 +402,7 @@ function animateCount(el, target) {
   const timer = setInterval(() => {
     current += step;
     if (current >= target) { el.textContent = target; clearInterval(timer); }
-    else                     el.textContent = current;
+    else el.textContent = current;
   }, 30);
 }
 
@@ -423,17 +436,17 @@ function showToast(msg, type = 'info') {
 }
 
 // ============================================================
-//  REPERTOIRE DATA (static — edit here)
+//  REPERTOIRE DATA
 // ============================================================
 const repertoireData = [
-  { title: "Tukutendereza",          type: "hymn",    typeLabel: "Hymn",    description: "Traditional Swahili worship song" },
-  { title: "Amazing Grace",          type: "hymn",    typeLabel: "Hymn",    description: "Classic gospel hymn arrangement" },
-  { title: "Hakuna Mungu Kama Wewe", type: "praise",  typeLabel: "Praise",  description: "Contemporary Swahili praise" },
-  { title: "How Great Thou Art",     type: "hymn",    typeLabel: "Hymn",    description: "Grand worship anthem" },
-  { title: "Kuna Siku",              type: "special", typeLabel: "Special", description: "Special music for divine service" },
-  { title: "It Is Well",             type: "hymn",    typeLabel: "Hymn",    description: "Peaceful hymn arrangement" },
-  { title: "Mungu Yu Mwema",         type: "praise",  typeLabel: "Praise",  description: "Upbeat praise and worship" },
-  { title: "Great Is Thy Faithfulness", type: "hymn", typeLabel: "Hymn",   description: "Thanksgiving hymn" }
+  { title: "Tukutendereza",             type: "hymn",    typeLabel: "Hymn",    description: "Traditional Swahili worship song" },
+  { title: "Amazing Grace",             type: "hymn",    typeLabel: "Hymn",    description: "Classic gospel hymn arrangement" },
+  { title: "Hakuna Mungu Kama Wewe",    type: "praise",  typeLabel: "Praise",  description: "Contemporary Swahili praise" },
+  { title: "How Great Thou Art",        type: "hymn",    typeLabel: "Hymn",    description: "Grand worship anthem" },
+  { title: "Kuna Siku",                 type: "special", typeLabel: "Special", description: "Special music for divine service" },
+  { title: "It Is Well",                type: "hymn",    typeLabel: "Hymn",    description: "Peaceful hymn arrangement" },
+  { title: "Mungu Yu Mwema",            type: "praise",  typeLabel: "Praise",  description: "Upbeat praise and worship" },
+  { title: "Great Is Thy Faithfulness", type: "hymn",    typeLabel: "Hymn",    description: "Thanksgiving hymn" }
 ];
 
 // ============================================================
@@ -466,45 +479,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   document.getElementById('choirFormSave')?.addEventListener('click', saveChoirForm);
 
-  // Admin controls
+  // Admin
   document.getElementById('adminLoginBtn')?.addEventListener('click', promptAdminLogin);
   document.getElementById('adminLogoutBtn')?.addEventListener('click', adminLogout);
   document.getElementById('adminAddBtn')?.addEventListener('click', openAddModal);
 
-  // Escape key
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeChoirFormModal();
   });
 });
-
-// ============================================================
-//  HARDCODED FALLBACK
-// ============================================================
-function getHardcodedFallback() {
-  return [
-    { id:1,  firstName:"Sarah",   lastName:"Wanjiku",    voicePart:"soprano", role:"Section Leader" },
-    { id:2,  firstName:"Grace",   lastName:"Muthoni",    voicePart:"soprano", role:"Member" },
-    { id:3,  firstName:"Faith",   lastName:"Njeri",      voicePart:"soprano", role:"Member" },
-    { id:4,  firstName:"Mary",    lastName:"Atieno",     voicePart:"soprano", role:"Member" },
-    { id:5,  firstName:"Joyce",   lastName:"Wambui",     voicePart:"soprano", role:"Member" },
-    { id:6,  firstName:"Linda",   lastName:"Akinyi",     voicePart:"soprano", role:"Member" },
-    { id:7,  firstName:"Esther",  lastName:"Achieng",    voicePart:"alto",    role:"Section Leader" },
-    { id:8,  firstName:"Ruth",    lastName:"Mwangi",     voicePart:"alto",    role:"Member" },
-    { id:9,  firstName:"Diana",   lastName:"Kemunto",    voicePart:"alto",    role:"Member" },
-    { id:10, firstName:"Cynthia", lastName:"Omondi",     voicePart:"alto",    role:"Member" },
-    { id:11, firstName:"Ann",     lastName:"Wairimu",    voicePart:"alto",    role:"Member" },
-    { id:12, firstName:"Beatrice",lastName:"Nduku",      voicePart:"alto",    role:"Member" },
-    { id:13, firstName:"Michael", lastName:"Kipchirchir",voicePart:"tenor",   role:"Section Leader" },
-    { id:14, firstName:"David",   lastName:"Mutua",      voicePart:"tenor",   role:"Member" },
-    { id:15, firstName:"James",   lastName:"Otieno",     voicePart:"tenor",   role:"Member" },
-    { id:16, firstName:"Paul",    lastName:"Karanja",    voicePart:"tenor",   role:"Member" },
-    { id:17, firstName:"Peter",   lastName:"Ochieng",    voicePart:"tenor",   role:"Member" },
-    { id:18, firstName:"John",    lastName:"Kamau",      voicePart:"tenor",   role:"Member" },
-    { id:19, firstName:"Daniel",  lastName:"Mwangi",     voicePart:"bass",    role:"Section Leader" },
-    { id:20, firstName:"Joseph",  lastName:"Kibet",      voicePart:"bass",    role:"Member" },
-    { id:21, firstName:"Samuel",  lastName:"Ndungu",     voicePart:"bass",    role:"Member" },
-    { id:22, firstName:"Stephen", lastName:"Oduor",      voicePart:"bass",    role:"Member" },
-    { id:23, firstName:"Mark",    lastName:"Wekesa",     voicePart:"bass",    role:"Member" },
-    { id:24, firstName:"Simon",   lastName:"Kiprono",    voicePart:"bass",    role:"Member" }
-  ];
-}
