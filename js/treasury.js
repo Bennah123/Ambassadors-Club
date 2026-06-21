@@ -1,24 +1,16 @@
-const fallbackContributionsData = [
-  { id: 1, date: '2026-06-14', member: 'John Kamau', type: 'sabbath', amount: 500, method: 'mpesa', status: 'confirmed', ref: 'MPESA12345' },
-  { id: 2, date: '2026-06-14', member: 'Sarah Wanjiku', type: 'tithe', amount: 2000, method: 'mpesa', status: 'confirmed', ref: 'MPESA12346' },
-  { id: 3, date: '2026-06-07', member: 'Peter Ochieng', type: 'camp', amount: 1500, method: 'cash', status: 'confirmed', ref: 'CASH001' },
-  { id: 4, date: '2026-06-07', member: 'Grace Muthoni', type: 'welfare', amount: 300, method: 'mpesa', status: 'confirmed', ref: 'MPESA12347' },
-  { id: 5, date: '2026-05-31', member: 'David Mutua', type: 'sabbath', amount: 400, method: 'cash', status: 'confirmed', ref: 'CASH002' },
-  { id: 6, date: '2026-05-31', member: 'Esther Achieng', type: 'tithe', amount: 1500, method: 'bank', status: 'pending', ref: 'BANK001' },
-  { id: 7, date: '2026-05-24', member: 'Michael Kipchirchir', type: 'building', amount: 1000, method: 'mpesa', status: 'confirmed', ref: 'MPESA12348' },
-  { id: 8, date: '2026-05-24', member: 'Faith Njeri', type: 'sabbath', amount: 600, method: 'mpesa', status: 'confirmed', ref: 'MPESA12349' },
-  { id: 9, date: '2026-05-17', member: 'John Kamau', type: 'camp', amount: 2000, method: 'mpesa', status: 'confirmed', ref: 'MPESA12350' },
-  { id: 10, date: '2026-05-17', member: 'Sarah Wanjiku', type: 'welfare', amount: 500, method: 'cash', status: 'confirmed', ref: 'CASH003' }
-];
+// ============================================================
+//  TREASURY.JS — SDA Embakasi Central Ambassadors Club
+//  Admin PIN: 0000 (change ADMIN_PIN constant below)
+// ============================================================
 
-// ---- ACTIVE DATA ----
-let contributionsData = [...fallbackContributionsData];
-let isSupabaseConnected = false;
+const ADMIN_PIN = '0000';
 
+// ---- LABELS ----
 const typeLabels = {
   sabbath: 'Sabbath Offering',
   tithe: 'Tithe',
-  camp: 'Camp Fund',
+  camp: 'Camp Meeting',
+  recording: 'Recording',
   building: 'Building Fund',
   welfare: 'Welfare',
   other: 'Other'
@@ -30,406 +22,812 @@ const methodLabels = {
   bank: 'Bank Transfer'
 };
 
-const memberList = [
-  'John Kamau', 'Sarah Wanjiku', 'Peter Ochieng', 'Grace Muthoni',
-  'David Mutua', 'Esther Achieng', 'Michael Kipchirchir', 'Faith Njeri'
-];
+// ---- STATE ----
+let contributionsData = [];
+let categoriesData = [];   // from contribution_categories table
+let membersData = [];       // from members table
+let isSupabaseConnected = false;
+let isAdmin = false;
+let activeCategoryId = null; // null = "All Contributions" view
 
-// ---- LOAD FROM SUPABASE ----
-async function loadContributionsFromSupabase() {
-  if (typeof supabaseClient === 'undefined') {
-    console.log('Supabase not configured. Using fallback data.');
-    return false;
+// ---- PAGINATION ----
+const PAGE_SIZE = 10;
+let currentPage = 1;
+
+// ============================================================
+//  SUPABASE LOADERS
+// ============================================================
+
+async function loadMembers() {
+  if (typeof supabaseClient === 'undefined') return;
+  try {
+    const { data, error } = await supabaseClient
+      .from('members')
+      .select('id, first_name, last_name')
+      .order('first_name', { ascending: true });
+    if (error) throw error;
+    membersData = (data || []).map(m => ({
+      id: m.id,
+      name: `${m.first_name} ${m.last_name}`.trim()
+    }));
+  } catch (err) {
+    console.warn('Could not load members:', err.message);
   }
+}
 
+async function loadCategories() {
+  if (typeof supabaseClient === 'undefined') return;
+  try {
+    const { data, error } = await supabaseClient
+      .from('contribution_categories')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    categoriesData = data || [];
+  } catch (err) {
+    console.warn('Could not load categories:', err.message);
+    // Fallback built-in categories so UI isn't empty
+    categoriesData = [
+      { id: 'sabbath', name: 'Sabbath Offering', description: 'Weekly Sabbath collections' },
+      { id: 'tithe', name: 'Tithe', description: 'Member tithes' },
+      { id: 'camp', name: 'Camp Meeting', description: 'Annual camp fund' },
+      { id: 'recording', name: 'Recording', description: 'Studio & recording costs' },
+      { id: 'building', name: 'Building Fund', description: 'Church building project' },
+      { id: 'welfare', name: 'Welfare', description: 'Member welfare support' },
+    ];
+  }
+}
+
+async function loadContributions() {
+  if (typeof supabaseClient === 'undefined') {
+    console.log('Supabase not configured — using empty state.');
+    return;
+  }
   try {
     const { data, error } = await supabaseClient
       .from('contributions')
       .select('*')
       .order('contribution_date', { ascending: false });
-
     if (error) throw error;
-
-    if (data && data.length > 0) {
-      contributionsData = data.map(c => ({
-        id: c.id,
-        date: c.contribution_date,
-        member: c.member_name,
-        type: c.contribution_type,
-        amount: c.amount,
-        method: c.payment_method,
-        status: c.status,
-        ref: c.reference || 'N/A'
-      }));
-      isSupabaseConnected = true;
-      console.log(`✅ Loaded ${data.length} contributions from Supabase`);
-      return true;
-    }
+    contributionsData = (data || []).map(c => ({
+      id: c.id,
+      date: c.contribution_date,
+      member: c.member_name,
+      type: c.contribution_type,
+      categoryId: c.category_id || c.contribution_type,
+      amount: c.amount,
+      method: c.payment_method,
+      status: c.status,
+      ref: c.reference || 'N/A',
+      notes: c.notes || ''
+    }));
+    isSupabaseConnected = true;
+    console.log(`✅ Loaded ${contributionsData.length} contributions`);
   } catch (err) {
-    console.warn('Supabase fetch failed:', err.message);
+    console.warn('Supabase contributions fetch failed:', err.message);
   }
-
-  return false;
 }
 
-// ---- RENDER CONTRIBUTIONS TABLE ----
-function renderContributions(filterType = 'all', filterMonth = 'all') {
-  const tbody = document.getElementById('contributionsTableBody');
-  if (!tbody) return;
+// ============================================================
+//  DATE HELPER (fixes UTC→EAT shift bug)
+// ============================================================
+function formatDate(dateStr) {
+  // Parse as local date to avoid UTC midnight → previous day in EAT (UTC+3)
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+// ============================================================
+//  SUMMARY CARDS  (all computed from live data)
+// ============================================================
+function updateSummaryCards() {
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const lastMonth = (() => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  })();
+
+  const total = contributionsData.reduce((s, c) => s + c.amount, 0);
+
+  const thisMonthIn = contributionsData
+    .filter(c => c.date.startsWith(thisMonth) && c.status === 'confirmed')
+    .reduce((s, c) => s + c.amount, 0);
+
+  const lastMonthIn = contributionsData
+    .filter(c => c.date.startsWith(lastMonth) && c.status === 'confirmed')
+    .reduce((s, c) => s + c.amount, 0);
+
+  const uniqueContributors = new Set(
+    contributionsData.filter(c => c.status === 'confirmed').map(c => c.member)
+  ).size;
+  const totalMembers = membersData.length || '—';
+
+  const inTrend = lastMonthIn > 0
+    ? Math.round(((thisMonthIn - lastMonthIn) / lastMonthIn) * 100)
+    : null;
+
+  set('currentBalance', `KES ${total.toLocaleString()}`);
+  set('monthIncome', `KES ${thisMonthIn.toLocaleString()}`);
+  set('activeContributors', `${uniqueContributors} / ${totalMembers}`);
+
+  const trendEl = document.getElementById('incomeTrend');
+  if (trendEl && inTrend !== null) {
+    trendEl.textContent = `${inTrend >= 0 ? '+' : ''}${inTrend}% vs last month`;
+    trendEl.className = `t-trend ${inTrend >= 0 ? 't-up' : 't-down'}`;
+  }
+
+  // YTD quick stats
+  const ytdTotal = contributionsData
+    .filter(c => c.date.startsWith(String(now.getFullYear())))
+    .reduce((s, c) => s + c.amount, 0);
+  set('ytdTotal', `KES ${ytdTotal.toLocaleString()}`);
+
+  // Per-category totals in quick stats
+  categoriesData.forEach(cat => {
+    const catTotal = contributionsData
+      .filter(c => (c.categoryId === cat.id || c.type === cat.id))
+      .reduce((s, c) => s + c.amount, 0);
+    const el = document.getElementById(`qs-cat-${cat.id}`);
+    if (el) el.textContent = `KES ${catTotal.toLocaleString()}`;
+  });
+}
+
+function set(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+// ============================================================
+//  CATEGORY TABS
+// ============================================================
+function renderCategoryTabs() {
+  const container = document.getElementById('categoryTabs');
+  if (!container) return;
+
+  const tabs = [{ id: null, name: 'All' }, ...categoriesData];
+
+  container.innerHTML = tabs.map(cat => `
+    <button class="cat-tab ${activeCategoryId === cat.id ? 'active' : ''}"
+            data-catid="${cat.id ?? ''}"
+            onclick="switchCategory(${cat.id === null ? 'null' : `'${cat.id}'`})">
+      ${cat.name}
+    </button>
+  `).join('');
+}
+
+function switchCategory(catId) {
+  activeCategoryId = catId === '' ? null : catId;
+  currentPage = 1;
+  renderCategoryTabs();
+  renderContributions();
+}
+
+// ============================================================
+//  CONTRIBUTIONS TABLE
+// ============================================================
+function getFilteredContributions() {
+  const filterType = document.getElementById('filterType')?.value || 'all';
+  const filterMonth = document.getElementById('filterMonth')?.value || 'all';
 
   let filtered = [...contributionsData];
 
-  // Apply type filter
-  if (filterType !== 'all') {
-    filtered = filtered.filter(c => c.type === filterType);
+  if (activeCategoryId !== null) {
+    filtered = filtered.filter(c =>
+      c.categoryId === activeCategoryId || c.type === activeCategoryId
+    );
   }
-
-  // Apply month filter
+  if (filterType !== 'all') {
+    filtered = filtered.filter(c => c.type === filterType || c.categoryId === filterType);
+  }
   if (filterMonth !== 'all') {
     filtered = filtered.filter(c => c.date.startsWith(filterMonth));
   }
 
-  // Sort by date descending
   filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+  return filtered;
+}
 
-  tbody.innerHTML = filtered.map(c => `
-    <tr>
-      <td>${formatDate(c.date)}</td>
-      <td><strong>${c.member}</strong></td>
-      <td>
-        <span class="type-badge type-${c.type}">${typeLabels[c.type]}</span>
-      </td>
-      <td class="text-right">KES ${c.amount.toLocaleString()}</td>
-      <td>${methodLabels[c.method]}</td>
-      <td>
-        <span class="status-badge status-${c.status}">${c.status}</span>
-      </td>
-      <td>
-        <button class="action-btn" title="View Details" onclick="viewContribution(${c.id})">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-          </svg>
-        </button>
-      </td>
-    </tr>
-  `).join('');
+function renderContributions() {
+  const filtered = getFilteredContributions();
+  const tbody = document.getElementById('contributionsTableBody');
+  if (!tbody) return;
 
-  // Update summary cards (simple calculation)
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageItems = filtered.slice(start, start + PAGE_SIZE);
+
+  if (pageItems.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="empty-state">
+          No contributions found. ${isAdmin ? 'Add one using the button above.' : ''}
+        </td>
+      </tr>`;
+  } else {
+    tbody.innerHTML = pageItems.map(c => {
+      const catName = getCategoryName(c.categoryId || c.type);
+      return `
+        <tr>
+          <td>${formatDate(c.date)}</td>
+          <td><strong>${c.member}</strong></td>
+          <td><span class="type-badge">${catName}</span></td>
+          <td class="text-right">KES ${c.amount.toLocaleString()}</td>
+          <td>${methodLabels[c.method] || c.method}</td>
+          <td><span class="status-badge status-${c.status}">${c.status}</span></td>
+          <td>
+            <button class="action-btn" title="View Details" onclick="openDetailModal(${JSON.stringify(c.id)})">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+            ${isAdmin ? `
+            <button class="action-btn action-danger" title="Delete" onclick="deleteContribution(${JSON.stringify(c.id)})">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+                <path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+              </svg>
+            </button>` : ''}
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  renderPagination(filtered.length);
   updateSummaryCards();
 }
 
-function updateSummaryCards() {
-  const total = contributionsData.reduce((sum, c) => sum + c.amount, 0);
-  const confirmed = contributionsData.filter(c => c.status === 'confirmed').length;
-
-  const balanceEl = document.getElementById('currentBalance');
-  if (balanceEl) balanceEl.textContent = `KES ${total.toLocaleString()}`;
-
-  const contributorsEl = document.getElementById('activeContributors');
-  if (contributorsEl) contributorsEl.textContent = `${confirmed} / ${contributionsData.length}`;
+function getCategoryName(catId) {
+  const cat = categoriesData.find(c => c.id === catId);
+  if (cat) return cat.name;
+  return typeLabels[catId] || catId || 'Other';
 }
 
-function formatDate(dateStr) {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' });
-}
+// ============================================================
+//  PAGINATION
+// ============================================================
+function renderPagination(totalItems) {
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+  const start = Math.min((currentPage - 1) * PAGE_SIZE + 1, totalItems);
+  const end = Math.min(currentPage * PAGE_SIZE, totalItems);
 
-// ---- VIEW CONTRIBUTION DETAIL ----
-function viewContribution(id) {
-  const c = contributionsData.find(x => x.id === id);
-  if (!c) return;
+  set('pageInfo', `Showing ${totalItems === 0 ? 0 : start}–${end} of ${totalItems} records`);
 
-  alert(`Contribution Details:
+  const container = document.getElementById('pageButtons');
+  if (!container) return;
 
-Member: ${c.member}
-Date: ${formatDate(c.date)}
-Type: ${typeLabels[c.type]}
-Amount: KES ${c.amount.toLocaleString()}
-Method: ${methodLabels[c.method]}
-Reference: ${c.ref}
-Status: ${c.status.toUpperCase()}`);
-}
+  let buttons = '';
+  buttons += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goPage(${currentPage - 1})">&#8592;</button>`;
 
-// ---- INITIALIZE CHARTS ----
-function initCharts() {
-  // Line chart - contributions trend
-  const ctx1 = document.getElementById('contributionChart');
-  if (ctx1) {
-    new Chart(ctx1, {
-      type: 'line',
-      data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-        datasets: [{
-          label: 'Contributions (KES)',
-          data: [32000, 28000, 35000, 31000, 42000, 38500],
-          borderColor: '#1a365d',
-          backgroundColor: 'rgba(26, 54, 93, 0.08)',
-          fill: true,
-          tension: 0.4,
-          pointBackgroundColor: '#c9a227',
-          pointBorderColor: '#1a365d',
-          pointBorderWidth: 2,
-          pointRadius: 5,
-          pointHoverRadius: 7
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            grid: { color: 'rgba(0,0,0,0.05)' },
-            ticks: {
-              callback: function(value) {
-                return 'KES ' + (value / 1000) + 'K';
-              }
-            }
-          },
-          x: {
-            grid: { display: false }
-          }
-        }
-      }
-    });
-  }
-
-  // Doughnut chart - expense breakdown
-  const ctx2 = document.getElementById('expenseChart');
-  if (ctx2) {
-    const expenseData = {
-      labels: ['Camp', 'Welfare', 'Events', 'Materials', 'Other'],
-      datasets: [{
-        data: [35, 20, 25, 12, 8],
-        backgroundColor: ['#1a365d', '#c9a227', '#8b1538', '#6b8f71', '#94a3b8'],
-        borderWidth: 0,
-        hoverOffset: 8
-      }]
-    };
-
-    new Chart(ctx2, {
-      type: 'doughnut',
-      data: expenseData,
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '65%',
-        plugins: {
-          legend: { display: false }
-        }
-      }
-    });
-
-    // Custom legend
-    const legendContainer = document.getElementById('expenseLegend');
-    if (legendContainer) {
-      const colors = ['#1a365d', '#c9a227', '#8b1538', '#6b8f71', '#94a3b8'];
-      legendContainer.innerHTML = expenseData.labels.map((label, i) => `
-        <div class="legend-item">
-          <span class="legend-dot" style="background: ${colors[i]}"></span>
-          <span>${label} (${expenseData.datasets[0].data[i]}%)</span>
-        </div>
-      `).join('');
+  for (let i = 1; i <= totalPages; i++) {
+    if (totalPages <= 7 || i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+      buttons += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+    } else if (Math.abs(i - currentPage) === 2) {
+      buttons += `<span class="page-ellipsis">…</span>`;
     }
   }
+
+  buttons += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goPage(${currentPage + 1})">&#8594;</button>`;
+  container.innerHTML = buttons;
 }
 
-// ---- POPULATE MEMBER SELECT ----
-function populateMemberSelect() {
-  const select = document.getElementById('contribMember');
-  if (!select) return;
+function goPage(n) {
+  currentPage = n;
+  renderContributions();
+  document.getElementById('contributionsTable')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
-  // Clear existing options except first
-  while (select.options.length > 1) {
-    select.remove(1);
+// ============================================================
+//  CHARTS
+// ============================================================
+function initCharts() {
+  renderTrendChart();
+  renderExpenseChart();
+}
+
+function renderTrendChart() {
+  const ctx = document.getElementById('contributionChart');
+  if (!ctx) return;
+
+  // Build last-6-months labels + totals from real data
+  const months = [];
+  const totals = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const label = d.toLocaleDateString('en-KE', { month: 'short' });
+    const sum = contributionsData
+      .filter(c => c.date.startsWith(key) && c.status === 'confirmed')
+      .reduce((s, c) => s + c.amount, 0);
+    months.push(label);
+    totals.push(sum);
   }
 
-  memberList.forEach(member => {
-    const option = document.createElement('option');
-    option.value = member;
-    option.textContent = member;
-    select.appendChild(option);
+  if (window._trendChart) window._trendChart.destroy();
+  window._trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [{
+        label: 'Contributions (KES)',
+        data: totals,
+        borderColor: '#1a365d',
+        backgroundColor: 'rgba(26,54,93,0.08)',
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#c9a227',
+        pointBorderColor: '#1a365d',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: { callback: v => 'KES ' + (v / 1000).toFixed(0) + 'K' }
+        },
+        x: { grid: { display: false } }
+      }
+    }
   });
 }
 
-// ---- SET DEFAULT DATE ----
-function setDefaultDate() {
-  const dateInput = document.getElementById('contribDate');
-  if (dateInput) {
-    dateInput.valueAsDate = new Date();
+function renderExpenseChart() {
+  const ctx = document.getElementById('expenseChart');
+  if (!ctx) return;
+
+  const colors = ['#1a365d','#c9a227','#8b1538','#6b8f71','#94a3b8','#e07b39','#5b4fcf'];
+  const labels = [];
+  const values = [];
+
+  categoriesData.forEach((cat, i) => {
+    const total = contributionsData
+      .filter(c => (c.categoryId === cat.id || c.type === cat.id) && c.status === 'confirmed')
+      .reduce((s, c) => s + c.amount, 0);
+    if (total > 0) {
+      labels.push(cat.name);
+      values.push(total);
+    }
+  });
+
+  if (labels.length === 0) {
+    labels.push('No data yet');
+    values.push(1);
+  }
+
+  if (window._expChart) window._expChart.destroy();
+  window._expChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: colors.slice(0, labels.length),
+        borderWidth: 0,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  const legendEl = document.getElementById('expenseLegend');
+  if (legendEl) {
+    legendEl.innerHTML = labels.map((label, i) => `
+      <div class="legend-item">
+        <span class="legend-dot" style="background:${colors[i]}"></span>
+        <span>${label}</span>
+      </div>
+    `).join('');
   }
 }
 
-// ---- MODAL FUNCTIONS ----
+// ============================================================
+//  QUICK STATS — dynamic category rows
+// ============================================================
+function renderQuickStats() {
+  const grid = document.getElementById('quickStatsGrid');
+  if (!grid) return;
+
+  const now = new Date();
+  const ytdTotal = contributionsData
+    .filter(c => c.date.startsWith(String(now.getFullYear())))
+    .reduce((s, c) => s + c.amount, 0);
+
+  let html = `
+    <div class="qs-item">
+      <span class="qs-label">Total Collected (YTD)</span>
+      <span class="qs-value" id="ytdTotal">KES ${ytdTotal.toLocaleString()}</span>
+    </div>`;
+
+  categoriesData.forEach(cat => {
+    const total = contributionsData
+      .filter(c => (c.categoryId === cat.id || c.type === cat.id))
+      .reduce((s, c) => s + c.amount, 0);
+    html += `
+      <div class="qs-item">
+        <span class="qs-label">${cat.name}</span>
+        <span class="qs-value" id="qs-cat-${cat.id}">KES ${total.toLocaleString()}</span>
+      </div>`;
+  });
+
+  grid.innerHTML = html;
+}
+
+// ============================================================
+//  POPULATE SELECTS
+// ============================================================
+function populateMemberSelect() {
+  const select = document.getElementById('contribMember');
+  if (!select) return;
+  while (select.options.length > 1) select.remove(1);
+
+  if (membersData.length > 0) {
+    membersData.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.name;
+      opt.textContent = m.name;
+      select.appendChild(opt);
+    });
+  }
+}
+
+function populateTypeSelect() {
+  const select = document.getElementById('contribType');
+  if (!select) return;
+  while (select.options.length > 1) select.remove(1);
+  categoriesData.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat.id;
+    opt.textContent = cat.name;
+    select.appendChild(opt);
+  });
+}
+
+function populateFilterType() {
+  const select = document.getElementById('filterType');
+  if (!select) return;
+  while (select.options.length > 1) select.remove(1);
+  categoriesData.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat.id;
+    opt.textContent = cat.name;
+    select.appendChild(opt);
+  });
+}
+
+function setDefaultDate() {
+  const el = document.getElementById('contribDate');
+  if (el) {
+    const now = new Date();
+    el.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  }
+}
+
+// ============================================================
+//  ADMIN MODE
+// ============================================================
+function promptAdminLogin() {
+  const modal = document.getElementById('adminPinModal');
+  if (modal) {
+    modal.classList.add('active');
+    document.getElementById('adminPinInput')?.focus();
+  }
+}
+
+function closeAdminPinModal() {
+  const modal = document.getElementById('adminPinModal');
+  if (modal) modal.classList.remove('active');
+  const input = document.getElementById('adminPinInput');
+  if (input) input.value = '';
+  const err = document.getElementById('pinError');
+  if (err) err.textContent = '';
+}
+
+function submitAdminPin() {
+  const input = document.getElementById('adminPinInput');
+  const err = document.getElementById('pinError');
+  if (!input) return;
+
+  if (input.value === ADMIN_PIN) {
+    isAdmin = true;
+    closeAdminPinModal();
+    applyAdminUI();
+  } else {
+    if (err) err.textContent = 'Incorrect PIN. Try again.';
+    input.value = '';
+    input.focus();
+  }
+}
+
+function logoutAdmin() {
+  isAdmin = false;
+  applyAdminUI();
+}
+
+function applyAdminUI() {
+  // Admin button label
+  const adminBtn = document.getElementById('adminToggleBtn');
+  if (adminBtn) {
+    adminBtn.textContent = isAdmin ? '🔓 Admin: ON' : '🔒 Admin';
+    adminBtn.classList.toggle('admin-active', isAdmin);
+  }
+
+  // Show/hide admin-only elements
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = isAdmin ? '' : 'none';
+  });
+
+  // Re-render table to show/hide delete buttons
+  renderContributions();
+}
+
+// ============================================================
+//  MODALS — CONTRIBUTION DETAIL
+// ============================================================
+function openDetailModal(id) {
+  const c = contributionsData.find(x => x.id === id);
+  if (!c) return;
+
+  set('detailMember', c.member);
+  set('detailDate', formatDate(c.date));
+  set('detailType', getCategoryName(c.categoryId || c.type));
+  set('detailAmount', `KES ${c.amount.toLocaleString()}`);
+  set('detailMethod', methodLabels[c.method] || c.method);
+  set('detailRef', c.ref || 'N/A');
+  set('detailStatus', c.status.toUpperCase());
+  set('detailNotes', c.notes || '—');
+
+  const statusEl = document.getElementById('detailStatusBadge');
+  if (statusEl) {
+    statusEl.className = `status-badge status-${c.status}`;
+    statusEl.textContent = c.status;
+  }
+
+  document.getElementById('detailModal')?.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDetailModal() {
+  document.getElementById('detailModal')?.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+// ============================================================
+//  MODALS — ADD CONTRIBUTION
+// ============================================================
 function openModal() {
-  const modal = document.getElementById('addContribModal');
-  modal.classList.add('active');
+  if (!isAdmin) { promptAdminLogin(); return; }
+  document.getElementById('addContribModal')?.classList.add('active');
   document.body.style.overflow = 'hidden';
 }
 
 function closeModal() {
-  const modal = document.getElementById('addContribModal');
-  modal.classList.remove('active');
+  document.getElementById('addContribModal')?.classList.remove('active');
   document.body.style.overflow = '';
-  document.getElementById('contribForm').reset();
+  document.getElementById('contribForm')?.reset();
   setDefaultDate();
 }
 
-// ---- SAVE TO SUPABASE (if connected) ----
-async function saveContributionToSupabase(data) {
-  if (typeof supabaseClient === 'undefined' || !isSupabaseConnected) {
-    return false; // Will use local data only
-  }
+// ============================================================
+//  MODALS — ADD CATEGORY (admin only)
+// ============================================================
+function openCategoryModal() {
+  document.getElementById('addCategoryModal')?.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
 
+function closeCategoryModal() {
+  document.getElementById('addCategoryModal')?.classList.remove('active');
+  document.body.style.overflow = '';
+  document.getElementById('categoryForm')?.reset();
+}
+
+// ============================================================
+//  SAVE CONTRIBUTION
+// ============================================================
+async function saveContributionToSupabase(data) {
+  if (!isSupabaseConnected) return null;
   try {
     const { data: result, error } = await supabaseClient
       .from('contributions')
       .insert([{
         member_name: data.member,
         contribution_type: data.type,
+        category_id: data.type,
         amount: data.amount,
         payment_method: data.method,
         contribution_date: data.date,
         reference: data.ref || 'N/A',
         notes: data.notes || '',
         status: 'confirmed'
-      }]);
-
+      }])
+      .select()
+      .single();
     if (error) throw error;
-    return true;
+    return result;
   } catch (err) {
-    console.error('Failed to save to Supabase:', err);
-    return false;
+    console.error('Failed to save contribution:', err);
+    return null;
   }
 }
 
-// ---- EVENT LISTENERS ----
-document.addEventListener('DOMContentLoaded', async () => {
-  // Load from Supabase or fallback
-  await loadContributionsFromSupabase();
+// ============================================================
+//  DELETE CONTRIBUTION
+// ============================================================
+async function deleteContribution(id) {
+  if (!isAdmin) return;
+  if (!confirm('Delete this contribution record? This cannot be undone.')) return;
 
-  // Render initial table
+  if (isSupabaseConnected) {
+    const { error } = await supabaseClient.from('contributions').delete().eq('id', id);
+    if (error) { alert('Failed to delete: ' + error.message); return; }
+  }
+
+  contributionsData = contributionsData.filter(c => c.id !== id);
   renderContributions();
+  renderExpenseChart();
+  renderTrendChart();
+}
 
-  // Initialize charts
+// ============================================================
+//  SAVE CATEGORY
+// ============================================================
+async function saveCategoryToSupabase(data) {
+  if (!isSupabaseConnected) return null;
+  try {
+    const { data: result, error } = await supabaseClient
+      .from('contribution_categories')
+      .insert([{ name: data.name, description: data.description || '' }])
+      .select()
+      .single();
+    if (error) throw error;
+    return result;
+  } catch (err) {
+    console.error('Failed to save category:', err);
+    return null;
+  }
+}
+
+// ============================================================
+//  EVENT LISTENERS
+// ============================================================
+document.addEventListener('DOMContentLoaded', async () => {
+  // Load everything
+  await Promise.all([loadMembers(), loadCategories()]);
+  await loadContributions();
+
+  // Render UI
+  renderCategoryTabs();
+  renderContributions();
+  renderQuickStats();
   initCharts();
-
-  // Populate member select
   populateMemberSelect();
-
-  // Set default date
+  populateTypeSelect();
+  populateFilterType();
   setDefaultDate();
+  applyAdminUI();
 
-  // Filter type change
-  const filterType = document.getElementById('filterType');
-  if (filterType) {
-    filterType.addEventListener('change', (e) => {
-      const monthFilter = document.getElementById('filterMonth')?.value || 'all';
-      renderContributions(e.target.value, monthFilter);
-    });
-  }
-
-  // Filter month change
-  const filterMonth = document.getElementById('filterMonth');
-  if (filterMonth) {
-    filterMonth.addEventListener('change', (e) => {
-      const typeFilter = document.getElementById('filterType')?.value || 'all';
-      renderContributions(typeFilter, e.target.value);
-    });
-  }
+  // Filters
+  document.getElementById('filterType')?.addEventListener('change', () => { currentPage = 1; renderContributions(); });
+  document.getElementById('filterMonth')?.addEventListener('change', () => { currentPage = 1; renderContributions(); });
 
   // Add contribution button
-  const addBtn = document.getElementById('addContributionBtn');
-  if (addBtn) {
-    addBtn.addEventListener('click', openModal);
-  }
+  document.getElementById('addContributionBtn')?.addEventListener('click', openModal);
 
-  // Modal close
-  const modalClose = document.getElementById('modalClose');
-  if (modalClose) {
-    modalClose.addEventListener('click', closeModal);
-  }
+  // Admin toggle button
+  document.getElementById('adminToggleBtn')?.addEventListener('click', () => {
+    if (isAdmin) logoutAdmin();
+    else promptAdminLogin();
+  });
 
-  // Cancel button
-  const cancelBtn = document.getElementById('cancelContrib');
-  if (cancelBtn) {
-    cancelBtn.addEventListener('click', closeModal);
-  }
+  // Add category button
+  document.getElementById('addCategoryBtn')?.addEventListener('click', openCategoryModal);
 
-  // Close on overlay click
-  const modal = document.getElementById('addContribModal');
-  if (modal) {
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal || e.target.classList.contains('modal-overlay')) {
-        closeModal();
+  // Modal closes
+  document.getElementById('modalClose')?.addEventListener('click', closeModal);
+  document.getElementById('cancelContrib')?.addEventListener('click', closeModal);
+  document.getElementById('detailModalClose')?.addEventListener('click', closeDetailModal);
+  document.getElementById('categoryModalClose')?.addEventListener('click', closeCategoryModal);
+  document.getElementById('cancelCategory')?.addEventListener('click', closeCategoryModal);
+
+  // Admin PIN modal
+  document.getElementById('pinSubmitBtn')?.addEventListener('click', submitAdminPin);
+  document.getElementById('pinCancelBtn')?.addEventListener('click', closeAdminPinModal);
+  document.getElementById('adminPinInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitAdminPin();
+  });
+
+  // Close modals on overlay click
+  ['addContribModal','detailModal','addCategoryModal','adminPinModal'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', e => {
+      if (e.target.id === id || e.target.classList.contains('modal-overlay')) {
+        if (id === 'addContribModal') closeModal();
+        else if (id === 'detailModal') closeDetailModal();
+        else if (id === 'addCategoryModal') closeCategoryModal();
+        else if (id === 'adminPinModal') closeAdminPinModal();
       }
     });
-  }
+  });
 
-  // Form submit
-  const form = document.getElementById('contribForm');
-  if (form) {
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+  // Contribution form submit
+  document.getElementById('contribForm')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const member = document.getElementById('contribMember').value;
+    const date = document.getElementById('contribDate').value;
+    const type = document.getElementById('contribType').value;
+    const amount = parseInt(document.getElementById('contribAmount').value);
+    const method = document.getElementById('contribMethod').value;
+    const ref = document.getElementById('contribRef').value || 'N/A';
+    const notes = document.getElementById('contribNotes')?.value || '';
 
-      const member = document.getElementById('contribMember').value;
-      const date = document.getElementById('contribDate').value;
-      const type = document.getElementById('contribType').value;
-      const amount = parseInt(document.getElementById('contribAmount').value);
-      const method = document.getElementById('contribMethod').value;
-      const ref = document.getElementById('contribRef').value || 'N/A';
-      const notes = document.getElementById('contribNotes')?.value || '';
+    if (!member || !date || !type || !amount) {
+      alert('Please fill in all required fields.');
+      return;
+    }
 
-      if (!member || !date || !type || !amount) {
-        alert('Please fill in all required fields.');
-        return;
-      }
+    const payload = { member, date, type, amount, method, ref, notes };
+    const saved = await saveContributionToSupabase(payload);
 
-      // Add new record locally
-      const newRecord = {
-        id: contributionsData.length + 1,
-        date: date,
-        member: member,
-        type: type,
-        amount: amount,
-        method: method,
-        status: 'confirmed',
-        ref: ref
-      };
+    const newRecord = {
+      id: saved?.id ?? `local-${Date.now()}`,
+      date, member, type,
+      categoryId: type,
+      amount, method,
+      status: 'confirmed',
+      ref, notes
+    };
 
-      contributionsData.unshift(newRecord);
+    contributionsData.unshift(newRecord);
+    renderContributions();
+    renderExpenseChart();
+    renderTrendChart();
+    renderQuickStats();
+    closeModal();
+  });
 
-      // Try to save to Supabase
-      const savedToSupabase = await saveContributionToSupabase({
-        member, date, type, amount, method, ref, notes
-      });
+  // Category form submit
+  document.getElementById('categoryForm')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const name = document.getElementById('catName').value.trim();
+    const description = document.getElementById('catDescription').value.trim();
 
-      if (savedToSupabase) {
-        console.log('✅ Saved to Supabase');
-      } else {
-        console.log('💾 Saved locally only (Supabase not connected)');
-      }
+    if (!name) { alert('Please enter a category name.'); return; }
 
-      // Re-render
-      const typeFilter = document.getElementById('filterType')?.value || 'all';
-      const monthFilter = document.getElementById('filterMonth')?.value || 'all';
-      renderContributions(typeFilter, monthFilter);
+    const saved = await saveCategoryToSupabase({ name, description });
+    const newCat = saved ?? { id: `local-${Date.now()}`, name, description };
 
-      // Close modal
-      closeModal();
-
-      // Show success
-      alert('Contribution recorded successfully!');
-    });
-  }
+    categoriesData.push(newCat);
+    renderCategoryTabs();
+    populateTypeSelect();
+    populateFilterType();
+    renderQuickStats();
+    renderExpenseChart();
+    closeCategoryModal();
+  });
 
   // Escape key
-  document.addEventListener('keydown', (e) => {
+  document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       closeModal();
+      closeDetailModal();
+      closeCategoryModal();
+      closeAdminPinModal();
     }
   });
 });
