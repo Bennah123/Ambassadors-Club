@@ -240,7 +240,8 @@ function promptAdminLogin() {
     isAdmin = true;
     sessionStorage.setItem('sda_admin', '1');
     updateAdminUI();
-    renderVoiceRoster(activeVoice);
+    // Re-render current tab to show admin controls (edit/delete buttons)
+    requestAnimationFrame(() => renderVoiceRoster(activeVoice));
     showToast('Admin mode enabled ✓', 'success');
   } else {
     showToast('Incorrect password', 'error');
@@ -251,51 +252,59 @@ function adminLogout() {
   isAdmin = false;
   sessionStorage.removeItem('sda_admin');
   updateAdminUI();
-  renderVoiceRoster(activeVoice);
+  requestAnimationFrame(() => renderVoiceRoster(activeVoice));
   showToast('Logged out of admin mode');
 }
 
 function updateAdminUI() {
-  const bar      = document.getElementById('adminBar');
-  const loginBtn = document.getElementById('adminLoginBtn');
+  const bar       = document.getElementById('adminBar');
+  const loginBtn  = document.getElementById('adminLoginBtn');
+  const formModal = document.getElementById('choirFormModal');
+
   if (bar) {
     bar.style.cssText = isAdmin
       ? 'display:flex !important;align-items:center;gap:1rem;background:#1a365d;color:white;padding:0.6rem 2rem;font-size:0.85rem;position:relative;z-index:9999;'
       : 'display:none !important;';
   }
-  if (loginBtn) loginBtn.style.display = isAdmin ? 'none' : 'inline-block';
+  if (loginBtn)  loginBtn.style.display  = isAdmin ? 'none' : 'inline-block';
+  // Form modal is completely inert for non-admins
+  if (formModal) formModal.setAttribute('aria-hidden', isAdmin ? 'false' : 'true');
+  if (formModal) formModal.style.pointerEvents = isAdmin ? 'auto' : 'none';
 }
 
 // ============================================================
 //  ADMIN — FORM (ADD / EDIT)
 // ============================================================
 
-function openAddModal() {
+async function openAddModal() {
   editingMemberId = null;
   resetForm();
-
-  // Show member dropdown, hide name fields
   toggleFormMode('add');
 
-  // Populate dropdown with eligible members not already in choir
-  const alreadyIn = new Set(flatRoster().map(m => `${m.firstName}|${m.lastName}`));
-  const available = eligibleMembers.filter(m => !alreadyIn.has(`${m.firstName}|${m.lastName}`));
-
-  const select = document.getElementById('cfMemberSelect');
-  if (select) {
-    select.innerHTML = `<option value="">— Select a member —</option>` +
-      available.map(m =>
-        `<option value="${m.firstName}|${m.lastName}">${escHtml(m.firstName)} ${escHtml(m.lastName)}</option>`
-      ).join('');
-
-    if (available.length === 0) {
-      select.innerHTML = `<option value="">No eligible members available</option>`;
-    }
-  }
-
+  // Show modal immediately with loading state
   document.getElementById('choirFormTitle').textContent = 'Add Choir Member';
   document.getElementById('choirFormModal').classList.add('active');
   document.body.style.overflow = 'hidden';
+
+  // Set dropdown to loading while we fetch
+  const select = document.getElementById('cfMemberSelect');
+  select.innerHTML = `<option value="">— Loading members… —</option>`;
+  select.disabled = true;
+
+  // Fetch eligible members now (lazy)
+  await loadEligibleMembers();
+
+  // Filter out members already in choir
+  const alreadyIn = new Set(flatRoster().map(m => `${m.firstName}|${m.lastName}`));
+  const available = eligibleMembers.filter(m => !alreadyIn.has(`${m.firstName}|${m.lastName}`));
+
+  select.disabled = false;
+  select.innerHTML = available.length > 0
+    ? `<option value="">— Select a member —</option>` +
+      available.map(m =>
+        `<option value="${m.firstName}|${m.lastName}">${escHtml(m.firstName)} ${escHtml(m.lastName)}</option>`
+      ).join('')
+    : `<option value="">No eligible members available</option>`;
 }
 
 function openEditModal(id) {
@@ -508,8 +517,8 @@ const repertoireData = [
 document.addEventListener('DOMContentLoaded', async () => {
   if (sessionStorage.getItem('sda_admin') === '1') isAdmin = true;
 
-  // Load both in parallel for speed
-  await Promise.all([loadChoir(), loadEligibleMembers()]);
+  // Only load choir data on page load — eligible members load lazily when admin opens Add form
+  await loadChoir();
 
   updateAdminUI();
   renderVoiceRoster('soprano');
