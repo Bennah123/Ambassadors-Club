@@ -17,6 +17,38 @@
       grid-column: 1 / -1; text-align: center; padding: 2rem;
       color: var(--text-muted); font-style: italic;
     }
+    /* Admin editable cards */
+    .choir-member-card.admin-editable { cursor: pointer; position: relative; }
+    .choir-member-card.admin-editable:hover {
+      border-color: var(--sda-gold);
+      box-shadow: 0 4px 16px rgba(201,162,39,0.2);
+    }
+    .edit-hint {
+      position: absolute; top: 0.5rem; right: 0.6rem;
+      font-size: 0.7rem; color: var(--sda-gold);
+      opacity: 0; transition: opacity 0.2s;
+      font-family: var(--font-body);
+    }
+    .choir-member-card.admin-editable:hover .edit-hint { opacity: 1; }
+    /* Popover */
+    #voicePopover.popover-visible {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+    }
+    /* Toast */
+    .sda-toast {
+      position: fixed; bottom: 2rem; left: 50%;
+      transform: translateX(-50%) translateY(1rem);
+      background: var(--sda-navy); color: white;
+      padding: 0.8rem 1.75rem; border-radius: 50px;
+      font-size: 0.9rem; font-weight: 500; font-family: var(--font-body);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      opacity: 0; transition: opacity 0.35s, transform 0.35s;
+      z-index: 9999; white-space: nowrap; pointer-events: none;
+    }
+    .sda-toast--show    { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .sda-toast--success { background: #16a34a; }
+    .sda-toast--error   { background: #dc2626; }
   </style>
 </head>
 <body>
@@ -104,12 +136,53 @@
           <span class="tab-count">0 members</span>
         </button>
       </div>
+
+      <!-- Admin controls -->
+      <div style="text-align:center; margin-top:0.75rem;">
+        <button id="adminLoginBtn"
+          style="font-size:0.75rem;color:var(--text-muted);background:none;border:none;cursor:pointer;font-family:var(--font-body);padding:0.25rem 0.5rem;text-decoration:underline;opacity:0.4;">
+          Admin
+        </button>
+        <span id="adminStatus" style="display:none; font-size:0.78rem; color:var(--sda-gold); font-family:var(--font-body);">
+          🔐 Admin Mode &nbsp;&middot;&nbsp;
+          <button id="adminLogoutBtn"
+            style="font-size:0.75rem;color:var(--text-muted);background:none;border:none;cursor:pointer;font-family:var(--font-body);text-decoration:underline;">
+            Log out
+          </button>
+        </span>
+      </div>
     </div>
 
     <div class="voice-roster" id="voiceRoster">
       <!-- Rendered via choir.js -->
     </div>
   </section>
+
+  <!-- Voice edit popover (admin only) -->
+  <div id="voicePopover" style="display:none; position:absolute; z-index:3000; width:220px;
+    background:var(--bg-card); border:1px solid var(--border-light); border-radius:14px;
+    box-shadow:0 12px 32px rgba(0,0,0,0.18); padding:1.25rem;
+    opacity:0; transform:translateY(6px); transition:opacity 0.2s, transform 0.2s;">
+    <p id="popoverName" style="font-family:var(--font-display);font-weight:600;color:var(--sda-navy);margin-bottom:0.85rem;font-size:1rem;"></p>
+    <div style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:0.85rem;">
+      <select id="popoverVoice" style="padding:0.55rem 0.75rem;border:2px solid var(--border-light);border-radius:8px;font-family:var(--font-body);font-size:0.88rem;background:var(--bg-light);color:var(--text-primary);">
+        <option value="">— Voice part —</option>
+        <option value="soprano">Soprano</option>
+        <option value="alto">Alto</option>
+        <option value="tenor">Tenor</option>
+        <option value="bass">Bass</option>
+      </select>
+      <select id="popoverRole" style="padding:0.55rem 0.75rem;border:2px solid var(--border-light);border-radius:8px;font-family:var(--font-body);font-size:0.88rem;background:var(--bg-light);color:var(--text-primary);">
+        <option value="Member">Member</option>
+        <option value="Section Leader">Section Leader</option>
+      </select>
+    </div>
+    <p id="popoverError" style="color:#dc2626;font-size:0.78rem;margin-bottom:0.5rem;min-height:1em;"></p>
+    <div style="display:flex;gap:0.5rem;">
+      <button id="popoverSave" style="flex:1;padding:0.5rem;background:var(--sda-navy);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;font-family:var(--font-body);">Save</button>
+      <button onclick="closePopover()" style="padding:0.5rem 0.75rem;background:var(--bg-light);color:var(--text-secondary);border:1px solid var(--border-light);border-radius:8px;font-size:0.85rem;cursor:pointer;font-family:var(--font-body);">✕</button>
+    </div>
+  </div>
 
   <!-- ==================== REHEARSAL SCHEDULE ==================== -->
   <section class="choir-schedule-section">
