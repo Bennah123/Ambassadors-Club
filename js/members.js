@@ -1,105 +1,132 @@
-// ============================================================
-//  AMBASSADORS MEMBERS — members.js
-//  Data layer: Supabase (if configured) → localStorage → JSON
-// ============================================================
-
-// ---- ADMIN CONFIG (change this password!) ----
-const ADMIN_PASSWORD = 'ambassadors2026';
+const ADMIN_PASSWORD = 'alivitsa0112';
 const STORAGE_KEY    = 'sda_members_data';
 
-// ---- DEPARTMENT LABELS ----
 const deptLabels = {
-  choir: 'Choir',
-  ushering: 'Ushering',
-  treasury: 'Treasury',
-  welfare: 'Welfare',
-  media: 'Media'
+  choir: 'Choir', ushering: 'Ushering',
+  treasury: 'Treasury', welfare: 'Welfare', media: 'Media'
 };
-
 const ALL_DEPTS = Object.keys(deptLabels);
 
-// ---- STATE ----
-let membersData       = [];
-let isAdmin           = false;
-let editingMemberId   = null;   // null = add mode, number = edit mode
+let membersData     = [];
+let isAdmin         = false;
+let editingMemberId = null;
+
+// ============================================================
+//  SUPABASE HELPERS
+// ============================================================
+
+function hasSupabase() {
+  return typeof supabaseClient !== 'undefined';
+}
+
+function toSupabaseRow(m) {
+  return {
+    first_name:  m.firstName,
+    last_name:   m.lastName,
+    role:        m.role,
+    departments: m.departments,
+    joined_year: m.joined,
+    gift:        m.gift,
+    phone:       m.phone,
+    email:       m.email,
+    bio:         m.bio
+  };
+}
+
+function fromSupabaseRow(m) {
+  return {
+    id:          m.id,
+    firstName:   m.first_name,
+    lastName:    m.last_name,
+    role:        m.role,
+    departments: m.departments || [],
+    joined:      m.joined_year,
+    gift:        m.gift   || '',
+    phone:       m.phone  || '',
+    email:       m.email  || '',
+    bio:         m.bio    || ''
+  };
+}
 
 // ============================================================
 //  DATA LOADING
 // ============================================================
 
-/** Priority: Supabase → localStorage → members.json */
 async function loadMembers() {
-  // 1. Try Supabase
-  if (typeof supabaseClient !== 'undefined') {
+  if (hasSupabase()) {
     try {
       const { data, error } = await supabaseClient
         .from('members')
         .select('*')
         .order('id', { ascending: true });
 
-      if (!error && data && data.length > 0) {
-        membersData = data.map(normaliseSupabaseRow);
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        membersData = data.map(fromSupabaseRow);
         console.log(`✅ Loaded ${membersData.length} members from Supabase`);
         return;
       }
     } catch (err) {
-      console.warn('Supabase fetch failed:', err.message);
+      console.warn('Supabase load failed:', err.message);
+      showToast('Could not reach database — showing cached data', 'error');
     }
   }
 
-  // 2. Try localStorage
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    try {
-      membersData = JSON.parse(stored);
-      console.log(`✅ Loaded ${membersData.length} members from localStorage`);
-      return;
-    } catch {
-      console.warn('localStorage parse failed, falling back to JSON file');
-    }
-  }
-
-  // 3. Fall back to members.json
+  // localStorage fallback
   try {
-    const res  = await fetch('members.json');
-    const json = await res.json();
-    if (Array.isArray(json) && json.length > 0) {
-      membersData = json;
-      saveToLocalStorage();
-      console.log(`✅ Loaded ${membersData.length} members from members.json`);
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      membersData = JSON.parse(stored);
+      console.log('ℹ️ Loaded from localStorage');
       return;
     }
-  } catch (err) {
-    console.warn('members.json fetch failed:', err.message);
-  }
+  } catch { /* ignore */ }
 
-  // 4. Hardcoded fallback (same as before)
+  // Final fallback
   membersData = getHardcodedFallback();
-  saveToLocalStorage();
-  console.log('ℹ️ Using hardcoded fallback data');
+  console.log('ℹ️ Using hardcoded fallback');
 }
 
-function normaliseSupabaseRow(m) {
-  return {
-    id: m.id,
-    firstName: m.first_name,
-    lastName: m.last_name,
-    role: m.role,
-    departments: m.departments || [],
-    joined: m.joined_year,
-    gift: m.gift,
-    phone: m.phone,
-    email: m.email,
-    bio: m.bio
-  };
-}
-
-function saveToLocalStorage() {
+function saveLocalCache() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(membersData));
 }
 
 // ============================================================
-//  RENDER MEMBERS GRID
+//  SUPABASE WRITE OPERATIONS
+// ============================================================
+
+async function supabaseInsert(memberObj) {
+  if (!hasSupabase()) return null;
+  const { data, error } = await supabaseClient
+    .from('members')
+    .insert([toSupabaseRow(memberObj)])
+    .select()
+    .single();
+  if (error) throw error;
+  return fromSupabaseRow(data); // returns member with real DB id
+}
+
+async function supabaseUpdate(id, memberObj) {
+  if (!hasSupabase()) return;
+  const { error } = await supabaseClient
+    .from('members')
+    .update(toSupabaseRow(memberObj))
+    .eq('id', id);
+  if (error) throw error;
+}
+
+async function supabaseDelete(id) {
+  if (!hasSupabase()) return;
+  const { error } = await supabaseClient
+    .from('members')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
+}
+
+// ============================================================
+//  RENDER
 // ============================================================
 
 function renderMembers(filter = 'all', search = '') {
@@ -110,17 +137,17 @@ function renderMembers(filter = 'all', search = '') {
   let filtered = membersData;
 
   if (filter !== 'all') {
-    filtered = filtered.filter(m => m.departments.includes(filter));
+    filtered = filtered.filter(m => (m.departments || []).includes(filter));
   }
 
   if (search.trim()) {
-    const s = search.toLowerCase().trim();
+    const s = search.toLowerCase();
     filtered = filtered.filter(m =>
       m.firstName.toLowerCase().includes(s) ||
-      m.lastName.toLowerCase().includes(s) ||
+      m.lastName.toLowerCase().includes(s)  ||
       (m.gift  || '').toLowerCase().includes(s) ||
       (m.role  || '').toLowerCase().includes(s) ||
-      (m.departments || []).some(d => d.toLowerCase().includes(s))
+      (m.departments || []).some(d => d.includes(s))
     );
   }
 
@@ -137,8 +164,8 @@ function renderMembers(filter = 'all', search = '') {
     <div class="member-card" data-id="${m.id}" onclick="openMemberModal(${m.id})">
       ${isAdmin ? `
         <div class="admin-card-actions" onclick="event.stopPropagation()">
-          <button class="admin-card-btn edit-btn"   onclick="openEditModal(${m.id})"   title="Edit member">✏️</button>
-          <button class="admin-card-btn delete-btn" onclick="deleteMember(${m.id})"    title="Remove member">🗑️</button>
+          <button class="admin-card-btn" onclick="openEditModal(${m.id})"  title="Edit">✏️</button>
+          <button class="admin-card-btn" onclick="deleteMember(${m.id})"   title="Delete">🗑️</button>
         </div>` : ''}
       <div class="card-banner">
         <div class="card-avatar">${getInitials(m.firstName, m.lastName)}</div>
@@ -148,11 +175,11 @@ function renderMembers(filter = 'all', search = '') {
         <span class="card-role">${escHtml(m.role)}</span>
         <p class="card-gift">Gift: ${escHtml(m.gift)}</p>
         <div class="dept-tags">
-          ${(m.departments || []).map(d => `<span class="dept-tag">${deptLabels[d] || escHtml(d)}</span>`).join('')}
+          ${(m.departments || []).map(d =>
+            `<span class="dept-tag">${deptLabels[d] || escHtml(d)}</span>`).join('')}
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
 // ============================================================
@@ -163,10 +190,7 @@ function openMemberModal(id) {
   const m = membersData.find(x => x.id === id);
   if (!m) return;
 
-  const modal     = document.getElementById('memberModal');
-  const modalBody = document.getElementById('modalBody');
-
-  modalBody.innerHTML = `
+  document.getElementById('modalBody').innerHTML = `
     <div class="modal-banner">
       <div class="modal-avatar">${getInitials(m.firstName, m.lastName)}</div>
     </div>
@@ -178,7 +202,8 @@ function openMemberModal(id) {
         <div class="detail-row">
           <span class="detail-label">Departments</span>
           <span class="detail-value dept-list">
-            ${(m.departments || []).map(d => `<span class="dept-tag">${deptLabels[d] || escHtml(d)}</span>`).join('')}
+            ${(m.departments || []).map(d =>
+              `<span class="dept-tag">${deptLabels[d] || escHtml(d)}</span>`).join('')}
           </span>
         </div>
         <div class="detail-row">
@@ -199,14 +224,15 @@ function openMemberModal(id) {
         </div>
       </div>
       ${isAdmin ? `
-        <div style="margin-top:1.5rem;display:flex;gap:0.75rem;justify-content:center;">
-          <button class="admin-action-btn edit"   onclick="closeMemberModal();openEditModal(${m.id})">✏️ Edit</button>
-          <button class="admin-action-btn delete" onclick="closeMemberModal();deleteMember(${m.id})">🗑️ Remove</button>
+        <div style="margin-top:1.5rem;display:flex;gap:.75rem;justify-content:center;">
+          <button class="admin-action-btn edit"
+            onclick="closeMemberModal();openEditModal(${m.id})">✏️ Edit</button>
+          <button class="admin-action-btn delete"
+            onclick="closeMemberModal();deleteMember(${m.id})">🗑️ Remove</button>
         </div>` : ''}
-    </div>
-  `;
+    </div>`;
 
-  modal.classList.add('active');
+  document.getElementById('memberModal').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
 
@@ -221,8 +247,7 @@ function closeMemberModal() {
 
 function promptAdminLogin() {
   const pwd = prompt('Enter admin password:');
-  if (pwd === null) return;           // cancelled
-
+  if (pwd === null) return;
   if (pwd === ADMIN_PASSWORD) {
     isAdmin = true;
     sessionStorage.setItem('sda_admin', '1');
@@ -243,14 +268,23 @@ function adminLogout() {
 }
 
 function updateAdminUI() {
-  const bar     = document.getElementById('adminBar');
+  const bar      = document.getElementById('adminBar');
   const loginBtn = document.getElementById('adminLoginBtn');
-  if (bar)      bar.style.display      = isAdmin ? 'flex' : 'none';
-  if (loginBtn) loginBtn.style.display = isAdmin ? 'none' : 'inline-flex';
+
+  if (bar) {
+    // Force visibility — override any conflicting CSS
+    bar.style.cssText = isAdmin
+      ? 'display:flex !important; align-items:center; gap:1rem; background:#1a365d; color:white; padding:0.6rem 2rem; font-size:0.85rem; position:relative; z-index:9999;'
+      : 'display:none !important;';
+  }
+
+  if (loginBtn) {
+    loginBtn.style.display = isAdmin ? 'none' : 'inline-block';
+  }
 }
 
 // ============================================================
-//  ADMIN — ADD / EDIT MODAL
+//  ADMIN — ADD / EDIT FORM
 // ============================================================
 
 function openAddModal() {
@@ -278,25 +312,28 @@ function closeMemberFormModal() {
 }
 
 function populateMemberForm(m) {
-  document.getElementById('fFirstName').value = m ? m.firstName : '';
-  document.getElementById('fLastName').value  = m ? m.lastName  : '';
-  document.getElementById('fRole').value      = m ? m.role      : '';
-  document.getElementById('fGift').value      = m ? m.gift      : '';
-  document.getElementById('fPhone').value     = m ? m.phone     : '';
-  document.getElementById('fEmail').value     = m ? m.email     : '';
-  document.getElementById('fJoined').value    = m ? m.joined    : new Date().getFullYear();
-  document.getElementById('fBio').value       = m ? m.bio       : '';
+  document.getElementById('fFirstName').value = m?.firstName || '';
+  document.getElementById('fLastName').value  = m?.lastName  || '';
+  document.getElementById('fRole').value      = m?.role      || '';
+  document.getElementById('fGift').value      = m?.gift      || '';
+  document.getElementById('fPhone').value     = m?.phone     || '';
+  document.getElementById('fEmail').value     = m?.email     || '';
+  document.getElementById('fJoined').value    = m?.joined    || new Date().getFullYear();
+  document.getElementById('fBio').value       = m?.bio       || '';
 
-  // Reset dept checkboxes
   ALL_DEPTS.forEach(d => {
     const cb = document.getElementById('fDept_' + d);
     if (cb) cb.checked = m ? (m.departments || []).includes(d) : false;
   });
 
   document.getElementById('memberFormError').textContent = '';
+
+  // Show/hide loading state on save button
+  const saveBtn = document.getElementById('memberFormSave');
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Member'; }
 }
 
-function saveMemberForm() {
+async function saveMemberForm() {
   const firstName   = document.getElementById('fFirstName').value.trim();
   const lastName    = document.getElementById('fLastName').value.trim();
   const role        = document.getElementById('fRole').value.trim();
@@ -307,52 +344,74 @@ function saveMemberForm() {
   const bio         = document.getElementById('fBio').value.trim();
   const departments = ALL_DEPTS.filter(d => document.getElementById('fDept_' + d)?.checked);
 
-  const errEl = document.getElementById('memberFormError');
+  const errEl   = document.getElementById('memberFormError');
+  const saveBtn = document.getElementById('memberFormSave');
 
-  // Validation
-  if (!firstName || !lastName) {
-    errEl.textContent = 'First and last name are required.'; return;
-  }
-  if (!role) {
-    errEl.textContent = 'Role is required.'; return;
-  }
-  if (departments.length === 0) {
-    errEl.textContent = 'Select at least one department.'; return;
-  }
+  // Validate
+  if (!firstName || !lastName) { errEl.textContent = 'First and last name are required.'; return; }
+  if (!role)                    { errEl.textContent = 'Role is required.'; return; }
+  if (departments.length === 0) { errEl.textContent = 'Select at least one department.'; return; }
   errEl.textContent = '';
 
-  if (editingMemberId !== null) {
-    // UPDATE
-    const idx = membersData.findIndex(x => x.id === editingMemberId);
-    if (idx !== -1) {
-      membersData[idx] = { ...membersData[idx], firstName, lastName, role, gift, phone, email, joined, bio, departments };
-      showToast(`${firstName} ${lastName} updated ✓`, 'success');
-    }
-  } else {
-    // ADD
-    const newId = membersData.length > 0 ? Math.max(...membersData.map(x => x.id)) + 1 : 1;
-    membersData.push({ id: newId, firstName, lastName, role, gift, phone, email, joined, bio, departments });
-    showToast(`${firstName} ${lastName} added ✓`, 'success');
-  }
+  // Loading state
+  saveBtn.disabled    = true;
+  saveBtn.textContent = 'Saving…';
 
-  saveToLocalStorage();
-  closeMemberFormModal();
-  renderMembers(currentFilter(), currentSearch());
+  const memberObj = { firstName, lastName, role, gift, phone, email, joined, bio, departments };
+
+  try {
+    if (editingMemberId !== null) {
+      // ── UPDATE ──
+      await supabaseUpdate(editingMemberId, memberObj);
+
+      const idx = membersData.findIndex(x => x.id === editingMemberId);
+      if (idx !== -1) membersData[idx] = { ...membersData[idx], ...memberObj };
+
+      showToast(`${firstName} ${lastName} updated ✓`, 'success');
+
+    } else {
+      // ── INSERT ──
+      if (hasSupabase()) {
+        const saved = await supabaseInsert(memberObj);
+        membersData.push(saved); // use real DB id
+      } else {
+        const newId = membersData.length > 0 ? Math.max(...membersData.map(x => x.id)) + 1 : 1;
+        membersData.push({ id: newId, ...memberObj });
+      }
+      showToast(`${firstName} ${lastName} added ✓`, 'success');
+    }
+
+    saveLocalCache();
+    closeMemberFormModal();
+    renderMembers(currentFilter(), currentSearch());
+
+  } catch (err) {
+    console.error('Save failed:', err);
+    errEl.textContent = `Save failed: ${err.message}`;
+    saveBtn.disabled    = false;
+    saveBtn.textContent = 'Save Member';
+  }
 }
 
 // ============================================================
 //  ADMIN — DELETE
 // ============================================================
 
-function deleteMember(id) {
+async function deleteMember(id) {
   const m = membersData.find(x => x.id === id);
   if (!m) return;
-  if (!confirm(`Remove ${m.firstName} ${m.lastName} from the members list?`)) return;
+  if (!confirm(`Remove ${m.firstName} ${m.lastName} from the members list?\n\nThis cannot be undone.`)) return;
 
-  membersData = membersData.filter(x => x.id !== id);
-  saveToLocalStorage();
-  renderMembers(currentFilter(), currentSearch());
-  showToast(`${m.firstName} ${m.lastName} removed`, 'error');
+  try {
+    await supabaseDelete(id);
+    membersData = membersData.filter(x => x.id !== id);
+    saveLocalCache();
+    renderMembers(currentFilter(), currentSearch());
+    showToast(`${m.firstName} ${m.lastName} removed`, 'error');
+  } catch (err) {
+    console.error('Delete failed:', err);
+    showToast(`Delete failed: ${err.message}`, 'error');
+  }
 }
 
 // ============================================================
@@ -365,10 +424,8 @@ function getInitials(first, last) {
 
 function escHtml(str) {
   return String(str || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function currentFilter() {
@@ -384,7 +441,7 @@ function showToast(msg, type = 'info') {
   if (existing) existing.remove();
 
   const toast = document.createElement('div');
-  toast.id = 'sdaToast';
+  toast.id        = 'sdaToast';
   toast.className = `sda-toast sda-toast--${type}`;
   toast.textContent = msg;
   document.body.appendChild(toast);
@@ -393,7 +450,7 @@ function showToast(msg, type = 'info') {
   setTimeout(() => {
     toast.classList.remove('sda-toast--show');
     setTimeout(() => toast.remove(), 400);
-  }, 2800);
+  }, 3000);
 }
 
 function debounce(fn, ms) {
@@ -406,13 +463,9 @@ function debounce(fn, ms) {
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Restore admin session
-  if (sessionStorage.getItem('sda_admin') === '1') {
-    isAdmin = true;
-  }
+  if (sessionStorage.getItem('sda_admin') === '1') isAdmin = true;
 
   await loadMembers();
-
   updateAdminUI();
   renderMembers();
 
@@ -426,58 +479,47 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Search
-  const searchInput = document.getElementById('memberSearch');
-  if (searchInput) {
-    searchInput.addEventListener('input', debounce(e => {
-      renderMembers(currentFilter(), e.target.value);
-    }, 300));
-  }
+  document.getElementById('memberSearch')?.addEventListener('input',
+    debounce(e => renderMembers(currentFilter(), e.target.value), 300));
 
-  // Member detail modal close
+  // Member detail modal
   document.getElementById('modalClose')?.addEventListener('click', closeMemberModal);
   document.getElementById('memberModal')?.addEventListener('click', e => {
-    if (e.target === e.currentTarget || e.target.classList.contains('modal-overlay')) {
+    if (e.target === e.currentTarget || e.target.classList.contains('modal-overlay'))
       closeMemberModal();
-    }
   });
 
-  // Member form modal close
+  // Form modal
   document.getElementById('memberFormClose')?.addEventListener('click', closeMemberFormModal);
   document.getElementById('memberFormModal')?.addEventListener('click', e => {
-    if (e.target === e.currentTarget || e.target.classList.contains('modal-overlay')) {
+    if (e.target === e.currentTarget || e.target.classList.contains('modal-overlay'))
       closeMemberFormModal();
-    }
   });
-
-  // Save button in form
   document.getElementById('memberFormSave')?.addEventListener('click', saveMemberForm);
 
-  // Admin buttons
+  // Admin controls
   document.getElementById('adminLoginBtn')?.addEventListener('click', promptAdminLogin);
   document.getElementById('adminLogoutBtn')?.addEventListener('click', adminLogout);
   document.getElementById('adminAddBtn')?.addEventListener('click', openAddModal);
 
-  // Escape key closes whichever modal is open
+  // Escape key
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      closeMemberModal();
-      closeMemberFormModal();
-    }
+    if (e.key === 'Escape') { closeMemberModal(); closeMemberFormModal(); }
   });
 });
 
 // ============================================================
-//  HARDCODED FALLBACK DATA
+//  HARDCODED FALLBACK
 // ============================================================
 function getHardcodedFallback() {
   return [
-    { id:1,firstName:"John",lastName:"Kamau",role:"Youth Leader",departments:["choir","treasury"],joined:"2022",gift:"Leadership",phone:"+254 712 345 678",email:"john.kamau@email.com",bio:"Passionate about youth ministry and financial stewardship. Leads the Ambassadors Club with vision and dedication." },
-    { id:2,firstName:"Sarah",lastName:"Wanjiku",role:"Choir Director",departments:["choir","media"],joined:"2021",gift:"Music",phone:"+254 723 456 789",email:"sarah.w@email.com",bio:"Gifted vocalist and choir leader. Organizes rehearsals and special music programs for divine services." },
-    { id:3,firstName:"Peter",lastName:"Ochieng",role:"Treasurer",departments:["treasury","welfare"],joined:"2023",gift:"Administration",phone:"+254 734 567 890",email:"peter.o@email.com",bio:"Detail-oriented and trustworthy. Manages club finances and welfare contributions with integrity." },
-    { id:4,firstName:"Grace",lastName:"Muthoni",role:"Welfare Coordinator",departments:["welfare","ushering"],joined:"2022",gift:"Hospitality",phone:"+254 745 678 901",email:"grace.m@email.com",bio:"Heart for service and community care. Coordinates outreach programs and member support initiatives." },
-    { id:5,firstName:"David",lastName:"Mutua",role:"Media Lead",departments:["media","choir"],joined:"2023",gift:"Creativity",phone:"+254 756 789 012",email:"david.m@email.com",bio:"Tech-savvy creative handling sound, visuals, and social media for the club and church programs." },
-    { id:6,firstName:"Esther",lastName:"Achieng",role:"Ushering Lead",departments:["ushering","welfare"],joined:"2021",gift:"Service",phone:"+254 767 890 123",email:"esther.a@email.com",bio:"Welcoming and organized. Ensures smooth flow during services and special church events." },
-    { id:7,firstName:"Michael",lastName:"Kipchirchir",role:"Sabbath School Teacher",departments:["choir"],joined:"2024",gift:"Teaching",phone:"+254 778 901 234",email:"michael.k@email.com",bio:"Youth Sabbath School teacher with a passion for Bible study and discipleship." },
-    { id:8,firstName:"Faith",lastName:"Njeri",role:"Events Coordinator",departments:["media","ushering"],joined:"2023",gift:"Organization",phone:"+254 789 012 345",email:"faith.n@email.com",bio:"Plans and coordinates club events, camps, and fellowship activities throughout the year." }
+    { id:1,firstName:"John",lastName:"Kamau",role:"Youth Leader",departments:["choir","treasury"],joined:"2022",gift:"Leadership",phone:"+254 712 345 678",email:"john.kamau@email.com",bio:"Passionate about youth ministry and financial stewardship." },
+    { id:2,firstName:"Sarah",lastName:"Wanjiku",role:"Choir Director",departments:["choir","media"],joined:"2021",gift:"Music",phone:"+254 723 456 789",email:"sarah.w@email.com",bio:"Gifted vocalist and choir leader. Organizes rehearsals and special music programs." },
+    { id:3,firstName:"Peter",lastName:"Ochieng",role:"Treasurer",departments:["treasury","welfare"],joined:"2023",gift:"Administration",phone:"+254 734 567 890",email:"peter.o@email.com",bio:"Detail-oriented and trustworthy. Manages club finances with integrity." },
+    { id:4,firstName:"Grace",lastName:"Muthoni",role:"Welfare Coordinator",departments:["welfare","ushering"],joined:"2022",gift:"Hospitality",phone:"+254 745 678 901",email:"grace.m@email.com",bio:"Heart for service and community care. Coordinates outreach programs." },
+    { id:5,firstName:"David",lastName:"Mutua",role:"Media Lead",departments:["media","choir"],joined:"2023",gift:"Creativity",phone:"+254 756 789 012",email:"david.m@email.com",bio:"Tech-savvy creative handling sound, visuals, and social media." },
+    { id:6,firstName:"Esther",lastName:"Achieng",role:"Ushering Lead",departments:["ushering","welfare"],joined:"2021",gift:"Service",phone:"+254 767 890 123",email:"esther.a@email.com",bio:"Welcoming and organized. Ensures smooth flow during services." },
+    { id:7,firstName:"Michael",lastName:"Kipchirchir",role:"Sabbath School Teacher",departments:["choir"],joined:"2024",gift:"Teaching",phone:"+254 778 901 234",email:"michael.k@email.com",bio:"Youth Sabbath School teacher with a passion for Bible study." },
+    { id:8,firstName:"Faith",lastName:"Njeri",role:"Events Coordinator",departments:["media","ushering"],joined:"2023",gift:"Organization",phone:"+254 789 012 345",email:"faith.n@email.com",bio:"Plans and coordinates club events, camps, and fellowship activities." }
   ];
 }
