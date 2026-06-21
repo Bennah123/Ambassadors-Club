@@ -1,4 +1,9 @@
-const ADMIN_PASSWORD = 'alivitsa0112';
+// ============================================================
+//  AMBASSADORS MEMBERS — members.js
+//  Data layer: Supabase (primary) → localStorage → hardcoded
+// ============================================================
+
+const ADMIN_PASSWORD = 'ambassadors2026'; // ← change this!
 const STORAGE_KEY    = 'sda_members_data';
 
 const deptLabels = {
@@ -73,17 +78,17 @@ async function loadMembers() {
     }
   }
 
-  // localStorage fallback
+  // localStorage fallback (offline cache)
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       membersData = JSON.parse(stored);
-      console.log('ℹ️ Loaded from localStorage');
+      console.log('ℹ️ Loaded from localStorage cache');
       return;
     }
   } catch { /* ignore */ }
 
-  // Final fallback
+  // Last resort — hardcoded data
   membersData = getHardcodedFallback();
   console.log('ℹ️ Using hardcoded fallback');
 }
