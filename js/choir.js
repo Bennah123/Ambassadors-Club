@@ -85,24 +85,27 @@ async function loadChoir() {
 }
 
 /**
- * Load members who have 'choir' in their departments.
- * Used to populate the "Add Member" dropdown.
+ * Load all members and filter client-side for choir dept.
+ * Avoids Supabase array-contains quirks.
  */
 async function loadEligibleMembers() {
   if (!hasSupabase()) return;
   try {
     const { data, error } = await supabaseClient
       .from('members')
-      .select('id, first_name, last_name')
-      .contains('departments', ['choir'])
+      .select('id, first_name, last_name, departments')
       .order('last_name', { ascending: true });
 
     if (error) throw error;
-    eligibleMembers = (data || []).map(m => ({
-      id:        m.id,
-      firstName: m.first_name || '',
-      lastName:  m.last_name  || ''
-    }));
+
+    eligibleMembers = (data || [])
+      .filter(m => Array.isArray(m.departments) && m.departments.includes('choir'))
+      .map(m => ({
+        id:        m.id,
+        firstName: m.first_name || '',
+        lastName:  m.last_name  || ''
+      }));
+
     console.log(`✅ ${eligibleMembers.length} eligible choir members loaded`);
   } catch (err) {
     console.warn('Could not load eligible members:', err.message);
@@ -281,30 +284,40 @@ async function openAddModal() {
   resetForm();
   toggleFormMode('add');
 
-  // Show modal immediately with loading state
+  // Open modal IMMEDIATELY — no waiting
   document.getElementById('choirFormTitle').textContent = 'Add Choir Member';
   document.getElementById('choirFormModal').classList.add('active');
   document.body.style.overflow = 'hidden';
 
-  // Set dropdown to loading while we fetch
+  // Show loading state in dropdown
   const select = document.getElementById('cfMemberSelect');
-  select.innerHTML = `<option value="">— Loading members… —</option>`;
-  select.disabled = true;
+  if (select) {
+    select.innerHTML = `<option value="">— Loading… —</option>`;
+    select.disabled = true;
+  }
 
-  // Fetch eligible members now (lazy)
+  // Fetch eligible members in the background AFTER modal is open
   await loadEligibleMembers();
 
-  // Filter out members already in choir
+  if (!select) return;
+
+  // Filter out members already in the choir roster
   const alreadyIn = new Set(flatRoster().map(m => `${m.firstName}|${m.lastName}`));
-  const available = eligibleMembers.filter(m => !alreadyIn.has(`${m.firstName}|${m.lastName}`));
+  const available = eligibleMembers.filter(
+    m => !alreadyIn.has(`${m.firstName}|${m.lastName}`)
+  );
 
   select.disabled = false;
-  select.innerHTML = available.length > 0
-    ? `<option value="">— Select a member —</option>` +
+
+  if (available.length === 0) {
+    select.innerHTML = `<option value="">No available choir members found</option>`;
+  } else {
+    select.innerHTML =
+      `<option value="">— Select a member —</option>` +
       available.map(m =>
-        `<option value="${m.firstName}|${m.lastName}">${escHtml(m.firstName)} ${escHtml(m.lastName)}</option>`
-      ).join('')
-    : `<option value="">No eligible members available</option>`;
+        `<option value="${escHtml(m.firstName)}|${escHtml(m.lastName)}">${escHtml(m.firstName)} ${escHtml(m.lastName)}</option>`
+      ).join('');
+  }
 }
 
 function openEditModal(id) {
