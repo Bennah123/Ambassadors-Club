@@ -12,8 +12,251 @@
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/members.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- ── Admin + toast styles (self-contained, uses your CSS variables) ── -->
+  <style>
+    /* ---- ADMIN BAR ---- */
+    .admin-bar {
+      display: none; /* shown via JS when isAdmin = true */
+      align-items: center;
+      gap: 1rem;
+      background: var(--sda-navy);
+      color: white;
+      padding: 0.6rem 2rem;
+      font-size: 0.85rem;
+      font-family: var(--font-body);
+    }
+    .admin-bar span { opacity: 0.75; flex: 1; }
+    .admin-bar-btn {
+      padding: 0.45rem 1.1rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: opacity 0.2s;
+    }
+    .admin-bar-btn:hover { opacity: 0.85; }
+    .admin-bar-btn.add { background: var(--sda-gold); color: var(--sda-navy); }
+    .admin-bar-btn.logout { background: rgba(255,255,255,0.15); color: white; }
+
+    /* Subtle "Admin" link in toolbar area */
+    .admin-login-btn {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-body);
+      padding: 0.25rem 0.5rem;
+      text-decoration: underline;
+      transition: color 0.2s;
+    }
+    .admin-login-btn:hover { color: var(--sda-navy); }
+
+    /* ---- ADMIN CARD ACTIONS ---- */
+    .admin-card-actions {
+      position: absolute;
+      top: 0.6rem;
+      right: 0.6rem;
+      display: flex;
+      gap: 0.35rem;
+      z-index: 5;
+    }
+    .admin-card-btn {
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.92);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .admin-card-btn:hover { transform: scale(1.15); box-shadow: 0 4px 10px rgba(0,0,0,0.18); }
+
+    /* In-modal admin actions */
+    .admin-action-btn {
+      padding: 0.55rem 1.4rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: opacity 0.2s;
+    }
+    .admin-action-btn:hover { opacity: 0.85; }
+    .admin-action-btn.edit   { background: var(--sda-navy); color: white; }
+    .admin-action-btn.delete { background: #dc2626;          color: white; }
+
+    /* ---- MEMBER FORM MODAL ---- */
+    #memberFormModal { z-index: 2100; }
+
+    .form-modal-content {
+      background: var(--bg-card);
+      border-radius: 24px;
+      max-width: 560px;
+      width: 100%;
+      max-height: 92vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.28);
+      border: 1px solid var(--border-light);
+      animation: modalSlideIn 0.3s ease;
+      padding: 2rem;
+    }
+
+    .form-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.75rem;
+    }
+    .form-modal-header h2 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      color: var(--sda-navy);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      padding: 0.75rem 1rem;
+      border: 2px solid var(--border-light);
+      border-radius: 10px;
+      font-family: var(--font-body);
+      font-size: 0.92rem;
+      background: var(--bg-light);
+      color: var(--text-primary);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      resize: vertical;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--sda-gold);
+      box-shadow: 0 0 0 4px rgba(201,162,39,0.1);
+    }
+    .form-group textarea { min-height: 90px; }
+
+    /* Dept checkboxes */
+    .dept-check-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+    }
+    .dept-check-label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--bg-light);
+      border: 2px solid var(--border-light);
+      border-radius: 8px;
+      padding: 0.4rem 0.85rem;
+      font-size: 0.83rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .dept-check-label:has(input:checked) {
+      border-color: var(--sda-navy);
+      background: rgba(26,54,93,0.07);
+      color: var(--sda-navy);
+    }
+    .dept-check-label input { display: none; }
+
+    .form-error {
+      color: #dc2626;
+      font-size: 0.83rem;
+      min-height: 1.2em;
+      margin-top: 0.25rem;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      margin-top: 1.5rem;
+    }
+    .form-btn {
+      padding: 0.7rem 1.75rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .form-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .form-btn.primary  { background: var(--sda-navy); color: white; }
+    .form-btn.secondary { background: var(--bg-light); color: var(--text-secondary); border: 2px solid var(--border-light); }
+
+    /* ---- TOAST ---- */
+    .sda-toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(1rem);
+      background: var(--sda-navy);
+      color: white;
+      padding: 0.8rem 1.75rem;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      font-family: var(--font-body);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: opacity 0.35s, transform 0.35s;
+      z-index: 9999;
+      white-space: nowrap;
+    }
+    .sda-toast--show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .sda-toast--success { background: #16a34a; }
+    .sda-toast--error   { background: #dc2626; }
+
+    /* Responsive form */
+    @media (max-width: 560px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-modal-content { padding: 1.25rem; margin: 1rem; }
+    }
+  </style>
 </head>
 <body>
+
+  <!-- ==================== ADMIN BAR ==================== -->
+  <div class="admin-bar" id="adminBar">
+    <span>🔐 Admin Mode — changes save to this browser</span>
+    <button class="admin-bar-btn add"    id="adminAddBtn">+ Add Member</button>
+    <button class="admin-bar-btn logout" id="adminLogoutBtn">Log Out</button>
+  </div>
+
   <!-- ==================== NAVIGATION ==================== -->
   <nav class="navbar" id="navbar">
     <a href="index.html" class="nav-brand">
@@ -63,6 +306,8 @@
         <button class="filter-btn" data-filter="welfare">Welfare</button>
         <button class="filter-btn" data-filter="media">Media</button>
       </div>
+      <!-- Hidden admin trigger — small link in bottom-right of toolbar -->
+      <button class="admin-login-btn" id="adminLoginBtn" title="Admin login">Admin</button>
     </div>
   </div>
 
@@ -71,7 +316,6 @@
     <div class="members-grid" id="membersGrid">
       <!-- Rendered dynamically via members.js -->
     </div>
-
     <div class="no-results" id="noResults" style="display: none;">
       <div class="no-results-icon">&#128269;</div>
       <h3>No members found</h3>
@@ -89,6 +333,75 @@
         </svg>
       </button>
       <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- ==================== MEMBER FORM MODAL (Admin) ==================== -->
+  <div class="modal" id="memberFormModal">
+    <div class="modal-overlay"></div>
+    <div class="form-modal-content">
+      <div class="form-modal-header">
+        <h2 id="memberFormTitle">Add New Member</h2>
+        <button class="modal-close" id="memberFormClose" aria-label="Close form" style="position:static;width:36px;height:36px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="fFirstName">First Name *</label>
+          <input id="fFirstName" type="text" placeholder="e.g. John">
+        </div>
+        <div class="form-group">
+          <label for="fLastName">Last Name *</label>
+          <input id="fLastName" type="text" placeholder="e.g. Kamau">
+        </div>
+        <div class="form-group">
+          <label for="fRole">Role *</label>
+          <input id="fRole" type="text" placeholder="e.g. Choir Director">
+        </div>
+        <div class="form-group">
+          <label for="fGift">Spiritual Gift</label>
+          <input id="fGift" type="text" placeholder="e.g. Music">
+        </div>
+        <div class="form-group">
+          <label for="fPhone">Phone</label>
+          <input id="fPhone" type="tel" placeholder="+254 7XX XXX XXX">
+        </div>
+        <div class="form-group">
+          <label for="fEmail">Email</label>
+          <input id="fEmail" type="email" placeholder="name@email.com">
+        </div>
+        <div class="form-group">
+          <label for="fJoined">Year Joined</label>
+          <input id="fJoined" type="number" min="2000" max="2099" placeholder="2024">
+        </div>
+
+        <div class="form-group full">
+          <label>Departments *</label>
+          <div class="dept-check-group">
+            <label class="dept-check-label"><input type="checkbox" id="fDept_choir">    Choir</label>
+            <label class="dept-check-label"><input type="checkbox" id="fDept_ushering"> Ushering</label>
+            <label class="dept-check-label"><input type="checkbox" id="fDept_treasury"> Treasury</label>
+            <label class="dept-check-label"><input type="checkbox" id="fDept_welfare">  Welfare</label>
+            <label class="dept-check-label"><input type="checkbox" id="fDept_media">    Media</label>
+          </div>
+        </div>
+
+        <div class="form-group full">
+          <label for="fBio">Bio</label>
+          <textarea id="fBio" placeholder="A short description about this member..."></textarea>
+        </div>
+      </div>
+
+      <p class="form-error" id="memberFormError"></p>
+
+      <div class="form-actions">
+        <button class="form-btn secondary" id="memberFormCancel" onclick="closeMemberFormModal()">Cancel</button>
+        <button class="form-btn primary"   id="memberFormSave">Save Member</button>
+      </div>
     </div>
   </div>
 
