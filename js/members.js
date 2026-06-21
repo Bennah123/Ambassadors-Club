@@ -131,12 +131,6 @@ async function supabaseDeleteMember(id) {
 //  CHOIR SYNC — auto-manages choir_members table
 // ============================================================
 
-/**
- * Called after every member save.
- * If member is in choir dept  → upsert into choir_members (voice_part stays null until set in choir page)
- * If member removed from choir → delete from choir_members
- * Uses member's full name as the link key (first_name + last_name match)
- */
 async function syncMemberToChoir(member, previousDepts = []) {
   if (!hasSupabase()) return;
 
@@ -144,7 +138,6 @@ async function syncMemberToChoir(member, previousDepts = []) {
   const wasInChoir = (previousDepts      || []).includes('choir');
 
   if (isInChoir) {
-    // Check if they already exist in choir_members
     const { data: existing } = await supabaseClient
       .from('choir_members')
       .select('id, voice_part')
@@ -153,21 +146,18 @@ async function syncMemberToChoir(member, previousDepts = []) {
       .maybeSingle();
 
     if (!existing) {
-      // Add to choir with no voice part assigned yet
       await supabaseClient
         .from('choir_members')
         .insert([{
           first_name: member.firstName,
           last_name:  member.lastName,
-          voice_part: null,   // admin assigns this on the choir page
+          voice_part: null,
           role:       'Member'
         }]);
       console.log(`✅ ${member.firstName} ${member.lastName} added to choir_members`);
     }
-    // If they already exist, leave them alone (don't overwrite voice_part/role set by choir admin)
 
   } else if (wasInChoir && !isInChoir) {
-    // Choir dept was removed — remove from choir_members
     await supabaseClient
       .from('choir_members')
       .delete()
@@ -402,7 +392,6 @@ async function saveMemberForm() {
 
   try {
     if (editingMemberId !== null) {
-      // ── UPDATE ──
       const previousMember = membersData.find(x => x.id === editingMemberId);
       const previousDepts  = previousMember?.departments || [];
 
@@ -411,17 +400,14 @@ async function saveMemberForm() {
       const idx = membersData.findIndex(x => x.id === editingMemberId);
       if (idx !== -1) membersData[idx] = { ...membersData[idx], ...memberObj };
 
-      // Sync choir membership based on dept change
       await syncMemberToChoir(memberObj, previousDepts);
 
       showToast(`${firstName} ${lastName} updated ✓`, 'success');
 
     } else {
-      // ── INSERT ──
       const saved = await supabaseInsert(memberObj);
       membersData.push(saved);
 
-      // If choir dept selected, add to choir_members
       await syncMemberToChoir(saved, []);
 
       showToast(`${firstName} ${lastName} added ✓`, 'success');
@@ -446,12 +432,13 @@ async function saveMemberForm() {
 async function deleteMember(id) {
   const m = membersData.find(x => x.id === id);
   if (!m) return;
-  if (!confirm(`Remove ${m.firstName} ${m.lastName} from the members list?\n\nThis cannot be undone.`)) return;
+  if (!confirm(`Remove ${m.firstName} ${m.lastName} from the members list?
+
+This cannot be undone.`)) return;
 
   try {
     await supabaseDeleteMember(id);
 
-    // Also remove from choir if they were a choir member
     if ((m.departments || []).includes('choir') && hasSupabase()) {
       await supabaseClient
         .from('choir_members')

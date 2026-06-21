@@ -76,7 +76,6 @@ function buildRosterFromArray(members) {
   members.forEach(m => {
     const part = m.voicePart || (m.voice_part || '').toLowerCase();
     if (VOICE_PARTS.includes(part)) choirRoster[part].push(m);
-    // Members with no voice part are simply not shown
   });
 }
 
@@ -174,14 +173,14 @@ function escHtml(str) {
 //  REPERTOIRE DATA
 // ============================================================
 const repertoireData = [
-  { title: "Tukutendereza",             type: "hymn",    typeLabel: "Hymn",    description: "Traditional Swahili worship song" },
-  { title: "Amazing Grace",             type: "hymn",    typeLabel: "Hymn",    description: "Classic gospel hymn arrangement" },
-  { title: "Hakuna Mungu Kama Wewe",    type: "praise",  typeLabel: "Praise",  description: "Contemporary Swahili praise" },
-  { title: "How Great Thou Art",        type: "hymn",    typeLabel: "Hymn",    description: "Grand worship anthem" },
-  { title: "Kuna Siku",                 type: "special", typeLabel: "Special", description: "Special music for divine service" },
-  { title: "It Is Well",                type: "hymn",    typeLabel: "Hymn",    description: "Peaceful hymn arrangement" },
-  { title: "Mungu Yu Mwema",            type: "praise",  typeLabel: "Praise",  description: "Upbeat praise and worship" },
-  { title: "Great Is Thy Faithfulness", type: "hymn",    typeLabel: "Hymn",    description: "Thanksgiving hymn" }
+  { title: "Nikikumbuka",             type: "hymn",    typeLabel: "Album-1",    description: "He died for our sins" },
+  { title: "Waseparo",             type: "hymn",    typeLabel: "Album-1",    description: "Tired of the sinful life" },
+  { title: "Mungu ni wa namna gani",    type: "praise",  typeLabel: "Album-1",  description: "God of Abraham, Isaac and Jacob" },
+  { title: "Bwana Mungu",        type: "hymn",    typeLabel: "Album-1",    description: "Always remember 'I Am'" },
+  { title: "Katika Pande Zote",                 type: "special", typeLabel: "Album-1", description: "Preach the Gospel all over the World" },
+  { title: "Jitu Kubwa",                type: "hymn",    typeLabel: "Album-1",    description: "Goliath's Defeat" },
+  { title: "Toiroka",            type: "praise",  typeLabel: "Album-1",  description: "We pray to you Lord" },
+  { title: "Kati ya Wenye Dhambi", type: "hymn",    typeLabel: "Album-1",    description: "Forgive our sins Father" }
 ];
 
 // ============================================================
