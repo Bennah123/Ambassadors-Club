@@ -150,10 +150,10 @@ function promptAdminLogin() {
   if (pwd === CHOIR_ADMIN_PASSWORD) {
     isAdmin = true;
     sessionStorage.setItem('sda_admin', '1');
-    document.getElementById('adminLoginBtn').style.display = 'none';
-    document.getElementById('adminStatus').style.display  = 'inline';
-    renderVoiceRoster(activeVoice);
-    showToast('Admin mode — click any member to edit voice', 'success');
+    document.getElementById('adminLoginBtn').style.display  = 'none';
+    document.getElementById('adminStatus').style.display    = 'inline-flex';
+    requestAnimationFrame(() => renderVoiceRoster(activeVoice));
+    showToast('Admin mode enabled ✓', 'success');
   } else {
     showToast('Incorrect password', 'error');
   }
@@ -163,9 +163,10 @@ function adminLogout() {
   isAdmin = false;
   sessionStorage.removeItem('sda_admin');
   closePopover();
-  document.getElementById('adminLoginBtn').style.display = 'inline';
-  document.getElementById('adminStatus').style.display  = 'none';
-  renderVoiceRoster(activeVoice);
+  closeVoiceAssignForm();
+  document.getElementById('adminLoginBtn').style.display  = 'inline';
+  document.getElementById('adminStatus').style.display    = 'none';
+  requestAnimationFrame(() => renderVoiceRoster(activeVoice));
   showToast('Logged out');
 }
 
@@ -323,14 +324,14 @@ function escHtml(str) {
 //  REPERTOIRE DATA
 // ============================================================
 const repertoireData = [
-  { title: "Tukutendereza",             type: "hymn",    typeLabel: "Hymn",    description: "Traditional Swahili worship song" },
-  { title: "Amazing Grace",             type: "hymn",    typeLabel: "Hymn",    description: "Classic gospel hymn arrangement" },
-  { title: "Hakuna Mungu Kama Wewe",    type: "praise",  typeLabel: "Praise",  description: "Contemporary Swahili praise" },
-  { title: "How Great Thou Art",        type: "hymn",    typeLabel: "Hymn",    description: "Grand worship anthem" },
-  { title: "Kuna Siku",                 type: "special", typeLabel: "Special", description: "Special music for divine service" },
-  { title: "It Is Well",                type: "hymn",    typeLabel: "Hymn",    description: "Peaceful hymn arrangement" },
-  { title: "Mungu Yu Mwema",            type: "praise",  typeLabel: "Praise",  description: "Upbeat praise and worship" },
-  { title: "Great Is Thy Faithfulness", type: "hymn",    typeLabel: "Hymn",    description: "Thanksgiving hymn" }
+  { title: "Nikikumbuka",               type: "hymn",    typeLabel: "Album-1",  description: "He died for our sins" },
+  { title: "Waseparo",                  type: "hymn",    typeLabel: "Album-1",  description: "Tired of the sinful life" },
+  { title: "Mungu ni wa namna gani",    type: "praise",  typeLabel: "Album-1",  description: "God of Abraham, Isaac and Jacob" },
+  { title: "Bwana Mungu",               type: "hymn",    typeLabel: "Album-1",  description: "Always remember 'I Am'" },
+  { title: "Katika Pande Zote",         type: "special", typeLabel: "Album-1",  description: "Preach the Gospel all over the World" },
+  { title: "Jitu Kubwa",                type: "hymn",    typeLabel: "Album-1",  description: "Goliath's Defeat" },
+  { title: "Toiroka",                   type: "praise",  typeLabel: "Album-1",  description: "We pray to you Lord" },
+  { title: "Kati ya Wenye Dhambi",      type: "hymn",    typeLabel: "Album-1",  description: "Forgive our sins Father" }
 ];
 
 // ============================================================
@@ -341,7 +342,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (sessionStorage.getItem('sda_admin') === '1') {
     isAdmin = true;
     document.getElementById('adminLoginBtn').style.display = 'none';
-    document.getElementById('adminStatus').style.display  = 'inline';
+    document.getElementById('adminStatus').style.display   = 'inline-flex';
   }
 
   await loadChoir();
@@ -362,15 +363,128 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('adminLoginBtn')?.addEventListener('click', promptAdminLogin);
   document.getElementById('adminLogoutBtn')?.addEventListener('click', adminLogout);
 
-  // Popover save
+  // ✏️ Assign Voice button → open form
+  document.getElementById('assignVoiceBtn')?.addEventListener('click', openVoiceAssignForm);
+
+  // Popover save (card-click popover)
   document.getElementById('popoverSave')?.addEventListener('click', saveVoiceEdit);
 
   // Close popover when clicking outside
   document.addEventListener('click', e => {
     const popover = document.getElementById('voicePopover');
-    if (popover && !popover.contains(e.target)) closePopover();
+    if (popover && !popover.contains(e.target) && !e.target.closest('.choir-member-card'))
+      closePopover();
   });
 
-  // Close on Escape
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopover(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closePopover(); closeVoiceAssignForm(); }
+  });
 });
+
+// ============================================================
+//  VOICE ASSIGNMENT FORM (Admin)
+//  Uses already-loaded choirRoster — no extra fetch needed.
+// ============================================================
+
+function openVoiceAssignForm() {
+  const modal = document.getElementById('voiceAssignModal');
+  if (!modal) return;
+
+  // Populate member dropdown from already-loaded roster
+  const allMembers = VOICE_PARTS.flatMap(p => choirRoster[p])
+    .sort((a, b) => a.lastName.localeCompare(b.lastName));
+
+  const memberSelect = document.getElementById('vaMember');
+  memberSelect.innerHTML = '<option value="">— Select member —</option>' +
+    allMembers.map(m =>
+      `<option value="${m.id}" data-voice="${m.voicePart || ''}" data-role="${m.role || 'Member'}">
+        ${escHtml(m.firstName)} ${escHtml(m.lastName)} (${voicePartLabels[m.voicePart] || 'Unassigned'})
+      </option>`
+    ).join('');
+
+  // Reset form
+  document.getElementById('vaVoice').value        = '';
+  document.getElementById('vaRole').value         = 'Member';
+  document.getElementById('vaError').textContent  = '';
+  const saveBtn = document.getElementById('vaSave');
+  saveBtn.disabled    = false;
+  saveBtn.textContent = 'Save';
+
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeVoiceAssignForm() {
+  document.getElementById('voiceAssignModal')?.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+// When a member is selected, pre-fill their current voice + role
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('vaMember')?.addEventListener('change', function () {
+    const opt = this.options[this.selectedIndex];
+    if (!opt.value) return;
+    document.getElementById('vaVoice').value = opt.dataset.voice || '';
+    document.getElementById('vaRole').value  = opt.dataset.role  || 'Member';
+  });
+});
+
+async function saveVoiceAssign() {
+  const memberSelect = document.getElementById('vaMember');
+  const memberId     = parseInt(memberSelect.value);
+  const voice        = document.getElementById('vaVoice').value;
+  const role         = document.getElementById('vaRole').value || 'Member';
+  const errEl        = document.getElementById('vaError');
+  const saveBtn      = document.getElementById('vaSave');
+
+  if (!memberId) { errEl.textContent = 'Please select a member.'; return; }
+  if (!voice)    { errEl.textContent = 'Please select a voice part.'; return; }
+  errEl.textContent   = '';
+  saveBtn.disabled    = true;
+  saveBtn.textContent = 'Saving…';
+
+  try {
+    if (hasSupabase()) {
+      const { error } = await supabaseClient
+        .from('choir_members')
+        .update({ voice_part: voice, role })
+        .eq('id', memberId);
+      if (error) throw error;
+    }
+
+    // Update local roster
+    let movedMember = null;
+    VOICE_PARTS.forEach(p => {
+      const idx = choirRoster[p].findIndex(x => x.id === memberId);
+      if (idx !== -1) {
+        movedMember = { ...choirRoster[p][idx], voicePart: voice, role };
+        choirRoster[p].splice(idx, 1);
+      }
+    });
+    if (movedMember) {
+      choirRoster[voice].push(movedMember);
+    }
+
+    // Update localStorage cache
+    localStorage.setItem(CHOIR_STORAGE_KEY, JSON.stringify(
+      VOICE_PARTS.flatMap(p => choirRoster[p])
+    ));
+
+    saveBtn.disabled    = false;
+    saveBtn.textContent = 'Save';
+    closeVoiceAssignForm();
+
+    // Switch to updated tab
+    document.querySelectorAll('.voice-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.voice-tab[data-voice="${voice}"]`)?.classList.add('active');
+    renderVoiceRoster(voice);
+
+    showToast(`${movedMember?.firstName} moved to ${voicePartLabels[voice]} ✓`, 'success');
+
+  } catch (err) {
+    console.error('Voice update failed:', err);
+    errEl.textContent   = `Failed: ${err.message}`;
+    saveBtn.disabled    = false;
+    saveBtn.textContent = 'Save';
+  }
+}

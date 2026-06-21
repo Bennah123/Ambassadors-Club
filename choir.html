@@ -143,8 +143,13 @@
           style="font-size:0.75rem;color:var(--text-muted);background:none;border:none;cursor:pointer;font-family:var(--font-body);padding:0.25rem 0.5rem;text-decoration:underline;opacity:0.4;">
           Admin
         </button>
-        <span id="adminStatus" style="display:none; font-size:0.78rem; color:var(--sda-gold); font-family:var(--font-body);">
+        <span id="adminStatus" style="display:none; font-size:0.78rem; color:var(--sda-gold); font-family:var(--font-body); align-items:center; gap:0.75rem;">
           🔐 Admin Mode &nbsp;&middot;&nbsp;
+          <button id="assignVoiceBtn"
+            style="padding:0.35rem 0.9rem;background:var(--sda-gold);color:var(--sda-navy);border:none;border-radius:7px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:var(--font-body);">
+            ✏️ Assign Voice
+          </button>
+          &nbsp;&middot;&nbsp;
           <button id="adminLogoutBtn"
             style="font-size:0.75rem;color:var(--text-muted);background:none;border:none;cursor:pointer;font-family:var(--font-body);text-decoration:underline;">
             Log out
@@ -181,6 +186,61 @@
     <div style="display:flex;gap:0.5rem;">
       <button id="popoverSave" style="flex:1;padding:0.5rem;background:var(--sda-navy);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;font-family:var(--font-body);">Save</button>
       <button onclick="closePopover()" style="padding:0.5rem 0.75rem;background:var(--bg-light);color:var(--text-secondary);border:1px solid var(--border-light);border-radius:8px;font-size:0.85rem;cursor:pointer;font-family:var(--font-body);">✕</button>
+    </div>
+  </div>
+
+  <!-- ==================== VOICE ASSIGN MODAL (Admin) ==================== -->
+  <div class="modal" id="voiceAssignModal">
+    <div class="modal-overlay" onclick="closeVoiceAssignForm()"></div>
+    <div style="background:var(--bg-card);border-radius:20px;max-width:420px;width:100%;
+      padding:2rem;position:relative;box-shadow:0 25px 50px rgba(0,0,0,0.25);
+      border:1px solid var(--border-light);animation:modalSlideIn 0.25s ease;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+        <h2 style="font-family:var(--font-display);color:var(--sda-navy);font-size:1.35rem;margin:0;">Assign Voice Part</h2>
+        <button onclick="closeVoiceAssignForm()"
+          style="width:34px;height:34px;border-radius:50%;border:none;background:var(--bg-light);color:var(--text-muted);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">✕</button>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+        <div style="display:flex;flex-direction:column;gap:0.4rem;">
+          <label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.4px;">Member *</label>
+          <select id="vaMember" style="padding:0.75rem 1rem;border:2px solid var(--border-light);border-radius:10px;font-family:var(--font-body);font-size:0.92rem;background:var(--bg-light);color:var(--text-primary);">
+            <option value="">— Select member —</option>
+          </select>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:0.4rem;">
+          <label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.4px;">Voice Part *</label>
+          <select id="vaVoice" style="padding:0.75rem 1rem;border:2px solid var(--border-light);border-radius:10px;font-family:var(--font-body);font-size:0.92rem;background:var(--bg-light);color:var(--text-primary);">
+            <option value="">— Select voice —</option>
+            <option value="soprano">Soprano</option>
+            <option value="alto">Alto</option>
+            <option value="tenor">Tenor</option>
+            <option value="bass">Bass</option>
+          </select>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:0.4rem;">
+          <label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.4px;">Role</label>
+          <select id="vaRole" style="padding:0.75rem 1rem;border:2px solid var(--border-light);border-radius:10px;font-family:var(--font-body);font-size:0.92rem;background:var(--bg-light);color:var(--text-primary);">
+            <option value="Member">Member</option>
+            <option value="Section Leader">Section Leader</option>
+          </select>
+        </div>
+      </div>
+
+      <p id="vaError" style="color:#dc2626;font-size:0.83rem;margin-top:0.75rem;min-height:1.2em;"></p>
+
+      <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.25rem;">
+        <button onclick="closeVoiceAssignForm()"
+          style="padding:0.65rem 1.5rem;border:2px solid var(--border-light);background:var(--bg-light);color:var(--text-secondary);border-radius:10px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:var(--font-body);">
+          Cancel
+        </button>
+        <button id="vaSave" onclick="saveVoiceAssign()"
+          style="padding:0.65rem 1.5rem;background:var(--sda-navy);color:white;border:none;border-radius:10px;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:var(--font-body);">
+          Save
+        </button>
+      </div>
     </div>
   </div>
 
