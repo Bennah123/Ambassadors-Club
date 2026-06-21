@@ -6,28 +6,20 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   // ---- ACTIVE NAV LINK ----
-  // BUG FIX: pathname.split('/').pop() returns '' on directory URLs (e.g. "/")
-  // so the fallback must cover both '' and explicit 'index.html'
   const rawPage = window.location.pathname.split('/').pop();
   const currentPage = rawPage === '' ? 'index.html' : rawPage;
 
   document.querySelectorAll('.nav-links a').forEach(link => {
     const linkHref = link.getAttribute('href');
-    // Normalise: treat both '' and 'index.html' as home
     const normHref = linkHref === '' ? 'index.html' : linkHref;
     if (normHref === currentPage) {
       link.classList.add('active');
     } else {
-      // Remove stale active class that may be hard-coded in HTML
       link.classList.remove('active');
     }
   });
 
   // ---- MOBILE MENU TOGGLE ----
-  // BUG FIX: main.js and home.js both attached click listeners to the same
-  // mobileToggle element, causing the hamburger animation to fire twice and
-  // the menu to immediately close. Mobile toggle is now ONLY handled in main.js;
-  // the duplicate block has been removed from home.js.
   const mobileToggle = document.getElementById('mobileToggle');
   const navLinks    = document.getElementById('navLinks');
 
@@ -35,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     mobileToggle.addEventListener('click', () => {
       const isOpen = navLinks.classList.toggle('mobile-open');
       mobileToggle.setAttribute('aria-expanded', isOpen);
+      document.body.classList.toggle('menu-open', isOpen);
 
       const spans = mobileToggle.querySelectorAll('span');
       if (isOpen) {
@@ -53,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
       link.addEventListener('click', () => {
         navLinks.classList.remove('mobile-open');
         mobileToggle.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('menu-open');
         const spans = mobileToggle.querySelectorAll('span');
         spans[0].style.transform = 'none';
         spans[1].style.opacity   = '1';
@@ -69,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ) {
         navLinks.classList.remove('mobile-open');
         mobileToggle.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('menu-open');
         const spans = mobileToggle.querySelectorAll('span');
         spans[0].style.transform = 'none';
         spans[1].style.opacity   = '1';
@@ -78,16 +73,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ---- SMOOTH SCROLL FOR ANCHOR LINKS ----
-  // BUG FIX: querySelector throws if href is exactly '#' (empty fragment).
-  // Added a guard so we only scroll when there is an actual target selector.
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
       const href = this.getAttribute('href');
-      if (!href || href === '#') return; // nothing to scroll to
+      if (!href || href === '#') return;
       e.preventDefault();
       const target = document.querySelector(href);
       if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const navHeight = document.querySelector('.navbar')?.offsetHeight || 0;
+        const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - navHeight;
+        window.scrollTo({ top: targetPosition, behavior: 'smooth' });
       }
     });
   });
@@ -113,7 +108,48 @@ document.addEventListener('DOMContentLoaded', () => {
   const yearSpan = document.querySelector('.current-year');
   if (yearSpan) yearSpan.textContent = new Date().getFullYear();
 
+  // ---- BACK TO TOP BUTTON ----
+  initBackToTop();
+
+  // ---- NEWSLETTER FORM ----
+  initNewsletterForm();
+
 });
+
+// ---- BACK TO TOP ----
+function initBackToTop() {
+  const backToTop = document.getElementById('backToTop');
+  if (!backToTop) return;
+
+  window.addEventListener('scroll', () => {
+    if (window.pageYOffset > 500) {
+      backToTop.classList.add('visible');
+    } else {
+      backToTop.classList.remove('visible');
+    }
+  }, { passive: true });
+
+  backToTop.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+// ---- NEWSLETTER FORM ----
+function initNewsletterForm() {
+  const form = document.getElementById('newsletterForm');
+  if (!form) return;
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('newsletterEmail').value;
+    if (email && email.includes('@')) {
+      showToast('Thank you for subscribing! You will receive updates soon.', 'success');
+      form.reset();
+    } else {
+      showToast('Please enter a valid email address.', 'error');
+    }
+  });
+}
 
 // ---- UTILITIES ----
 

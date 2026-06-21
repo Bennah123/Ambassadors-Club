@@ -35,10 +35,6 @@ function animateCounters() {
 }
 
 function animateCount(element, target) {
-  // BUG FIX: original used a fixed 50-step setInterval regardless of target
-  // value — for target=3 each step was 0.06, so it would show "0" for almost
-  // all steps. Now we use requestAnimationFrame with easing for smooth results
-  // at any target value.
   const duration = 1500; // ms
   const start = performance.now();
 
@@ -88,8 +84,6 @@ function populateUpcomingEvents() {
   const container = document.getElementById('upcomingEvents');
   if (!container) return;
 
-  // BUG FIX: innerHTML was set all at once — if the data array were ever empty
-  // the container would just be blank with no feedback. Added empty-state.
   if (!upcomingEventsData.length) {
     container.innerHTML = '<p class="no-events">No upcoming events. Check back soon!</p>';
     return;
@@ -124,7 +118,7 @@ function escapeHTML(str) {
 // ============================================================
 function initScrollAnimations() {
   const animatedElements = document.querySelectorAll(
-    '.mission-text, .mission-card, .feature-card, .event-preview-card, .testimonial-content'
+    '.mission-text, .mission-card, .feature-card, .event-preview-card, .testimonial-content, .join-cta-content, .join-cta-visual, .newsletter-content, .newsletter-form, .footer-brand-col, .footer-links-col, .footer-contact-col'
   );
   if (!animatedElements.length) return;
 
@@ -132,7 +126,6 @@ function initScrollAnimations() {
   animatedElements.forEach((el, index) => {
     el.style.opacity    = '0';
     el.style.transform  = 'translateY(30px)';
-    // Stagger delay capped at 0.4s so later items don't feel sluggish
     const delay = Math.min(index * 0.08, 0.4);
     el.style.transition = `opacity 0.6s ease ${delay}s, transform 0.6s ease ${delay}s`;
   });
@@ -157,9 +150,6 @@ function initHeroParallax() {
   const hero = document.querySelector('.hero');
   if (!hero) return;
 
-  // BUG FIX: original ran parallax even on mobile, causing janky layout on
-  // small screens where the hero already fills the viewport. Disabled below
-  // 768 px via a media-query check that re-evaluates on resize.
   let enabled = window.innerWidth >= 768;
 
   window.addEventListener('resize', () => {
@@ -192,10 +182,6 @@ function initHeroParallax() {
 // ============================================================
 // NAVBAR SCROLL EFFECT
 // ============================================================
-// BUG FIX: original code in home.js duplicated the scroll listener already
-// in main.js, creating two competing handlers modifying `.navbar` styles.
-// Consolidated here into one handler that handles both shadow (main.js concern)
-// and background opacity (home-specific concern).
 function initNavbarScroll() {
   const navbar = document.getElementById('navbar');
   if (!navbar) return;

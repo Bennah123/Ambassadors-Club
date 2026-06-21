@@ -83,8 +83,6 @@ body {
   opacity: 0.15;
 }
 .hero-content { position: relative; z-index: 2; max-width: 800px; }
-/* BUG FIX: hero-content z-index was 1, same as hero overlays — bumped to 2
-   so content always sits above .hero-bg-overlay and .hero-particles */
 
 .hero-badge {
   display: inline-flex; align-items: center; gap: 0.5rem;
@@ -121,6 +119,7 @@ body {
   border: 2px solid rgba(255,255,255,0.35);
 }
 .btn-outline:hover { border-color: var(--sda-gold); color: var(--sda-gold); }
+.btn-sm { padding: 0.625rem 1.5rem; font-size: 0.875rem; }
 
 /* ---- SECTION HEADERS ---- */
 .section-header {
@@ -142,12 +141,10 @@ body {
 /* ---- FOOTER ---- */
 .footer {
   background: var(--sda-navy);
-  padding: 3rem 2rem 1.5rem;
   border-top: 3px solid var(--sda-gold);
 }
 
 /* ---- TOAST NOTIFICATION ---- */
-/* Used by showToast() in main.js */
 .toast-notification {
   position: fixed;
   bottom: 1.5rem;
@@ -184,9 +181,6 @@ body {
 
 /* ---- RESPONSIVE ---- */
 @media (max-width: 768px) {
-  /* BUG FIX: `display: none` on .nav-links hides the menu permanently on
-     mobile even after JS adds `.mobile-open`. Removed — visibility is handled
-     via the transform/opacity rules in home.css. */
   .hero { padding-top: 6rem; }
   .hero-cta { flex-direction: column; align-items: center; }
 }
