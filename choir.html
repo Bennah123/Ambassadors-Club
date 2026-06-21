@@ -12,15 +12,14 @@
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/choir.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .choir-empty {
+      grid-column: 1 / -1; text-align: center; padding: 2rem;
+      color: var(--text-muted); font-style: italic;
+    }
+  </style>
 </head>
 <body>
-
-  <!-- ==================== ADMIN BAR ==================== -->
-  <div id="adminBar" style="display:none !important;">
-    <span>🔐 Admin Mode — Choir Management</span>
-    <button class="admin-bar-btn add"    id="adminAddBtn">+ Add Member</button>
-    <button class="admin-bar-btn logout" id="adminLogoutBtn">Log Out</button>
-  </div>
 
   <!-- ==================== NAVIGATION ==================== -->
   <nav class="navbar" id="navbar">
@@ -87,33 +86,23 @@
         <button class="voice-tab active" data-voice="soprano">
           <span class="tab-icon">&#9836;</span>
           <span class="tab-name">Soprano</span>
-          <span class="tab-count">6 members</span>
+          <span class="tab-count">0 members</span>
         </button>
         <button class="voice-tab" data-voice="alto">
           <span class="tab-icon">&#9836;</span>
           <span class="tab-name">Alto</span>
-          <span class="tab-count">6 members</span>
+          <span class="tab-count">0 members</span>
         </button>
         <button class="voice-tab" data-voice="tenor">
           <span class="tab-icon">&#9836;</span>
           <span class="tab-name">Tenor</span>
-          <span class="tab-count">6 members</span>
+          <span class="tab-count">0 members</span>
         </button>
         <button class="voice-tab" data-voice="bass">
           <span class="tab-icon">&#9836;</span>
           <span class="tab-name">Bass</span>
-          <span class="tab-count">6 members</span>
+          <span class="tab-count">0 members</span>
         </button>
-        <!-- Only visible when members have no voice part assigned yet -->
-        <button class="voice-tab unassigned-tab" data-voice="unassigned" style="display:none; border-color:#f59e0b;">
-          <span class="tab-icon">⏳</span>
-          <span class="tab-name">Unassigned</span>
-          <span class="tab-count" style="color:#f59e0b;">0 members</span>
-        </button>
-      </div>
-      <!-- Hidden admin trigger -->
-      <div style="text-align:center; margin-top:0.75rem;">
-        <button id="adminLoginBtn" style="font-size:0.78rem;color:var(--text-muted);background:none;border:none;cursor:pointer;font-family:var(--font-body);padding:0.25rem 0.5rem;text-decoration:underline;">Admin</button>
       </div>
     </div>
 
@@ -142,7 +131,6 @@
           <span class="sc-tag">Weekly</span>
         </div>
       </div>
-
       <div class="schedule-card">
         <div class="sc-icon-bg">&#127929;</div>
         <div class="sc-content">
@@ -153,7 +141,6 @@
           <span class="sc-tag">Bi-Weekly</span>
         </div>
       </div>
-
       <div class="schedule-card">
         <div class="sc-icon-bg">&#127932;</div>
         <div class="sc-content">
@@ -175,7 +162,6 @@
       <p>A selection of songs we minister during divine services and special programs</p>
       <div class="accent-line"></div>
     </div>
-
     <div class="repertoire-list" id="repertoireList">
       <!-- Rendered via choir.js -->
     </div>
@@ -233,190 +219,6 @@
       <p class="footer-credit">Built with love by the Ambassadors Club</p>
     </div>
   </footer>
-
-  <!-- ==================== CHOIR MEMBER FORM MODAL (Admin only) ==================== -->
-  <div class="modal" id="choirFormModal" aria-hidden="true">
-    <div class="modal-overlay"></div>
-    <div class="form-modal-content">
-      <div class="form-modal-header">
-        <h2 id="choirFormTitle">Add Choir Member</h2>
-        <button id="choirFormClose" style="width:36px;height:36px;border-radius:50%;border:none;background:var(--bg-light);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
-        </button>
-      </div>
-
-      <!-- ADD MODE: member dropdown -->
-      <div id="cfAddFields">
-        <div class="form-group full" style="margin-bottom:1rem;">
-          <label for="cfMemberSelect">Select Member *</label>
-          <select id="cfMemberSelect">
-            <option value="">— Loading members… —</option>
-          </select>
-          <small style="color:var(--text-muted);font-size:0.78rem;margin-top:0.35rem;display:block;">
-            Only members with Choir department appear here.
-          </small>
-        </div>
-      </div>
-
-      <!-- EDIT MODE: name display (read-only) -->
-      <div id="cfEditFields" style="display:none;">
-        <div class="form-group full" style="margin-bottom:1rem;">
-          <label>Member</label>
-          <div id="cfEditName" style="padding:0.75rem 1rem;background:var(--bg-light);border:2px solid var(--border-light);border-radius:10px;font-weight:600;color:var(--sda-navy);"></div>
-        </div>
-      </div>
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="cfVoicePart">Voice Part</label>
-          <select id="cfVoicePart">
-            <option value="">— Not assigned yet —</option>
-            <option value="soprano">Soprano</option>
-            <option value="alto">Alto</option>
-            <option value="tenor">Tenor</option>
-            <option value="bass">Bass</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="cfRole">Role</label>
-          <select id="cfRole">
-            <option value="Member">Member</option>
-            <option value="Section Leader">Section Leader</option>
-          </select>
-        </div>
-      </div>
-
-      <p class="form-error" id="choirFormError"></p>
-
-      <div class="form-actions">
-        <button class="form-btn secondary" onclick="closeChoirFormModal()">Cancel</button>
-        <button class="form-btn primary" id="choirFormSave">Save Member</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== SHARED ADMIN + TOAST STYLES ==================== -->
-  <style>
-    /* Admin bar */
-    #adminBar {
-      align-items: center; gap: 1rem;
-      background: #1a365d; color: white;
-      padding: 0.6rem 2rem; font-size: 0.85rem;
-      font-family: var(--font-body);
-      position: relative; z-index: 9999;
-    }
-    .admin-bar-btn {
-      padding: 0.45rem 1.1rem; border: none; border-radius: 8px;
-      font-size: 0.85rem; font-weight: 600; cursor: pointer;
-      font-family: var(--font-body); transition: opacity 0.2s;
-    }
-    .admin-bar-btn:hover { opacity: 0.85; }
-    .admin-bar-btn.add    { background: #c9a227; color: #1a365d; }
-    .admin-bar-btn.logout { background: rgba(255,255,255,0.15); color: white; }
-
-    /* Admin card actions */
-    .admin-card-actions {
-      position: absolute; top: 0.5rem; right: 0.5rem;
-      display: flex; gap: 0.35rem; z-index: 5;
-    }
-    .admin-card-btn {
-      width: 28px; height: 28px; border: none; border-radius: 7px;
-      cursor: pointer; font-size: 0.8rem; display: flex;
-      align-items: center; justify-content: center;
-      background: rgba(255,255,255,0.92);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-      transition: transform 0.15s;
-    }
-    .admin-card-btn:hover { transform: scale(1.15); }
-
-    /* Form modal */
-    #choirFormModal { z-index: 2100; }
-    .form-modal-content {
-      background: var(--bg-card); border-radius: 24px;
-      max-width: 500px; width: 100%; max-height: 92vh;
-      overflow-y: auto; position: relative;
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.28);
-      border: 1px solid var(--border-light);
-      animation: modalSlideIn 0.3s ease; padding: 2rem;
-    }
-    .form-modal-header {
-      display: flex; justify-content: space-between;
-      align-items: center; margin-bottom: 1.75rem;
-    }
-    .form-modal-header h2 {
-      font-family: var(--font-display); font-size: 1.4rem; color: var(--sda-navy);
-    }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
-    .form-group.full { grid-column: 1 / -1; }
-    .form-group label {
-      font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);
-      text-transform: uppercase; letter-spacing: 0.4px;
-    }
-    .form-group input, .form-group select {
-      padding: 0.75rem 1rem; border: 2px solid var(--border-light);
-      border-radius: 10px; font-family: var(--font-body); font-size: 0.92rem;
-      background: var(--bg-light); color: var(--text-primary);
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .form-group input:focus, .form-group select:focus {
-      outline: none; border-color: #c9a227;
-      box-shadow: 0 0 0 4px rgba(201,162,39,0.1);
-    }
-    .form-error { color: #dc2626; font-size: 0.83rem; min-height: 1.2em; margin-top: 0.25rem; }
-    .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }
-    .form-btn {
-      padding: 0.7rem 1.75rem; border: none; border-radius: 10px;
-      font-size: 0.9rem; font-weight: 600; cursor: pointer;
-      font-family: var(--font-body); transition: opacity 0.2s, transform 0.15s;
-    }
-    .form-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-    .form-btn.primary  { background: var(--sda-navy); color: white; }
-    .form-btn.secondary { background: var(--bg-light); color: var(--text-secondary); border: 2px solid var(--border-light); }
-
-    /* Empty state */
-    .choir-empty {
-      grid-column: 1 / -1; text-align: center; padding: 2rem;
-      color: var(--text-muted); font-style: italic;
-    }
-    .choir-empty a { color: var(--sda-gold); }
-
-    /* Assign voice button on unassigned cards */
-    .assign-voice-btn {
-      margin-top: 0.75rem;
-      padding: 0.4rem 1rem;
-      background: #f59e0b;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: var(--font-body);
-      transition: opacity 0.2s;
-    }
-    .assign-voice-btn:hover { opacity: 0.85; }
-
-    /* Toast */
-    .sda-toast {
-      position: fixed; bottom: 2rem; left: 50%;
-      transform: translateX(-50%) translateY(1rem);
-      background: var(--sda-navy); color: white;
-      padding: 0.8rem 1.75rem; border-radius: 50px;
-      font-size: 0.9rem; font-weight: 500; font-family: var(--font-body);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-      opacity: 0; transition: opacity 0.35s, transform 0.35s;
-      z-index: 9999; white-space: nowrap;
-    }
-    .sda-toast--show    { opacity: 1; transform: translateX(-50%) translateY(0); }
-    .sda-toast--success { background: #16a34a; }
-    .sda-toast--error   { background: #dc2626; }
-
-    @media (max-width: 500px) {
-      .form-grid { grid-template-columns: 1fr; }
-      .form-modal-content { padding: 1.25rem; margin: 1rem; }
-    }
-  </style>
 
   <script src="js/supabase-config.js"></script>
   <script src="js/main.js"></script>
