@@ -66,7 +66,7 @@
           <span class="c-label">Services/Week</span>
         </div>
         <div class="c-stat">
-          <span class="c-number">3+</span>
+          <span class="c-number">6+</span>
           <span class="c-label">Years Active</span>
         </div>
       </div>
@@ -136,42 +136,32 @@
         <div class="sc-icon-bg">&#127908;</div>
         <div class="sc-content">
           <h3>Main Choir Practice</h3>
-          <p class="sc-time">Saturdays, 4:00 PM — 6:00 PM</p>
-          <p class="sc-loc">Church Parking</p>
+          <p class="sc-time">Sundays, 2:00 PM — 5:00 PM</p>
+          <p class="sc-loc">Conference Room</p>
           <p class="sc-desc">Full choir rehearsal with all voice sections. Focus on upcoming Sabbath music and special programs.</p>
-          <span class="sc-tag">Weekly</span>
+          <span class="sc-tag">Every Sunday</span>
         </div>
       </div>
 
       <div class="schedule-card">
         <div class="sc-icon-bg">&#127929;</div>
         <div class="sc-content">
-          <h3>Sectional Rehearsals</h3>
+          <h3>Midweek Rehearsals</h3>
           <p class="sc-time">Wednesdays, 4:00 PM — 6:00 PM</p>
           <p class="sc-loc">Conference Room</p>
           <p class="sc-desc">Voice-specific training. Each section works on harmony, pitch, and blending under section leaders.</p>
-          <span class="sc-tag">Bi-Weekly</span>
-        </div>
-      </div>
-      <div class="schedule-card">
-        <div class="sc-icon-bg">&#127928;</div>
-        <div class="sc-content">
-          <h3>Friday Training</h3>
-          <p class="sc-time">Fridays, 4:00 PM - 6:00 PM</p>
-          <p class="sc-loc">Conference Room</p>
-          <p class="sc-desc">Voice-specific training. Each section works on harmony, pitch, and blending under section leaders.</p>
-          <span class="sc-tag">Bi-Weekly</span>
+          <span class="sc-tag">Every Wednesday</span>
         </div>
       </div>
 
       <div class="schedule-card">
         <div class="sc-icon-bg">&#127932;</div>
         <div class="sc-content">
-          <h3>Special Program Prep</h3>
-          <p class="sc-time">As Announced</p>
-          <p class="sc-loc">Church Sanctuary</p>
-          <p class="sc-desc">Intensive rehearsals for camp meetings, musical concerts, evangelistic series, and church celebrations.</p>
-          <span class="sc-tag">Event-Based</span>
+          <h3>Friday Training</h3>
+          <p class="sc-time">Fridays, 4:00 PM - 6:00 PM</p>
+          <p class="sc-loc">Conference Room</p>
+          <p class="sc-desc">Voice-specific training. Each section works on harmony, pitch, and blending under section leaders.</p>
+          <span class="sc-tag">Every Friday</span>
         </div>
       </div>
     </div>
@@ -255,17 +245,30 @@
         </button>
       </div>
 
+      <!-- ADD MODE: member dropdown -->
+      <div id="cfAddFields">
+        <div class="form-group full" style="margin-bottom:1rem;">
+          <label for="cfMemberSelect">Select Member *</label>
+          <select id="cfMemberSelect">
+            <option value="">— Loading members… —</option>
+          </select>
+          <small style="color:var(--text-muted);font-size:0.78rem;margin-top:0.35rem;display:block;">
+            Only members with Choir department appear here.
+          </small>
+        </div>
+      </div>
+
+      <!-- EDIT MODE: name display (read-only) -->
+      <div id="cfEditFields" style="display:none;">
+        <div class="form-group full" style="margin-bottom:1rem;">
+          <label>Member</label>
+          <div id="cfEditName" style="padding:0.75rem 1rem;background:var(--bg-light);border:2px solid var(--border-light);border-radius:10px;font-weight:600;color:var(--sda-navy);"></div>
+        </div>
+      </div>
+
       <div class="form-grid">
         <div class="form-group">
-          <label for="cfFirstName">First Name *</label>
-          <input id="cfFirstName" type="text" placeholder="e.g. Sarah">
-        </div>
-        <div class="form-group">
-          <label for="cfLastName">Last Name *</label>
-          <input id="cfLastName" type="text" placeholder="e.g. Wanjiku">
-        </div>
-        <div class="form-group">
-          <label for="cfVoicePart">Voice Part *</label>
+          <label for="cfVoicePart">Voice Part</label>
           <select id="cfVoicePart">
             <option value="">— Not assigned yet —</option>
             <option value="soprano">Soprano</option>

@@ -1,7 +1,7 @@
 // ============================================================
 //  CHOIR PAGE — choir.js
-//  Data layer: Supabase → localStorage cache
-//  Members with no voice_part assigned show in "Unassigned" tab
+//  Data: Supabase → localStorage cache
+//  Add form: dropdown from members table (choir dept only)
 // ============================================================
 
 const CHOIR_ADMIN_PASSWORD = 'ambassadors2026';
@@ -14,16 +14,17 @@ const voicePartLabels = {
   bass:       'Bass',
   unassigned: 'Unassigned'
 };
-const VOICE_PARTS = ['soprano', 'alto', 'tenor', 'bass']; // excludes unassigned
+const VOICE_PARTS = ['soprano', 'alto', 'tenor', 'bass'];
 
 // ---- STATE ----
 let choirRoster     = { soprano: [], alto: [], tenor: [], bass: [], unassigned: [] };
+let eligibleMembers = []; // members with choir dept, for dropdown
 let isAdmin         = false;
 let editingMemberId = null;
 let activeVoice     = 'soprano';
 
 // ============================================================
-//  SUPABASE HELPERS
+//  SUPABASE
 // ============================================================
 
 function hasSupabase() {
@@ -34,8 +35,8 @@ function fromSupabaseRow(m) {
   const part = (m.voice_part || '').toLowerCase();
   return {
     id:        m.id,
-    firstName: m.first_name  || '',
-    lastName:  m.last_name   || '',
+    firstName: m.first_name || '',
+    lastName:  m.last_name  || '',
     voicePart: VOICE_PARTS.includes(part) ? part : 'unassigned',
     role:      m.role || 'Member'
   };
@@ -75,27 +76,44 @@ async function loadChoir() {
     }
   }
 
-  // localStorage fallback (offline cache only)
   try {
     const stored = localStorage.getItem(CHOIR_STORAGE_KEY);
-    if (stored) {
-      buildRosterFromArray(JSON.parse(stored));
-      console.log('ℹ️ Loaded choir from localStorage cache');
-      return;
-    }
+    if (stored) { buildRosterFromArray(JSON.parse(stored)); return; }
   } catch { /* ignore */ }
 
-  // Nothing available
   buildRosterFromArray([]);
-  console.log('ℹ️ No choir data available');
+}
+
+/**
+ * Load members who have 'choir' in their departments.
+ * Used to populate the "Add Member" dropdown.
+ */
+async function loadEligibleMembers() {
+  if (!hasSupabase()) return;
+  try {
+    const { data, error } = await supabaseClient
+      .from('members')
+      .select('id, first_name, last_name')
+      .contains('departments', ['choir'])
+      .order('last_name', { ascending: true });
+
+    if (error) throw error;
+    eligibleMembers = (data || []).map(m => ({
+      id:        m.id,
+      firstName: m.first_name || '',
+      lastName:  m.last_name  || ''
+    }));
+    console.log(`✅ ${eligibleMembers.length} eligible choir members loaded`);
+  } catch (err) {
+    console.warn('Could not load eligible members:', err.message);
+  }
 }
 
 function buildRosterFromArray(members) {
   choirRoster = { soprano: [], alto: [], tenor: [], bass: [], unassigned: [] };
   members.forEach(m => {
     const part = m.voicePart || 'unassigned';
-    if (choirRoster[part] !== undefined) choirRoster[part].push(m);
-    else choirRoster.unassigned.push(m);
+    (choirRoster[part] = choirRoster[part] || []).push(m);
   });
 }
 
@@ -108,7 +126,7 @@ function saveLocalCache() {
 }
 
 // ============================================================
-//  SUPABASE WRITE OPERATIONS
+//  SUPABASE WRITE
 // ============================================================
 
 async function supabaseInsert(memberObj) {
@@ -129,7 +147,7 @@ async function supabaseUpdate(id, memberObj) {
   if (error) throw error;
 }
 
-async function supabaseDelete(id) {
+async function supabaseDeleteRow(id) {
   const { error } = await supabaseClient
     .from('choir_members')
     .delete()
@@ -138,7 +156,7 @@ async function supabaseDelete(id) {
 }
 
 // ============================================================
-//  RENDER
+//  RENDER ROSTER
 // ============================================================
 
 function renderVoiceRoster(voice) {
@@ -149,33 +167,31 @@ function renderVoiceRoster(voice) {
   const members   = choirRoster[voice] || [];
   const partLabel = voicePartLabels[voice] || voice;
 
-  // Update tab counts (all tabs including unassigned)
+  // Update all tab counts
   [...VOICE_PARTS, 'unassigned'].forEach(p => {
-    const countEl = document.querySelector(`.voice-tab[data-voice="${p}"] .tab-count`);
-    if (countEl) {
-      const n = choirRoster[p].length;
-      countEl.textContent = `${n} member${n !== 1 ? 's' : ''}`;
+    const el = document.querySelector(`.voice-tab[data-voice="${p}"] .tab-count`);
+    if (el) {
+      const n = (choirRoster[p] || []).length;
+      el.textContent = `${n} member${n !== 1 ? 's' : ''}`;
     }
   });
 
-  // Update unassigned tab visibility — only show if there are unassigned members
+  // Show/hide unassigned tab
   const unassignedTab = document.querySelector('.voice-tab[data-voice="unassigned"]');
   if (unassignedTab) {
-    unassignedTab.style.display = choirRoster.unassigned.length > 0 ? 'flex' : 'none';
+    unassignedTab.style.display = (choirRoster.unassigned || []).length > 0 ? 'flex' : 'none';
   }
 
-  // Update hero member count (assigned only)
-  const countEl = document.querySelector('.c-number[data-count]');
-  if (countEl) countEl.textContent = VOICE_PARTS.flatMap(p => choirRoster[p]).length;
+  // Update hero count (assigned only)
+  const heroCount = document.querySelector('.c-number[data-count]');
+  if (heroCount) heroCount.textContent = VOICE_PARTS.flatMap(p => choirRoster[p]).length;
 
-  // Empty state
   if (members.length === 0) {
     container.innerHTML = `
       <div class="choir-empty">
-        <p>No ${partLabel} members yet.
-        ${voice === 'unassigned'
-          ? 'New choir members added from the Members page will appear here until you assign their voice part.'
-          : isAdmin ? `Use "+ Add Member" to add one, or assign voice parts from the <a href="members.html">Members page</a>.` : ''}
+        <p>${voice === 'unassigned'
+          ? 'No unassigned members. New choir members from the Members page appear here.'
+          : `No ${partLabel} members yet.${isAdmin ? ' Click "+ Add Member" to add one.' : ''}`}
         </p>
       </div>`;
     return;
@@ -186,17 +202,17 @@ function renderVoiceRoster(voice) {
       ${isAdmin ? `
         <div class="admin-card-actions" onclick="event.stopPropagation()">
           <button class="admin-card-btn" onclick="openEditModal(${m.id})" title="Edit">✏️</button>
-          <button class="admin-card-btn" onclick="deleteChoirMember(${m.id})" title="Delete">🗑️</button>
+          <button class="admin-card-btn" onclick="deleteChoirMember(${m.id})" title="Remove">🗑️</button>
         </div>` : ''}
       <div class="cm-avatar">${getInitials(m.firstName, m.lastName)}</div>
       <h4>${escHtml(m.firstName)} ${escHtml(m.lastName)}</h4>
       <span class="cm-part">
         ${voice === 'unassigned'
-          ? '<em style="color:var(--text-muted)">Voice not assigned</em>'
+          ? '<em style="color:var(--text-muted);font-style:italic;font-size:0.8rem;">Voice not assigned</em>'
           : `${partLabel} &middot; ${escHtml(m.role)}`}
       </span>
       ${voice === 'unassigned' && isAdmin
-        ? `<button class="assign-voice-btn" onclick="openEditModal(${m.id})">Assign Voice Part</button>`
+        ? `<button class="assign-voice-btn" onclick="openEditModal(${m.id})">Assign Voice ▾</button>`
         : ''}
     </div>
   `).join('');
@@ -205,16 +221,12 @@ function renderVoiceRoster(voice) {
 function renderRepertoire() {
   const container = document.getElementById('repertoireList');
   if (!container) return;
-  container.innerHTML = repertoireData.map((song, i) => `
+  container.innerHTML = repertoireData.map((s, i) => `
     <div class="rep-item">
       <span class="rep-number">${i + 1}</span>
-      <div class="rep-info">
-        <h4>${escHtml(song.title)}</h4>
-        <p>${escHtml(song.description)}</p>
-      </div>
-      <span class="rep-tag ${song.type}">${song.typeLabel}</span>
-    </div>
-  `).join('');
+      <div class="rep-info"><h4>${escHtml(s.title)}</h4><p>${escHtml(s.description)}</p></div>
+      <span class="rep-tag ${s.type}">${s.typeLabel}</span>
+    </div>`).join('');
 }
 
 // ============================================================
@@ -248,19 +260,39 @@ function updateAdminUI() {
   const loginBtn = document.getElementById('adminLoginBtn');
   if (bar) {
     bar.style.cssText = isAdmin
-      ? 'display:flex !important; align-items:center; gap:1rem; background:#1a365d; color:white; padding:0.6rem 2rem; font-size:0.85rem; position:relative; z-index:9999;'
+      ? 'display:flex !important;align-items:center;gap:1rem;background:#1a365d;color:white;padding:0.6rem 2rem;font-size:0.85rem;position:relative;z-index:9999;'
       : 'display:none !important;';
   }
   if (loginBtn) loginBtn.style.display = isAdmin ? 'none' : 'inline-block';
 }
 
 // ============================================================
-//  ADMIN — ADD / EDIT FORM
+//  ADMIN — FORM (ADD / EDIT)
 // ============================================================
 
 function openAddModal() {
   editingMemberId = null;
-  populateForm(null);
+  resetForm();
+
+  // Show member dropdown, hide name fields
+  toggleFormMode('add');
+
+  // Populate dropdown with eligible members not already in choir
+  const alreadyIn = new Set(flatRoster().map(m => `${m.firstName}|${m.lastName}`));
+  const available = eligibleMembers.filter(m => !alreadyIn.has(`${m.firstName}|${m.lastName}`));
+
+  const select = document.getElementById('cfMemberSelect');
+  if (select) {
+    select.innerHTML = `<option value="">— Select a member —</option>` +
+      available.map(m =>
+        `<option value="${m.firstName}|${m.lastName}">${escHtml(m.firstName)} ${escHtml(m.lastName)}</option>`
+      ).join('');
+
+    if (available.length === 0) {
+      select.innerHTML = `<option value="">No eligible members available</option>`;
+    }
+  }
+
   document.getElementById('choirFormTitle').textContent = 'Add Choir Member';
   document.getElementById('choirFormModal').classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -270,10 +302,33 @@ function openEditModal(id) {
   const m = flatRoster().find(x => x.id === id);
   if (!m) return;
   editingMemberId = id;
-  populateForm(m);
+  resetForm();
+
+  // Edit mode: show name as read-only text, no dropdown
+  toggleFormMode('edit');
+
+  document.getElementById('cfEditName').textContent  = `${m.firstName} ${m.lastName}`;
+  document.getElementById('cfVoicePart').value        = m.voicePart === 'unassigned' ? '' : (m.voicePart || '');
+  document.getElementById('cfRole').value             = m.role || 'Member';
+
   document.getElementById('choirFormTitle').textContent = 'Edit Choir Member';
   document.getElementById('choirFormModal').classList.add('active');
   document.body.style.overflow = 'hidden';
+}
+
+/** Show dropdown (add mode) or name label (edit mode) */
+function toggleFormMode(mode) {
+  const addFields  = document.getElementById('cfAddFields');
+  const editFields = document.getElementById('cfEditFields');
+  if (addFields)  addFields.style.display  = mode === 'add'  ? 'block' : 'none';
+  if (editFields) editFields.style.display = mode === 'edit' ? 'block' : 'none';
+}
+
+function resetForm() {
+  const errEl   = document.getElementById('choirFormError');
+  const saveBtn = document.getElementById('choirFormSave');
+  if (errEl)   errEl.textContent = '';
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Member'; }
 }
 
 function closeChoirFormModal() {
@@ -282,28 +337,27 @@ function closeChoirFormModal() {
   editingMemberId = null;
 }
 
-function populateForm(m) {
-  document.getElementById('cfFirstName').value = m?.firstName || '';
-  document.getElementById('cfLastName').value  = m?.lastName  || '';
-  document.getElementById('cfVoicePart').value = m?.voicePart === 'unassigned' ? '' : (m?.voicePart || '');
-  document.getElementById('cfRole').value      = m?.role || 'Member';
-  document.getElementById('choirFormError').textContent = '';
-  const saveBtn = document.getElementById('choirFormSave');
-  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Member'; }
-}
-
 async function saveChoirForm() {
-  const firstName = document.getElementById('cfFirstName').value.trim();
-  const lastName  = document.getElementById('cfLastName').value.trim();
-  const voicePart = document.getElementById('cfVoicePart').value || 'unassigned';
-  const role      = document.getElementById('cfRole').value || 'Member';
-
   const errEl   = document.getElementById('choirFormError');
   const saveBtn = document.getElementById('choirFormSave');
+  const voicePart = document.getElementById('cfVoicePart').value || 'unassigned';
+  const role      = document.getElementById('cfRole').value      || 'Member';
 
-  if (!firstName || !lastName) { errEl.textContent = 'First and last name are required.'; return; }
-  errEl.textContent = '';
+  let firstName, lastName;
 
+  if (editingMemberId !== null) {
+    // Edit mode — get name from existing record
+    const existing = flatRoster().find(x => x.id === editingMemberId);
+    firstName = existing.firstName;
+    lastName  = existing.lastName;
+  } else {
+    // Add mode — get name from dropdown
+    const selected = document.getElementById('cfMemberSelect').value;
+    if (!selected) { errEl.textContent = 'Please select a member.'; return; }
+    [firstName, lastName] = selected.split('|');
+  }
+
+  errEl.textContent   = '';
   saveBtn.disabled    = true;
   saveBtn.textContent = 'Saving…';
 
@@ -311,40 +365,46 @@ async function saveChoirForm() {
 
   try {
     if (editingMemberId !== null) {
-      // UPDATE
+      // ── UPDATE ──
       await supabaseUpdate(editingMemberId, memberObj);
 
-      // Remove from old part, add to new part
+      // Move from old part to new part in local state
       [...VOICE_PARTS, 'unassigned'].forEach(p => {
-        const idx = choirRoster[p].findIndex(x => x.id === editingMemberId);
+        const idx = (choirRoster[p] || []).findIndex(x => x.id === editingMemberId);
         if (idx !== -1) choirRoster[p].splice(idx, 1);
       });
+      if (!choirRoster[voicePart]) choirRoster[voicePart] = [];
       choirRoster[voicePart].push({ id: editingMemberId, ...memberObj });
 
       showToast(`${firstName} ${lastName} updated ✓`, 'success');
 
     } else {
-      // INSERT
-      if (hasSupabase()) {
-        const saved = await supabaseInsert(memberObj);
-        choirRoster[voicePart].push(saved);
-      } else {
-        const all   = flatRoster();
-        const newId = all.length > 0 ? Math.max(...all.map(x => x.id)) + 1 : 1;
-        choirRoster[voicePart].push({ id: newId, ...memberObj });
-      }
+      // ── INSERT ──
+      const saved = hasSupabase()
+        ? await supabaseInsert(memberObj)
+        : (() => {
+            const all   = flatRoster();
+            const newId = all.length > 0 ? Math.max(...all.map(x => x.id)) + 1 : 1;
+            return { id: newId, ...memberObj };
+          })();
+
+      if (!choirRoster[voicePart]) choirRoster[voicePart] = [];
+      choirRoster[voicePart].push(saved);
       showToast(`${firstName} ${lastName} added ✓`, 'success');
     }
 
     saveLocalCache();
+
+    // Reset button BEFORE closing so it's ready next time
+    saveBtn.disabled    = false;
+    saveBtn.textContent = 'Save Member';
+
     closeChoirFormModal();
 
     // Switch to the saved member's tab
+    document.querySelectorAll('.voice-tab').forEach(t => t.classList.remove('active'));
     const targetTab = document.querySelector(`.voice-tab[data-voice="${voicePart}"]`);
-    if (targetTab) {
-      document.querySelectorAll('.voice-tab').forEach(t => t.classList.remove('active'));
-      targetTab.classList.add('active');
-    }
+    if (targetTab) targetTab.classList.add('active');
     renderVoiceRoster(voicePart);
 
   } catch (err) {
@@ -362,12 +422,12 @@ async function saveChoirForm() {
 async function deleteChoirMember(id) {
   const m = flatRoster().find(x => x.id === id);
   if (!m) return;
-  if (!confirm(`Remove ${m.firstName} ${m.lastName} from the choir?\n\nThis will not remove them from the Members page.`)) return;
+  if (!confirm(`Remove ${m.firstName} ${m.lastName} from the choir?\n\nThey will remain on the Members page.`)) return;
 
   try {
-    await supabaseDelete(id);
+    await supabaseDeleteRow(id);
     [...VOICE_PARTS, 'unassigned'].forEach(p => {
-      choirRoster[p] = choirRoster[p].filter(x => x.id !== id);
+      choirRoster[p] = (choirRoster[p] || []).filter(x => x.id !== id);
     });
     saveLocalCache();
     renderVoiceRoster(activeVoice);
@@ -385,25 +445,20 @@ async function deleteChoirMember(id) {
 function animateCounters() {
   const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const el  = entry.target;
-        const end = VOICE_PARTS.flatMap(p => choirRoster[p]).length || parseInt(el.dataset.count) || 0;
-        animateCount(el, end);
-        observer.unobserve(el);
-      }
+      if (!entry.isIntersecting) return;
+      const el  = entry.target;
+      const end = VOICE_PARTS.flatMap(p => choirRoster[p]).length || parseInt(el.dataset.count) || 0;
+      let current = 0;
+      const step  = Math.max(1, Math.ceil(end / 40));
+      const timer = setInterval(() => {
+        current += step;
+        if (current >= end) { el.textContent = end; clearInterval(timer); }
+        else el.textContent = current;
+      }, 30);
+      observer.unobserve(el);
     });
   }, { threshold: 0.5 });
   document.querySelectorAll('.c-number[data-count]').forEach(c => observer.observe(c));
-}
-
-function animateCount(el, target) {
-  let current = 0;
-  const step  = Math.max(1, Math.ceil(target / 40));
-  const timer = setInterval(() => {
-    current += step;
-    if (current >= target) { el.textContent = target; clearInterval(timer); }
-    else el.textContent = current;
-  }, 30);
 }
 
 // ============================================================
@@ -421,18 +476,15 @@ function escHtml(str) {
 }
 
 function showToast(msg, type = 'info') {
-  const existing = document.getElementById('sdaToast');
-  if (existing) existing.remove();
-  const toast = document.createElement('div');
-  toast.id        = 'sdaToast';
-  toast.className = `sda-toast sda-toast--${type}`;
-  toast.textContent = msg;
-  document.body.appendChild(toast);
-  requestAnimationFrame(() => toast.classList.add('sda-toast--show'));
-  setTimeout(() => {
-    toast.classList.remove('sda-toast--show');
-    setTimeout(() => toast.remove(), 400);
-  }, 3000);
+  const old = document.getElementById('sdaToast');
+  if (old) old.remove();
+  const t = document.createElement('div');
+  t.id = 'sdaToast';
+  t.className = `sda-toast sda-toast--${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('sda-toast--show'));
+  setTimeout(() => { t.classList.remove('sda-toast--show'); setTimeout(() => t.remove(), 400); }, 3000);
 }
 
 // ============================================================
@@ -456,13 +508,14 @@ const repertoireData = [
 document.addEventListener('DOMContentLoaded', async () => {
   if (sessionStorage.getItem('sda_admin') === '1') isAdmin = true;
 
-  await loadChoir();
+  // Load both in parallel for speed
+  await Promise.all([loadChoir(), loadEligibleMembers()]);
+
   updateAdminUI();
   renderVoiceRoster('soprano');
   renderRepertoire();
   animateCounters();
 
-  // Voice tabs
   document.querySelectorAll('.voice-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.voice-tab').forEach(t => t.classList.remove('active'));
@@ -471,7 +524,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Form modal
   document.getElementById('choirFormClose')?.addEventListener('click', closeChoirFormModal);
   document.getElementById('choirFormModal')?.addEventListener('click', e => {
     if (e.target === e.currentTarget || e.target.classList.contains('modal-overlay'))
@@ -479,12 +531,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   document.getElementById('choirFormSave')?.addEventListener('click', saveChoirForm);
 
-  // Admin
   document.getElementById('adminLoginBtn')?.addEventListener('click', promptAdminLogin);
   document.getElementById('adminLogoutBtn')?.addEventListener('click', adminLogout);
   document.getElementById('adminAddBtn')?.addEventListener('click', openAddModal);
 
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeChoirFormModal();
-  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeChoirFormModal(); });
 });
