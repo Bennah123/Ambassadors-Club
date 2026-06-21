@@ -324,14 +324,14 @@ function escHtml(str) {
 //  REPERTOIRE DATA
 // ============================================================
 const repertoireData = [
-  { title: "Nikikumbuka",               type: "hymn",    typeLabel: "Album-1",  description: "He died for our sins" },
-  { title: "Waseparo",                  type: "hymn",    typeLabel: "Album-1",  description: "Tired of the sinful life" },
-  { title: "Mungu ni wa namna gani",    type: "praise",  typeLabel: "Album-1",  description: "God of Abraham, Isaac and Jacob" },
-  { title: "Bwana Mungu",               type: "hymn",    typeLabel: "Album-1",  description: "Always remember 'I Am'" },
-  { title: "Katika Pande Zote",         type: "special", typeLabel: "Album-1",  description: "Preach the Gospel all over the World" },
-  { title: "Jitu Kubwa",                type: "hymn",    typeLabel: "Album-1",  description: "Goliath's Defeat" },
-  { title: "Toiroka",                   type: "praise",  typeLabel: "Album-1",  description: "We pray to you Lord" },
-  { title: "Kati ya Wenye Dhambi",      type: "hymn",    typeLabel: "Album-1",  description: "Forgive our sins Father" }
+  { title: "Tukutendereza",             type: "hymn",    typeLabel: "Hymn",    description: "Traditional Swahili worship song" },
+  { title: "Amazing Grace",             type: "hymn",    typeLabel: "Hymn",    description: "Classic gospel hymn arrangement" },
+  { title: "Hakuna Mungu Kama Wewe",    type: "praise",  typeLabel: "Praise",  description: "Contemporary Swahili praise" },
+  { title: "How Great Thou Art",        type: "hymn",    typeLabel: "Hymn",    description: "Grand worship anthem" },
+  { title: "Kuna Siku",                 type: "special", typeLabel: "Special", description: "Special music for divine service" },
+  { title: "It Is Well",                type: "hymn",    typeLabel: "Hymn",    description: "Peaceful hymn arrangement" },
+  { title: "Mungu Yu Mwema",            type: "praise",  typeLabel: "Praise",  description: "Upbeat praise and worship" },
+  { title: "Great Is Thy Faithfulness", type: "hymn",    typeLabel: "Hymn",    description: "Thanksgiving hymn" }
 ];
 
 // ============================================================
@@ -364,7 +364,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('adminLogoutBtn')?.addEventListener('click', adminLogout);
 
   // ✏️ Assign Voice button → open form
-  document.getElementById('assignVoiceBtn')?.addEventListener('click', openVoiceAssignForm);
+  document.getElementById('assignVoiceBtn')?.addEventListener('click', () => openVoiceAssignForm());
 
   // Popover save (card-click popover)
   document.getElementById('popoverSave')?.addEventListener('click', saveVoiceEdit);
@@ -383,35 +383,74 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // ============================================================
 //  VOICE ASSIGNMENT FORM (Admin)
-//  Uses already-loaded choirRoster — no extra fetch needed.
+//  Fetches names from the MEMBERS table (choir dept filter).
+//  Never requires re-entering names already in Members page.
 // ============================================================
 
-function openVoiceAssignForm() {
+async function openVoiceAssignForm() {
   const modal = document.getElementById('voiceAssignModal');
   if (!modal) return;
 
-  // Populate member dropdown from already-loaded roster
-  const allMembers = VOICE_PARTS.flatMap(p => choirRoster[p])
-    .sort((a, b) => a.lastName.localeCompare(b.lastName));
-
-  const memberSelect = document.getElementById('vaMember');
-  memberSelect.innerHTML = '<option value="">— Select member —</option>' +
-    allMembers.map(m =>
-      `<option value="${m.id}" data-voice="${m.voicePart || ''}" data-role="${m.role || 'Member'}">
-        ${escHtml(m.firstName)} ${escHtml(m.lastName)} (${voicePartLabels[m.voicePart] || 'Unassigned'})
-      </option>`
-    ).join('');
-
-  // Reset form
+  // Open modal immediately
+  document.getElementById('vaError').textContent  = '';
   document.getElementById('vaVoice').value        = '';
   document.getElementById('vaRole').value         = 'Member';
-  document.getElementById('vaError').textContent  = '';
   const saveBtn = document.getElementById('vaSave');
   saveBtn.disabled    = false;
   saveBtn.textContent = 'Save';
 
+  const memberSelect = document.getElementById('vaMember');
+  memberSelect.innerHTML = '<option value="">— Loading… —</option>';
+  memberSelect.disabled  = true;
+
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
+
+  // Fetch choir-dept members from the MEMBERS table
+  try {
+    const { data, error } = await supabaseClient
+      .from('members')
+      .select('id, first_name, last_name, departments')
+      .order('last_name', { ascending: true });
+
+    if (error) throw error;
+
+    // Filter client-side — works regardless of how Supabase stores the array
+    const choirMembers = (data || []).filter(m =>
+      Array.isArray(m.departments) && m.departments.includes('choir')
+    );
+
+    // Build a lookup of who already has a voice assigned in choir_members
+    const voiceLookup = {};
+    VOICE_PARTS.forEach(p => {
+      choirRoster[p].forEach(cm => {
+        voiceLookup[`${cm.firstName}|${cm.lastName}`] = voicePartLabels[p];
+      });
+    });
+
+    memberSelect.disabled = false;
+
+    if (choirMembers.length === 0) {
+      memberSelect.innerHTML = '<option value="">No choir members found in Members page</option>';
+      return;
+    }
+
+    memberSelect.innerHTML = '<option value="">— Select member —</option>' +
+      choirMembers.map(m => {
+        const key          = `${m.first_name}|${m.last_name}`;
+        const currentVoice = voiceLookup[key] || 'Not assigned';
+        // Store first_name|last_name as value — used to match in choir_members
+        return `<option value="${escHtml(m.first_name)}|${escHtml(m.last_name)}"
+          data-current-voice="${voiceLookup[key] ? Object.keys(voicePartLabels).find(k => voicePartLabels[k] === voiceLookup[key]) : ''}">
+          ${escHtml(m.first_name)} ${escHtml(m.last_name)} — ${currentVoice}
+        </option>`;
+      }).join('');
+
+  } catch (err) {
+    memberSelect.disabled = false;
+    memberSelect.innerHTML = '<option value="">Failed to load members</option>';
+    document.getElementById('vaError').textContent = `Could not load members: ${err.message}`;
+  }
 }
 
 function closeVoiceAssignForm() {
@@ -419,51 +458,67 @@ function closeVoiceAssignForm() {
   document.body.style.overflow = '';
 }
 
-// When a member is selected, pre-fill their current voice + role
+// Pre-fill voice when a member is selected
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('vaMember')?.addEventListener('change', function () {
     const opt = this.options[this.selectedIndex];
     if (!opt.value) return;
-    document.getElementById('vaVoice').value = opt.dataset.voice || '';
-    document.getElementById('vaRole').value  = opt.dataset.role  || 'Member';
+    // Pre-fill their current voice part if already assigned
+    document.getElementById('vaVoice').value = opt.dataset.currentVoice || '';
+    document.getElementById('vaRole').value  = 'Member';
   });
 });
 
 async function saveVoiceAssign() {
   const memberSelect = document.getElementById('vaMember');
-  const memberId     = parseInt(memberSelect.value);
+  const selectedVal  = memberSelect.value; // "FirstName|LastName"
   const voice        = document.getElementById('vaVoice').value;
   const role         = document.getElementById('vaRole').value || 'Member';
   const errEl        = document.getElementById('vaError');
   const saveBtn      = document.getElementById('vaSave');
 
-  if (!memberId) { errEl.textContent = 'Please select a member.'; return; }
-  if (!voice)    { errEl.textContent = 'Please select a voice part.'; return; }
+  if (!selectedVal) { errEl.textContent = 'Please select a member.'; return; }
+  if (!voice)       { errEl.textContent = 'Please select a voice part.'; return; }
+
+  const [firstName, lastName] = selectedVal.split('|');
   errEl.textContent   = '';
   saveBtn.disabled    = true;
   saveBtn.textContent = 'Saving…';
 
   try {
     if (hasSupabase()) {
-      const { error } = await supabaseClient
+      // Check if this person already exists in choir_members
+      const { data: existing } = await supabaseClient
         .from('choir_members')
-        .update({ voice_part: voice, role })
-        .eq('id', memberId);
-      if (error) throw error;
+        .select('id')
+        .eq('first_name', firstName)
+        .eq('last_name',  lastName)
+        .maybeSingle();
+
+      if (existing) {
+        // Update existing record
+        const { error } = await supabaseClient
+          .from('choir_members')
+          .update({ voice_part: voice, role })
+          .eq('id', existing.id);
+        if (error) throw error;
+      } else {
+        // Insert new record (member was in choir dept but not yet in choir_members)
+        const { error } = await supabaseClient
+          .from('choir_members')
+          .insert([{ first_name: firstName, last_name: lastName, voice_part: voice, role }]);
+        if (error) throw error;
+      }
     }
 
-    // Update local roster
-    let movedMember = null;
+    // Update local choirRoster — remove from any current part, add to new part
     VOICE_PARTS.forEach(p => {
-      const idx = choirRoster[p].findIndex(x => x.id === memberId);
-      if (idx !== -1) {
-        movedMember = { ...choirRoster[p][idx], voicePart: voice, role };
-        choirRoster[p].splice(idx, 1);
-      }
+      choirRoster[p] = choirRoster[p].filter(
+        x => !(x.firstName === firstName && x.lastName === lastName)
+      );
     });
-    if (movedMember) {
-      choirRoster[voice].push(movedMember);
-    }
+    if (!choirRoster[voice]) choirRoster[voice] = [];
+    choirRoster[voice].push({ id: Date.now(), firstName, lastName, voicePart: voice, role });
 
     // Update localStorage cache
     localStorage.setItem(CHOIR_STORAGE_KEY, JSON.stringify(
@@ -479,10 +534,10 @@ async function saveVoiceAssign() {
     document.querySelector(`.voice-tab[data-voice="${voice}"]`)?.classList.add('active');
     renderVoiceRoster(voice);
 
-    showToast(`${movedMember?.firstName} moved to ${voicePartLabels[voice]} ✓`, 'success');
+    showToast(`${firstName} ${lastName} → ${voicePartLabels[voice]} ✓`, 'success');
 
   } catch (err) {
-    console.error('Voice update failed:', err);
+    console.error('Voice assign failed:', err);
     errEl.textContent   = `Failed: ${err.message}`;
     saveBtn.disabled    = false;
     saveBtn.textContent = 'Save';
