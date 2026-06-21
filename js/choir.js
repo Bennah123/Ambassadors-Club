@@ -1,10 +1,11 @@
 // ============================================================
 //  CHOIR PAGE — choir.js
-//  Read-only display. Loads from Supabase → localStorage cache.
-//  Management is done via the Members page only.
+//  Visitors: read-only display.
+//  Admin: click any member card to edit their voice part.
 // ============================================================
 
-const CHOIR_STORAGE_KEY = 'sda_choir_data';
+const CHOIR_STORAGE_KEY    = 'sda_choir_data';
+const CHOIR_ADMIN_PASSWORD = 'ambassadors2026';
 
 const voicePartLabels = {
   soprano: 'Soprano',
@@ -16,6 +17,7 @@ const VOICE_PARTS = ['soprano', 'alto', 'tenor', 'bass'];
 
 let choirRoster = { soprano: [], alto: [], tenor: [], bass: [] };
 let activeVoice = 'soprano';
+let isAdmin     = false;
 
 // ============================================================
 //  SUPABASE
@@ -62,7 +64,6 @@ async function loadChoir() {
     }
   }
 
-  // localStorage fallback
   try {
     const stored = localStorage.getItem(CHOIR_STORAGE_KEY);
     if (stored) { buildRosterFromArray(JSON.parse(stored)); return; }
@@ -77,6 +78,10 @@ function buildRosterFromArray(members) {
     const part = m.voicePart || (m.voice_part || '').toLowerCase();
     if (VOICE_PARTS.includes(part)) choirRoster[part].push(m);
   });
+}
+
+function flatRoster() {
+  return VOICE_PARTS.flatMap(p => choirRoster[p]);
 }
 
 // ============================================================
@@ -102,7 +107,7 @@ function renderVoiceRoster(voice) {
 
   // Update hero member count
   const heroCount = document.querySelector('.c-number[data-count]');
-  if (heroCount) heroCount.textContent = VOICE_PARTS.flatMap(p => choirRoster[p]).length;
+  if (heroCount) heroCount.textContent = flatRoster().length;
 
   if (members.length === 0) {
     container.innerHTML = `
@@ -113,7 +118,10 @@ function renderVoiceRoster(voice) {
   }
 
   container.innerHTML = members.map(m => `
-    <div class="choir-member-card">
+    <div class="choir-member-card ${isAdmin ? 'admin-editable' : ''}"
+         data-id="${m.id}"
+         ${isAdmin ? `onclick="openVoicePopover(event, ${m.id})"` : ''}>
+      ${isAdmin ? `<div class="edit-hint">✏️ click to edit</div>` : ''}
       <div class="cm-avatar">${getInitials(m.firstName, m.lastName)}</div>
       <h4>${escHtml(m.firstName)} ${escHtml(m.lastName)}</h4>
       <span class="cm-part">${partLabel} &middot; ${escHtml(m.role)}</span>
@@ -133,6 +141,132 @@ function renderRepertoire() {
 }
 
 // ============================================================
+//  ADMIN — LOGIN
+// ============================================================
+
+function promptAdminLogin() {
+  const pwd = prompt('Enter admin password:');
+  if (pwd === null) return;
+  if (pwd === CHOIR_ADMIN_PASSWORD) {
+    isAdmin = true;
+    sessionStorage.setItem('sda_admin', '1');
+    document.getElementById('adminLoginBtn').style.display = 'none';
+    document.getElementById('adminStatus').style.display  = 'inline';
+    renderVoiceRoster(activeVoice);
+    showToast('Admin mode — click any member to edit voice', 'success');
+  } else {
+    showToast('Incorrect password', 'error');
+  }
+}
+
+function adminLogout() {
+  isAdmin = false;
+  sessionStorage.removeItem('sda_admin');
+  closePopover();
+  document.getElementById('adminLoginBtn').style.display = 'inline';
+  document.getElementById('adminStatus').style.display  = 'none';
+  renderVoiceRoster(activeVoice);
+  showToast('Logged out');
+}
+
+// ============================================================
+//  VOICE EDIT POPOVER
+// ============================================================
+
+function openVoicePopover(event, memberId) {
+  event.stopPropagation();
+  closePopover(); // close any existing one
+
+  const m = flatRoster().find(x => x.id === memberId);
+  if (!m) return;
+
+  const card    = event.currentTarget;
+  const popover = document.getElementById('voicePopover');
+
+  // Populate
+  document.getElementById('popoverName').textContent    = `${m.firstName} ${m.lastName}`;
+  document.getElementById('popoverVoice').value         = m.voicePart || '';
+  document.getElementById('popoverRole').value          = m.role || 'Member';
+  document.getElementById('popoverError').textContent   = '';
+  document.getElementById('popoverSave').disabled       = false;
+  document.getElementById('popoverSave').textContent    = 'Save';
+  popover.dataset.memberId = memberId;
+
+  // Position near the card
+  const rect = card.getBoundingClientRect();
+  popover.style.top  = `${rect.bottom + window.scrollY + 8}px`;
+  popover.style.left = `${Math.min(rect.left + window.scrollX, window.innerWidth - 240)}px`;
+  popover.style.display = 'block';
+
+  // Animate in
+  requestAnimationFrame(() => popover.classList.add('popover-visible'));
+}
+
+function closePopover() {
+  const popover = document.getElementById('voicePopover');
+  if (popover) {
+    popover.classList.remove('popover-visible');
+    popover.style.display = 'none';
+  }
+}
+
+async function saveVoiceEdit() {
+  const popover  = document.getElementById('voicePopover');
+  const memberId = parseInt(popover.dataset.memberId);
+  const voice    = document.getElementById('popoverVoice').value;
+  const role     = document.getElementById('popoverRole').value || 'Member';
+  const errEl    = document.getElementById('popoverError');
+  const saveBtn  = document.getElementById('popoverSave');
+
+  if (!voice) { errEl.textContent = 'Please select a voice part.'; return; }
+  errEl.textContent  = '';
+  saveBtn.disabled   = true;
+  saveBtn.textContent = 'Saving…';
+
+  try {
+    if (hasSupabase()) {
+      const { error } = await supabaseClient
+        .from('choir_members')
+        .update({ voice_part: voice, role })
+        .eq('id', memberId);
+      if (error) throw error;
+    }
+
+    // Update local roster — move member to new part
+    let member = null;
+    VOICE_PARTS.forEach(p => {
+      const idx = choirRoster[p].findIndex(x => x.id === memberId);
+      if (idx !== -1) {
+        member = { ...choirRoster[p][idx], voicePart: voice, role };
+        choirRoster[p].splice(idx, 1);
+      }
+    });
+    if (member) {
+      if (!choirRoster[voice]) choirRoster[voice] = [];
+      choirRoster[voice].push(member);
+    }
+
+    // Update localStorage cache
+    localStorage.setItem(CHOIR_STORAGE_KEY, JSON.stringify(flatRoster()));
+
+    closePopover();
+
+    // Switch to the updated member's tab
+    document.querySelectorAll('.voice-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.voice-tab[data-voice="${voice}"]`)?.classList.add('active');
+    renderVoiceRoster(voice);
+
+    showToast(`${member?.firstName} moved to ${voicePartLabels[voice]} ✓`, 'success');
+
+  } catch (err) {
+    console.error('Voice update failed:', err);
+    errEl.textContent   = `Failed: ${err.message}`;
+    saveBtn.disabled    = false;
+    saveBtn.textContent = 'Save';
+  }
+}
+
+// ============================================================
 //  COUNTER ANIMATION
 // ============================================================
 
@@ -141,7 +275,7 @@ function animateCounters() {
     entries.forEach(entry => {
       if (!entry.isIntersecting) return;
       const el  = entry.target;
-      const end = VOICE_PARTS.flatMap(p => choirRoster[p]).length || parseInt(el.dataset.count) || 0;
+      const end = flatRoster().length || parseInt(el.dataset.count) || 0;
       let current = 0;
       const step  = Math.max(1, Math.ceil(end / 40));
       const timer = setInterval(() => {
@@ -153,6 +287,22 @@ function animateCounters() {
     });
   }, { threshold: 0.5 });
   document.querySelectorAll('.c-number[data-count]').forEach(c => observer.observe(c));
+}
+
+// ============================================================
+//  TOAST
+// ============================================================
+
+function showToast(msg, type = 'info') {
+  const old = document.getElementById('sdaToast');
+  if (old) old.remove();
+  const t = document.createElement('div');
+  t.id = 'sdaToast';
+  t.className = `sda-toast sda-toast--${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('sda-toast--show'));
+  setTimeout(() => { t.classList.remove('sda-toast--show'); setTimeout(() => t.remove(), 400); }, 3000);
 }
 
 // ============================================================
@@ -173,14 +323,14 @@ function escHtml(str) {
 //  REPERTOIRE DATA
 // ============================================================
 const repertoireData = [
-  { title: "Nikikumbuka",             type: "hymn",    typeLabel: "Album-1",    description: "He died for our sins" },
-  { title: "Waseparo",             type: "hymn",    typeLabel: "Album-1",    description: "Tired of the sinful life" },
-  { title: "Mungu ni wa namna gani",    type: "praise",  typeLabel: "Album-1",  description: "God of Abraham, Isaac and Jacob" },
-  { title: "Bwana Mungu",        type: "hymn",    typeLabel: "Album-1",    description: "Always remember 'I Am'" },
-  { title: "Katika Pande Zote",                 type: "special", typeLabel: "Album-1", description: "Preach the Gospel all over the World" },
-  { title: "Jitu Kubwa",                type: "hymn",    typeLabel: "Album-1",    description: "Goliath's Defeat" },
-  { title: "Toiroka",            type: "praise",  typeLabel: "Album-1",  description: "We pray to you Lord" },
-  { title: "Kati ya Wenye Dhambi", type: "hymn",    typeLabel: "Album-1",    description: "Forgive our sins Father" }
+  { title: "Tukutendereza",             type: "hymn",    typeLabel: "Hymn",    description: "Traditional Swahili worship song" },
+  { title: "Amazing Grace",             type: "hymn",    typeLabel: "Hymn",    description: "Classic gospel hymn arrangement" },
+  { title: "Hakuna Mungu Kama Wewe",    type: "praise",  typeLabel: "Praise",  description: "Contemporary Swahili praise" },
+  { title: "How Great Thou Art",        type: "hymn",    typeLabel: "Hymn",    description: "Grand worship anthem" },
+  { title: "Kuna Siku",                 type: "special", typeLabel: "Special", description: "Special music for divine service" },
+  { title: "It Is Well",                type: "hymn",    typeLabel: "Hymn",    description: "Peaceful hymn arrangement" },
+  { title: "Mungu Yu Mwema",            type: "praise",  typeLabel: "Praise",  description: "Upbeat praise and worship" },
+  { title: "Great Is Thy Faithfulness", type: "hymn",    typeLabel: "Hymn",    description: "Thanksgiving hymn" }
 ];
 
 // ============================================================
@@ -188,11 +338,18 @@ const repertoireData = [
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', async () => {
+  if (sessionStorage.getItem('sda_admin') === '1') {
+    isAdmin = true;
+    document.getElementById('adminLoginBtn').style.display = 'none';
+    document.getElementById('adminStatus').style.display  = 'inline';
+  }
+
   await loadChoir();
   renderVoiceRoster('soprano');
   renderRepertoire();
   animateCounters();
 
+  // Voice tabs
   document.querySelectorAll('.voice-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.voice-tab').forEach(t => t.classList.remove('active'));
@@ -200,4 +357,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       renderVoiceRoster(tab.dataset.voice);
     });
   });
+
+  // Admin login / logout
+  document.getElementById('adminLoginBtn')?.addEventListener('click', promptAdminLogin);
+  document.getElementById('adminLogoutBtn')?.addEventListener('click', adminLogout);
+
+  // Popover save
+  document.getElementById('popoverSave')?.addEventListener('click', saveVoiceEdit);
+
+  // Close popover when clicking outside
+  document.addEventListener('click', e => {
+    const popover = document.getElementById('voicePopover');
+    if (popover && !popover.contains(e.target)) closePopover();
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopover(); });
 });
