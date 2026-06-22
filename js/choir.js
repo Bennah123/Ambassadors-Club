@@ -410,7 +410,7 @@ async function openVoiceAssignForm() {
   try {
     const { data, error } = await supabaseClient
       .from('members')
-      .select('id, first_name, last_name, departments')
+      .select('id, first_name, last_name')
       .order('last_name', { ascending: true });
 
     if (error) throw error;
