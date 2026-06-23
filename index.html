@@ -7,23 +7,22 @@
   <title>Ambassadors Club | SDA Church Embakasi Central</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/main.css">
-  <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/home.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+
   <!-- ==================== NAVIGATION ==================== -->
   <nav class="navbar" id="navbar">
     <a href="index.html" class="nav-brand">
-      <img src="assets/logos/sda-logo-white.png" alt="SDA Logo" id="navLogo">
-      <div>
-        <span>SDA Embakasi Central</span>
-        <small>Ambassadors Club</small>
+      <div class="nav-brand-mark">AC</div>
+      <div class="nav-brand-text">
+        <span>Ambassadors Club</span>
+        <small>SDA Embakasi Central</small>
       </div>
     </a>
-    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
     <ul class="nav-links" id="navLinks">
@@ -37,360 +36,348 @@
     </ul>
   </nav>
 
-  <!-- ==================== HERO SECTION ==================== -->
+  <!-- ==================== HERO ==================== -->
   <section class="hero" id="home">
-    <div class="hero-bg-overlay"></div>
-    <div class="hero-particles" id="heroParticles"></div>
+    <div class="hero-canvas">
+      <div class="hero-orb hero-orb-1"></div>
+      <div class="hero-orb hero-orb-2"></div>
+      <div class="hero-grid"></div>
+    </div>
     <div class="hero-content">
-      <div class="hero-badge">
-        <span class="badge-icon">&#9733;</span>
-        <span>Est. 2023 &middot; Ambassadors Club</span>
+      <div class="hero-eyebrow">
+        <span class="eyebrow-dot"></span>
+        <span>Est. 2023 · Nairobi, Kenya</span>
       </div>
-      <h1>
-        We Are<br>
-        <span class="text-gold">Embakasi Central Ambassadors</span><br>
-        One for Christ
+      <h1 class="hero-headline">
+        <span class="hero-headline-sub">We Are</span>
+        <span class="hero-headline-main">Embakasi Central<br>Ambassadors</span>
+        <span class="hero-headline-verse">One for Christ</span>
       </h1>
-      <p class="hero-subtitle">
-        Welcome to the Seventh Day Adventist Church Embakasi Central — 
-        where youth rise to serve, worship, and lead. Join the Ambassadors Club 
-        in our mission to spread the gospel and build community.
+      <p class="hero-body">
+        A community of young people called to serve, worship, and lead. 
+        Rooted in Scripture. Alive in fellowship. Ready for the world.
       </p>
       <div class="hero-cta">
-        <a href="members.html" class="btn btn-primary">
-          <span>Meet the Team</span>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
-          </svg>
+        <a href="members.html" class="btn btn-gold">
+          Meet the Team
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
-        <a href="activities.html" class="btn btn-outline">
-          <span>Upcoming Events</span>
-        </a>
-      </div>
-      <div class="hero-stats">
-        <div class="h-stat">
-          <span class="h-number" data-count="45">0</span>
-          <span class="h-label">Ambassadors</span>
-        </div>
-        <div class="h-stat">
-          <span class="h-number" data-count="24">0</span>
-          <span class="h-label">Choir Members</span>
-        </div>
-        <div class="h-stat">
-          <span class="h-number" data-count="12">0</span>
-          <span class="h-label">Annual Events</span>
-        </div>
-        <div class="h-stat">
-          <span class="h-number" data-count="3">0</span>
-          <span class="h-label">Years Strong</span>
-        </div>
+        <a href="activities.html" class="btn btn-ghost">See Events</a>
       </div>
     </div>
-    <div class="hero-scroll">
-      <span>Scroll to explore</span>
-      <div class="scroll-arrow"></div>
+    <div class="hero-stats-bar">
+      <div class="stat-item">
+        <span class="stat-num" data-count="45">0</span>
+        <span class="stat-label">Ambassadors</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-num" data-count="24">0</span>
+        <span class="stat-label">Choir Members</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-num" data-count="12">0</span>
+        <span class="stat-label">Annual Events</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-num" data-count="3">0</span>
+        <span class="stat-label">Years Strong</span>
+      </div>
+    </div>
+    <div class="hero-scroll-cue" aria-hidden="true">
+      <div class="scroll-line"></div>
     </div>
   </section>
 
-  <!-- ==================== MISSION SECTION ==================== -->
-  <section class="mission-section" id="mission">
-    <div class="mission-container">
-      <div class="mission-text">
-        <span class="section-tag">Our Calling</span>
-        <h2>We are Christ's Ambassadors</h2>
-        <p class="verse-quote">
-          "We are therefore Christ's ambassadors, as though God were making 
-          his appeal through us."
+  <!-- ==================== VERSE RIBBON ==================== -->
+  <div class="verse-ribbon">
+    <div class="verse-ribbon-track">
+      <span>"We are therefore Christ's ambassadors, as though God were making his appeal through us." — 2 Corinthians 5:20</span>
+      <span aria-hidden="true">&nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;</span>
+      <span>"Let no one despise your youth, but be an example to the believers." — 1 Timothy 4:12</span>
+      <span aria-hidden="true">&nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;</span>
+      <span>"Go ye into all the world and preach the gospel to every creature." — Mark 16:15</span>
+      <span aria-hidden="true">&nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;</span>
+      <span>"We are therefore Christ's ambassadors, as though God were making his appeal through us." — 2 Corinthians 5:20</span>
+      <span aria-hidden="true">&nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;</span>
+      <span>"Let no one despise your youth, but be an example to the believers." — 1 Timothy 4:12</span>
+      <span aria-hidden="true">&nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;</span>
+      <span>"Go ye into all the world and preach the gospel to every creature." — Mark 16:15</span>
+      <span aria-hidden="true">&nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;</span>
+    </div>
+  </div>
+
+  <!-- ==================== MISSION ==================== -->
+  <section class="mission-section reveal-section">
+    <div class="mission-inner">
+      <div class="mission-left">
+        <p class="section-label">Our Calling</p>
+        <h2 class="section-heading">Built on a<br><em>living word</em></h2>
+        <p class="mission-body">
+          The Ambassadors Club exists to empower young people at SDA Embakasi Central 
+          to live out their faith boldly — through worship, service, and community. 
+          We are not spectators. We are participants in something eternal.
         </p>
-        <p class="verse-ref">— 2 Corinthians 5:20</p>
-        <p class="mission-desc">
-          The Ambassadors Club at SDA Church Embakasi Central exists to empower 
-          young people to live out their faith, serve their community, and 
-          develop leadership skills rooted in biblical principles. Through worship, 
-          fellowship, and service, we prepare the next generation of church leaders.
-        </p>
-        <a href="about.html" class="btn btn-primary btn-sm">Learn Our Story</a>
+        <a href="about.html" class="btn btn-navy">Our Story →</a>
       </div>
-      <div class="mission-visual">
-        <div class="mission-card main-card">
-          <div class="mc-icon">&#127942;</div>
-          <h3>Leadership</h3>
-          <p>Developing youth leaders for church and community</p>
-        </div>
-        <div class="mission-card">
-          <div class="mc-icon">&#127758;</div>
-          <h3>Service</h3>
-          <p>Outreach programs in Embakasi and beyond</p>
-        </div>
-        <div class="mission-card">
-          <div class="mc-icon">&#127932;</div>
-          <h3>Worship</h3>
-          <p>Music ministry and spiritual growth</p>
-        </div>
-        <div class="mission-card">
-          <div class="mc-icon">&#128107;</div>
-          <h3>Fellowship</h3>
-          <p>Building lasting friendships in Christ</p>
+      <div class="mission-right">
+        <div class="pillar-grid">
+          <div class="pillar reveal-child">
+            <div class="pillar-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <h3>Leadership</h3>
+            <p>Developing youth leaders for church and community through mentorship and practice.</p>
+          </div>
+          <div class="pillar reveal-child">
+            <div class="pillar-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            </div>
+            <h3>Service</h3>
+            <p>Outreach programs across Embakasi and beyond — health, welfare, and the gospel.</p>
+          </div>
+          <div class="pillar reveal-child">
+            <div class="pillar-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            </div>
+            <h3>Worship</h3>
+            <p>Music ministry and spiritual growth that lifts hearts and honours God.</p>
+          </div>
+          <div class="pillar reveal-child">
+            <div class="pillar-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <h3>Fellowship</h3>
+            <p>Building lasting friendships in Christ across generations and backgrounds.</p>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ==================== FEATURES GRID ==================== -->
+  <!-- ==================== FEATURES / WHAT WE DO ==================== -->
   <section class="features-section">
-    <div class="section-header">
-      <span class="section-tag">Explore</span>
-      <h2>What We Do</h2>
-      <p>From worship to welfare, the Ambassadors Club is active in every aspect of church life</p>
-      <div class="accent-line"></div>
+    <div class="features-header reveal-section">
+      <p class="section-label">Explore</p>
+      <h2 class="section-heading">Everything we do</h2>
     </div>
-    <div class="features-grid">
-      <a href="members.html" class="feature-card">
-        <div class="fc-bg" style="background: linear-gradient(135deg, #1a365d, #0f2744);"></div>
-        <div class="fc-content">
-          <div class="fc-icon">&#128101;</div>
+    <div class="features-bento">
+      <a href="members.html" class="bento-card bento-navy reveal-child">
+        <div class="bento-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="bento-text">
           <h3>Members</h3>
-          <p>Meet our ambassadors, view profiles, and connect with the youth community</p>
-          <span class="fc-link">View Roster &rarr;</span>
+          <p>Meet our ambassadors, view profiles, and connect</p>
         </div>
+        <div class="bento-arrow">→</div>
       </a>
-      <a href="choir.html" class="feature-card">
-        <div class="fc-bg" style="background: linear-gradient(135deg, #8b1538, #5c0e25);"></div>
-        <div class="fc-content">
-          <div class="fc-icon">&#127932;</div>
+      <a href="choir.html" class="bento-card bento-crimson reveal-child">
+        <div class="bento-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        </div>
+        <div class="bento-text">
           <h3>Choir Ministry</h3>
-          <p>Our music ministry — voice sections, rehearsal schedules, and special programs</p>
-          <span class="fc-link">Join the Choir &rarr;</span>
+          <p>Voice sections, rehearsal schedules, and special programs</p>
         </div>
+        <div class="bento-arrow">→</div>
       </a>
-      <a href="activities.html" class="feature-card">
-        <div class="fc-bg" style="background: linear-gradient(135deg, #6b8f71, #4a6b50);"></div>
-        <div class="fc-content">
-          <div class="fc-icon">&#128197;</div>
+      <a href="activities.html" class="bento-card bento-sage reveal-child">
+        <div class="bento-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        </div>
+        <div class="bento-text">
           <h3>Activities</h3>
-          <p>Year-round events, camps, Bible studies, and community service projects</p>
-          <span class="fc-link">See Calendar &rarr;</span>
+          <p>Year-round events, camps, Bible studies, and community service</p>
         </div>
+        <div class="bento-arrow">→</div>
       </a>
-      <a href="treasury.html" class="feature-card">
-        <div class="fc-bg" style="background: linear-gradient(135deg, #c9a227, #a0801f);"></div>
-        <div class="fc-content">
-          <div class="fc-icon">&#128176;</div>
+      <a href="treasury.html" class="bento-card bento-gold reveal-child">
+        <div class="bento-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div class="bento-text">
           <h3>Treasury</h3>
-          <p>Transparent stewardship — track contributions, expenses, and club finances</p>
-          <span class="fc-link">View Dashboard &rarr;</span>
+          <p>Transparent stewardship — contributions, expenses, finances</p>
         </div>
+        <div class="bento-arrow">→</div>
       </a>
-      <a href="schedule.html" class="feature-card">
-        <div class="fc-bg" style="background: linear-gradient(135deg, #475569, #334155);"></div>
-        <div class="fc-content">
-          <div class="fc-icon">&#128337;</div>
+      <a href="schedule.html" class="bento-card bento-slate reveal-child">
+        <div class="bento-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div class="bento-text">
           <h3>Schedule</h3>
-          <p>Sabbath services, choir training, prayer meetings, and youth gatherings</p>
-          <span class="fc-link">Check Times &rarr;</span>
+          <p>Sabbath services, choir training, prayer and youth gatherings</p>
         </div>
+        <div class="bento-arrow">→</div>
       </a>
-      <a href="about.html" class="feature-card">
-        <div class="fc-bg" style="background: linear-gradient(135deg, #1e293b, #0f172a);"></div>
-        <div class="fc-content">
-          <div class="fc-icon">&#128220;</div>
-          <h3>About Us</h3>
-          <p>Our history, beliefs, leadership structure, and vision for the future</p>
-          <span class="fc-link">Read More &rarr;</span>
+      <a href="about.html" class="bento-card bento-dark reveal-child">
+        <div class="bento-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         </div>
+        <div class="bento-text">
+          <h3>About Us</h3>
+          <p>Our history, beliefs, leadership, and vision for the future</p>
+        </div>
+        <div class="bento-arrow">→</div>
       </a>
     </div>
   </section>
 
   <!-- ==================== UPCOMING EVENTS ==================== -->
-  <section class="events-preview">
-    <div class="section-header">
-      <span class="section-tag">Coming Up</span>
-      <h2>Next Events</h2>
-      <p>Don't miss what's happening in the Ambassadors Club</p>
-      <div class="accent-line"></div>
+  <section class="events-section reveal-section">
+    <div class="events-header">
+      <div>
+        <p class="section-label">Coming Up</p>
+        <h2 class="section-heading">Next Events</h2>
+      </div>
+      <a href="activities.html" class="btn btn-ghost-dark">Full Calendar →</a>
     </div>
-    <div class="events-row" id="upcomingEvents">
+    <div class="events-list" id="upcomingEvents">
       <!-- Populated by JS -->
     </div>
-    <div class="events-cta">
-      <a href="activities.html" class="btn btn-primary">View Full Calendar</a>
-    </div>
   </section>
 
-  <!-- ==================== TESTIMONIAL / VERSE ==================== -->
-  <section class="testimonial-section">
-    <div class="testimonial-content">
-      <div class="quote-mark">&#8220;</div>
-      <blockquote>
-        Let no one despise your youth, but be an example to the believers 
-        in word, in conduct, in love, in spirit, in faith, in purity.
+  <!-- ==================== FULL-BLEED VERSE ==================== -->
+  <section class="verse-section">
+    <div class="verse-inner">
+      <div class="verse-cross" aria-hidden="true">✦</div>
+      <blockquote class="verse-quote">
+        "Let no one despise your youth, but be an example to the believers 
+        in word, in conduct, in love, in spirit, in faith, in purity."
       </blockquote>
-      <cite>1 Timothy 4:12</cite>
-      <div class="testimonial-decoration">
-        <span></span><span></span><span></span>
-      </div>
+      <cite class="verse-cite">1 Timothy 4:12</cite>
     </div>
   </section>
 
-  <!-- ==================== JOIN US CTA SECTION ==================== -->
-  <section class="join-cta-section">
-    <div class="join-cta-container">
-      <div class="join-cta-content">
-        <span class="section-tag">Get Involved</span>
-        <h2>Become an Ambassador</h2>
-        <p>Join a community of young people passionate about serving Christ, growing in faith, and making a difference in Embakasi and beyond.</p>
-        <div class="join-cta-buttons">
-          <a href="members.html" class="btn btn-primary btn-lg">
-            <span>Join the Club</span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
+  <!-- ==================== JOIN CTA ==================== -->
+  <section class="join-section reveal-section">
+    <div class="join-inner">
+      <div class="join-content">
+        <p class="section-label">Get Involved</p>
+        <h2 class="section-heading">Become an<br><em>Ambassador</em></h2>
+        <p class="join-body">
+          Join a community of young people passionate about serving Christ, 
+          growing in faith, and making a difference in Embakasi and beyond.
+        </p>
+        <div class="join-buttons">
+          <a href="members.html" class="btn btn-gold">
+            Join the Club
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
-          <a href="about.html" class="btn btn-outline-light btn-lg">Learn More</a>
+          <a href="about.html" class="btn btn-ghost-dark">Learn More</a>
         </div>
       </div>
-      <div class="join-cta-visual">
-        <div class="cta-circle cta-circle-1"></div>
-        <div class="cta-circle cta-circle-2"></div>
-        <div class="cta-circle cta-circle-3"></div>
-        <div class="cta-icon">&#128330;</div>
+      <div class="join-visual" aria-hidden="true">
+        <div class="join-ring join-ring-1"></div>
+        <div class="join-ring join-ring-2"></div>
+        <div class="join-ring join-ring-3"></div>
+        <div class="join-cross">✦</div>
       </div>
     </div>
   </section>
 
-  <!-- ==================== NEWSLETTER SECTION ==================== -->
+  <!-- ==================== NEWSLETTER ==================== -->
   <section class="newsletter-section">
-    <div class="newsletter-container">
-      <div class="newsletter-content">
-        <div class="newsletter-icon">&#128231;</div>
+    <div class="newsletter-inner">
+      <div class="newsletter-left">
         <h3>Stay Connected</h3>
-        <p>Get weekly updates on events, devotionals, and Ambassadors Club news delivered to your inbox.</p>
+        <p>Weekly updates on events, devotionals, and club news — straight to your inbox.</p>
       </div>
-      <form class="newsletter-form" id="newsletterForm">
-        <div class="form-group">
-          <input type="email" id="newsletterEmail" placeholder="Enter your email address" required>
-          <button type="submit" class="btn btn-primary">Subscribe</button>
+      <form class="newsletter-form" id="newsletterForm" novalidate>
+        <div class="newsletter-field">
+          <input type="email" id="newsletterEmail" placeholder="your@email.com" required autocomplete="email">
+          <button type="submit" class="btn btn-gold">Subscribe</button>
         </div>
-        <p class="form-note">No spam. Unsubscribe anytime. Your privacy is respected.</p>
+        <p class="newsletter-note">No spam. Unsubscribe anytime.</p>
       </form>
     </div>
   </section>
 
   <!-- ==================== FOOTER ==================== -->
   <footer class="footer">
-    <!-- Footer Top Wave -->
-    <div class="footer-wave">
-      <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M0 120L60 105C120 90 240 60 360 52.5C480 45 600 60 720 67.5C840 75 960 75 1080 67.5C1200 60 1320 45 1380 37.5L1440 30V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="var(--sda-navy)"/>
-      </svg>
-    </div>
-
-    <div class="footer-main">
-      <div class="footer-container">
-        <!-- Brand Column -->
-        <div class="footer-brand-col">
-          <div class="footer-brand">
-            <div class="footer-logo-wrap">
-              <img src="assets/logos/sda-logo-white.png" alt="SDA Logo" class="footer-logo">
-            </div>
-            <div class="footer-brand-text">
-              <h4>SDA Church Embakasi Central</h4>
-              <p class="footer-tagline">Ambassadors Club Youth Ministry</p>
-              <p class="footer-motto">"Go ye into all the world and preach the gospel"</p>
-            </div>
-          </div>
-          <div class="footer-social">
-            <a href="#" class="social-link" target="_blank" rel="noopener" aria-label="TikTok">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
-            </a>
-            <a href="#" class="social-link" target="_blank" rel="noopener" aria-label="Instagram">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-            </a>
-            <a href="https://youtube.com/@embakasicentralsdachurch2858?si=1UIQUKah5X-QKBns" class="social-link" target="_blank" rel="noopener" aria-label="YouTube">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-            </a>
-            <a href="https://chat.whatsapp.com/Ir49xa1Gvu8HYFnD82CthV" class="social-link" target="_blank" rel="noopener" aria-label="WhatsApp">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-            </a>
-          </div>
+    <div class="footer-inner">
+      <div class="footer-brand-col">
+        <div class="footer-mark">AC</div>
+        <p class="footer-brand-name">SDA Church Embakasi Central</p>
+        <p class="footer-brand-sub">Ambassadors Club Youth Ministry</p>
+        <p class="footer-motto">"Go ye into all the world and preach the gospel"</p>
+        <div class="footer-socials">
+          <a href="#" class="social-btn" target="_blank" rel="noopener" aria-label="TikTok">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+          </a>
+          <a href="#" class="social-btn" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+          </a>
+          <a href="https://youtube.com/@embakasicentralsdachurch2858" class="social-btn" target="_blank" rel="noopener" aria-label="YouTube">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          </a>
+          <a href="https://chat.whatsapp.com/Ir49xa1Gvu8HYFnD82CthV" class="social-btn" target="_blank" rel="noopener" aria-label="WhatsApp">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          </a>
         </div>
-
-        <!-- Quick Links -->
-        <div class="footer-links-col">
-          <h5>Quick Links</h5>
-          <ul>
-            <li><a href="members.html"><span class="link-arrow">&rarr;</span> Members</a></li>
-            <li><a href="choir.html"><span class="link-arrow">&rarr;</span> Choir</a></li>
-            <li><a href="activities.html"><span class="link-arrow">&rarr;</span> Activities</a></li>
-            <li><a href="treasury.html"><span class="link-arrow">&rarr;</span> Treasury</a></li>
-            <li><a href="schedule.html"><span class="link-arrow">&rarr;</span> Schedule</a></li>
-          </ul>
+      </div>
+      <div class="footer-links-col">
+        <h5>Quick Links</h5>
+        <ul>
+          <li><a href="members.html">Members</a></li>
+          <li><a href="choir.html">Choir</a></li>
+          <li><a href="activities.html">Activities</a></li>
+          <li><a href="treasury.html">Treasury</a></li>
+          <li><a href="schedule.html">Schedule</a></li>
+        </ul>
+      </div>
+      <div class="footer-links-col">
+        <h5>Resources</h5>
+        <ul>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="https://wa.me/254726473887">Contact</a></li>
+          <li><a href="https://wa.me/254726473887">Prayer Request</a></li>
+          <li><a href="https://youtube.com/@embakasicentralsdachurch2858">Bible Study</a></li>
+          <li><a href="https://youtube.com/@embakasicentralsdachurch2858">Sermons</a></li>
+        </ul>
+      </div>
+      <div class="footer-contact-col">
+        <h5>Visit Us</h5>
+        <div class="contact-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span>Embakasi, Nairobi, Kenya</span>
         </div>
-
-        <!-- Resources -->
-        <div class="footer-links-col">
-          <h5>Resources</h5>
-          <ul>
-            <li><a href="about.html"><span class="link-arrow">&rarr;</span> About Us</a></li>
-            <li><a href="https://wa.me/254726473887"><span class="link-arrow">&rarr;</span> Contact</a></li>
-            <li><a href="https://wa.me/254726473887"><span class="link-arrow">&rarr;</span> Prayer Request</a></li>
-            <li><a href="https://youtube.com/@embakasicentralsdachurch2858?si=1UIQUKah5X-QKBns"><span class="link-arrow">&rarr;</span> Bible Study</a></li>
-            <li><a href="https://youtube.com/@embakasicentralsdachurch2858?si=1UIQUKah5X-QKBns"><span class="link-arrow">&rarr;</span> Sermons</a></li>
-          </ul>
+        <div class="contact-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.85a16 16 0 0 0 6 6l.9-.9a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/></svg>
+          <span>+254 726 473 887</span>
         </div>
-
-        <!-- Contact Info -->
-        <div class="footer-contact-col">
-          <h5>Visit Us</h5>
-          <div class="contact-item">
-            <span class="contact-icon">&#128205;</span>
-            <span>Embakasi, Nairobi, Kenya</span>
-          </div>
-          <div class="contact-item">
-            <span class="contact-icon">&#128222;</span>
-            <span>+254 726 473 887</span>
-          </div>
-          <div class="contact-item">
-            <span class="contact-icon">&#128231;</span>
-            <span>giftben593@gmail.com</span>
-          </div>
-          <div class="contact-item">
-            <span class="contact-icon">&#128337;</span>
-            <span>Sabbath Service: 8:00 AM - 5:00 PM</span>
-          </div>
-          <div class="footer-verse-box">
-            <p>"Go ye into all the world and preach the gospel to every creature."</p>
-            <span>— Mark 16:15</span>
-          </div>
+        <div class="contact-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span>giftben593@gmail.com</span>
+        </div>
+        <div class="contact-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <span>Sabbath: 8:00 AM – 5:00 PM</span>
         </div>
       </div>
     </div>
-
-    <!-- Footer Bottom -->
     <div class="footer-bottom">
-      <div class="footer-bottom-container">
-        <p>&copy; <span class="current-year">2026</span> SDA Church Embakasi Central. All rights reserved.</p>
-        <div class="footer-bottom-links">
-          <a href="#">Privacy Policy</a>
-          <span class="divider">|</span>
-          <a href="#">Terms of Use</a>
-          <span class="divider">|</span>
-          <a href="#">Accessibility</a>
-        </div>
-        <p class="footer-credit">Built with <span class="heart">&#10084;</span> by the Ambassadors Club</p>
+      <p>© <span class="current-year"></span> SDA Church Embakasi Central. All rights reserved.</p>
+      <div class="footer-bottom-links">
+        <a href="#">Privacy</a>
+        <span>·</span>
+        <a href="#">Terms</a>
+        <span>·</span>
+        <a href="#">Accessibility</a>
       </div>
+      <p class="footer-credit">Built with <span class="heart">♥</span> by the Ambassadors Club</p>
     </div>
   </footer>
 
-  <!-- Back to Top Button -->
+  <!-- Back to Top -->
   <button class="back-to-top" id="backToTop" aria-label="Back to top">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <path d="M18 15l-6-6-6 6"/>
-    </svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
   </button>
 
-  <script src="js/supabase-config.js"></script>
   <script src="js/main.js"></script>
   <script src="js/home.js"></script>
 </body>

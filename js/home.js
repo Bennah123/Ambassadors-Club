@@ -1,82 +1,65 @@
 // ============================================
-// HOME.JS - Homepage logic
+// HOME.JS – Homepage logic
 // SDA Embakasi Central – Ambassadors Club
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
-
   animateCounters();
   populateUpcomingEvents();
-  initScrollAnimations();
+  initScrollReveal();
   initHeroParallax();
-  initNavbarScroll();
-  // NOTE: Mobile menu toggle removed from here — it is handled in main.js.
-  // Having it in both files caused the menu to open and immediately close.
-
 });
 
-// ============================================================
+// =====================================================
 // COUNTER ANIMATION
-// ============================================================
+// =====================================================
 function animateCounters() {
-  const counters = document.querySelectorAll('.h-number');
+  const counters = document.querySelectorAll('.stat-num');
   if (!counters.length) return;
 
-  const observer = new IntersectionObserver((entries) => {
+  const io = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        animateCount(entry.target, parseInt(entry.target.dataset.count, 10));
-        observer.unobserve(entry.target);
-      }
+      if (!entry.isIntersecting) return;
+      animateCount(entry.target, parseInt(entry.target.dataset.count, 10));
+      io.unobserve(entry.target);
     });
   }, { threshold: 0.5 });
 
-  counters.forEach(counter => observer.observe(counter));
+  counters.forEach(c => io.observe(c));
 }
 
-function animateCount(element, target) {
-  const duration = 1500; // ms
-  const start = performance.now();
-
-  function step(now) {
-    const elapsed  = now - start;
-    const progress = Math.min(elapsed / duration, 1);
-    // Ease-out cubic
-    const eased = 1 - Math.pow(1 - progress, 3);
-    element.textContent = Math.round(eased * target);
-    if (progress < 1) requestAnimationFrame(step);
-  }
-
-  requestAnimationFrame(step);
+function animateCount(el, target) {
+  const duration = 1600;
+  const start    = performance.now();
+  (function step(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const e = 1 - Math.pow(1 - t, 3);       // ease-out cubic
+    el.textContent = Math.round(e * target);
+    if (t < 1) requestAnimationFrame(step);
+  })(performance.now());
 }
 
-// ============================================================
+// =====================================================
 // UPCOMING EVENTS
-// ============================================================
-const upcomingEventsData = [
+// =====================================================
+const EVENTS = [
   {
-    day: '28',
-    month: 'Jun 2026',
-    tag: 'epc-camp',
-    tagLabel: 'Camp',
+    day: '28', month: 'Jun 2026',
+    tag: 'tag-camp', tagLabel: 'Camp',
     title: 'Youth Camp Meeting',
-    description: 'Annual weekend retreat at Camp Site. Worship, workshops, and fellowship.'
+    desc: 'Annual weekend retreat — worship, workshops, and fellowship.'
   },
   {
-    day: '05',
-    month: 'Jul 2026',
-    tag: 'epc-service',
-    tagLabel: 'Service',
+    day: '05', month: 'Jul 2026',
+    tag: 'tag-service', tagLabel: 'Service',
     title: 'Community Health Outreach',
-    description: 'Free health screening and wellness education in Embakasi community.'
+    desc: 'Free health screening and wellness education in Embakasi.'
   },
   {
-    day: '12',
-    month: 'Jul 2026',
-    tag: 'epc-social',
-    tagLabel: 'Social',
+    day: '12', month: 'Jul 2026',
+    tag: 'tag-social', tagLabel: 'Social',
     title: 'Ambassadors Fellowship Night',
-    description: 'An evening of music, games, and bonding for all club members.'
+    desc: 'An evening of music, games, and bonding for all club members.'
   }
 ];
 
@@ -84,118 +67,83 @@ function populateUpcomingEvents() {
   const container = document.getElementById('upcomingEvents');
   if (!container) return;
 
-  if (!upcomingEventsData.length) {
+  if (!EVENTS.length) {
     container.innerHTML = '<p class="no-events">No upcoming events. Check back soon!</p>';
     return;
   }
 
-  container.innerHTML = upcomingEventsData.map(event => `
-    <div class="event-preview-card">
-      <div class="epc-date">
-        <span class="day">${escapeHTML(event.day)}</span>
-        <span class="month-year">${escapeHTML(event.month)}</span>
+  container.innerHTML = EVENTS.map(ev => `
+    <div class="event-row reveal-child">
+      <div class="event-date-block">
+        <span class="event-day">${esc(ev.day)}</span>
+        <span class="event-month">${esc(ev.month)}</span>
       </div>
-      <div class="epc-body">
-        <span class="epc-tag ${escapeHTML(event.tag)}">${escapeHTML(event.tagLabel)}</span>
-        <h4>${escapeHTML(event.title)}</h4>
-        <p>${escapeHTML(event.description)}</p>
+      <div class="event-info">
+        <span class="event-tag ${esc(ev.tag)}">${esc(ev.tagLabel)}</span>
+        <h4>${esc(ev.title)}</h4>
+        <p>${esc(ev.desc)}</p>
       </div>
+      <div class="event-caret">→</div>
     </div>
   `).join('');
+
+  // Trigger reveal on the newly injected rows
+  initScrollReveal();
 }
 
-/** Prevent XSS when injecting dynamic strings into innerHTML */
-function escapeHTML(str) {
+function esc(str) {
   return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ============================================================
-// SCROLL-TRIGGERED ANIMATIONS
-// ============================================================
-function initScrollAnimations() {
-  const animatedElements = document.querySelectorAll(
-    '.mission-text, .mission-card, .feature-card, .event-preview-card, .testimonial-content, .join-cta-content, .join-cta-visual, .newsletter-content, .newsletter-form, .footer-brand-col, .footer-links-col, .footer-contact-col'
-  );
-  if (!animatedElements.length) return;
+// =====================================================
+// SCROLL REVEAL
+// =====================================================
+function initScrollReveal() {
+  const els = document.querySelectorAll('.reveal-section:not(.in-view), .reveal-child:not(.in-view)');
+  if (!els.length) return;
 
-  // Set initial hidden state via style (JS-driven, so no FOUC)
-  animatedElements.forEach((el, index) => {
-    el.style.opacity    = '0';
-    el.style.transform  = 'translateY(30px)';
-    const delay = Math.min(index * 0.08, 0.4);
-    el.style.transition = `opacity 0.6s ease ${delay}s, transform 0.6s ease ${delay}s`;
-  });
-
-  const observer = new IntersectionObserver((entries) => {
+  const io = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        entry.target.style.opacity   = '1';
-        entry.target.style.transform = 'translateY(0)';
-        observer.unobserve(entry.target);
+        entry.target.classList.add('in-view');
+        io.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  }, { threshold: 0.10, rootMargin: '0px 0px -40px 0px' });
 
-  animatedElements.forEach(el => observer.observe(el));
+  els.forEach(el => io.observe(el));
 }
 
-// ============================================================
-// HERO PARALLAX
-// ============================================================
+// =====================================================
+// HERO PARALLAX (desktop only)
+// =====================================================
 function initHeroParallax() {
-  const hero = document.querySelector('.hero');
-  if (!hero) return;
+  const heroContent = document.querySelector('.hero-content');
+  if (!heroContent) return;
 
   let enabled = window.innerWidth >= 768;
+  let ticking  = false;
 
   window.addEventListener('resize', () => {
     enabled = window.innerWidth >= 768;
     if (!enabled) {
-      const heroContent = hero.querySelector('.hero-content');
-      if (heroContent) {
-        heroContent.style.transform = 'none';
-        heroContent.style.opacity   = '1';
-      }
+      heroContent.style.transform = 'none';
+      heroContent.style.opacity   = '1';
     }
   }, { passive: true });
 
-  let ticking = false;
   window.addEventListener('scroll', () => {
     if (!enabled || ticking) return;
     ticking = true;
     requestAnimationFrame(() => {
-      const scrolled    = window.pageYOffset;
-      const heroContent = hero.querySelector('.hero-content');
-      if (heroContent && scrolled < window.innerHeight) {
-        heroContent.style.transform = `translateY(${scrolled * 0.15}px)`;
-        heroContent.style.opacity   = String(1 - (scrolled / window.innerHeight) * 0.6);
+      const y = window.pageYOffset;
+      if (y < window.innerHeight) {
+        heroContent.style.transform = `translateY(${y * 0.12}px)`;
+        heroContent.style.opacity   = String(1 - (y / window.innerHeight) * 0.55);
       }
       ticking = false;
     });
-  }, { passive: true });
-}
-
-// ============================================================
-// NAVBAR SCROLL EFFECT
-// ============================================================
-function initNavbarScroll() {
-  const navbar = document.getElementById('navbar');
-  if (!navbar) return;
-
-  window.addEventListener('scroll', () => {
-    const scrolled = window.pageYOffset;
-    if (scrolled > 100) {
-      navbar.style.background      = 'rgba(26, 54, 93, 0.98)';
-      navbar.style.backdropFilter  = 'blur(14px)';
-      navbar.style.boxShadow       = '0 4px 24px rgba(0,0,0,0.25)';
-    } else {
-      navbar.style.background      = 'rgba(26, 54, 93, 0.95)';
-      navbar.style.backdropFilter  = 'blur(10px)';
-      navbar.style.boxShadow       = 'none';
-    }
   }, { passive: true });
 }
