@@ -1,315 +1,396 @@
-/* ============================================
-   SCHEDULE PAGE STYLES - SDA Embakasi Central
-   Ambassadors Club Website
-   ============================================ */
+/* =====================================================
+   SCHEDULE.CSS — SDA Ambassadors Club
+   ===================================================== */
 
 /* ---- PAGE HEADER ---- */
-.schedule-header {
-  background: linear-gradient(135deg, var(--sda-navy) 0%, #0f2744 50%, #475569 100%);
-}
-
-/* ---- SCHEDULE TIMELINE ---- */
-.schedule-page {
-  padding: 4rem 2rem;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.schedule-timeline {
-  position: relative;
-  padding-left: 3rem;
-}
-
-.schedule-timeline::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: linear-gradient(to bottom, var(--sda-gold), var(--sda-navy), var(--accent-crimson));
-  border-radius: 4px;
-}
-
-.timeline-day {
-  margin-bottom: 4rem;
-  position: relative;
-}
-
-.timeline-day:last-child {
-  margin-bottom: 0;
-}
-
-.timeline-day::before {
-  content: '';
-  position: absolute;
-  left: -3rem;
-  top: 1.5rem;
-  width: 16px;
-  height: 16px;
-  background: var(--sda-gold);
-  border-radius: 50%;
-  border: 4px solid var(--sda-cream);
-  transform: translateX(-6px);
-  box-shadow: 0 0 0 4px rgba(201, 162, 39, 0.2);
-}
-
-.day-marker {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  padding-left: 0.5rem;
-}
-
-.day-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, var(--sda-navy), var(--accent-crimson));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  box-shadow: var(--shadow-sm);
-}
-
-.day-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.day-name {
-  font-family: var(--font-display);
-  font-size: 1.6rem;
-  color: var(--sda-navy);
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.day-date {
-  color: var(--sda-gold);
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.day-events {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-/* ---- EVENT CARDS ---- */
-.event-card {
-  background: var(--bg-card);
-  padding: 1.5rem;
-  border-radius: 16px;
-  border: 1px solid var(--border-light);
-  display: flex;
-  gap: 1.5rem;
-  align-items: flex-start;
-  transition: all 0.3s;
+.page-header {
+  padding: 9rem 2rem 5rem;
+  text-align: center;
   position: relative;
   overflow: hidden;
 }
 
-.event-card:hover {
-  border-color: var(--sda-gold);
-  box-shadow: var(--shadow-md);
-  transform: translateX(4px);
+.schedule-header {
+  background: linear-gradient(135deg, var(--navy) 0%, #0c1a30 60%, #2c3e5a 100%);
 }
 
-.event-card::before {
+.schedule-header::before {
   content: '';
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--border-light);
-  transition: background 0.3s;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(201,162,39,0.06) 0%, transparent 60%);
 }
 
-.event-card:hover::before {
-  background: var(--sda-gold);
+.page-header-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
-.event-card.highlight::before {
-  background: var(--sda-gold);
-}
-
-.event-card.choir-card::before {
-  background: var(--accent-crimson);
-}
-
-.event-time {
-  min-width: 70px;
-  text-align: center;
-  padding-top: 0.3rem;
-}
-
-.time-start {
-  display: block;
+.page-header h1 {
   font-family: var(--font-display);
-  font-size: 1.4rem;
+  font-size: clamp(2.5rem, 5vw, 4rem);
   font-weight: 700;
-  color: var(--sda-navy);
-  line-height: 1;
+  color: white;
+  line-height: 1.1;
+  margin-bottom: 1rem;
 }
 
-.time-ampm {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.event-details {
-  flex: 1;
-}
-
-.event-tag {
-  display: inline-block;
-  padding: 0.2rem 0.6rem;
-  border-radius: 50px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 0.5rem;
-}
-
-.tag-study { background: #dbeafe; color: #1e40af; }
-.tag-worship { background: #fef3c7; color: #92400e; }
-.tag-youth { background: #dcfce7; color: #166534; }
-.tag-choir { background: #fee2e2; color: #991b1b; }
-.tag-prayer { background: #ede9fe; color: #7c3aed; }
-
-.event-details h4 {
+.page-header-sub {
+  font-size: 1.05rem;
+  color: rgba(255,255,255,0.6);
+  line-height: 1.7;
   font-family: var(--font-display);
-  color: var(--sda-navy);
-  font-size: 1.15rem;
-  margin-bottom: 0.4rem;
+  font-style: italic;
 }
 
-.event-details p {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  line-height: 1.6;
-  margin-bottom: 0.75rem;
+.page-header .section-label { color: var(--gold); margin-bottom: 0.75rem; }
+
+/* ---- QUICK-GLANCE CHIPS ---- */
+.schedule-chips {
+  background: var(--cream);
+  border-bottom: 1px solid var(--border);
 }
 
-.event-loc {
+.chips-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.chip {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  padding: 0.45rem 1rem;
+  border-radius: 50px;
   font-size: 0.85rem;
-  color: var(--sda-gold);
   font-weight: 500;
+  text-decoration: none;
+  border: 1.5px solid var(--border);
+  color: var(--text-2);
+  background: white;
+  transition: all 0.18s var(--ease);
 }
 
-/* ---- QUICK INFO ---- */
-.quick-info {
-  background: var(--bg-light);
-  padding: 4rem 2rem;
+.chip:hover {
+  border-color: var(--gold);
+  color: var(--gold);
 }
 
-.quick-info-grid {
-  max-width: 1000px;
+.chip.chip-active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--navy);
+  font-weight: 600;
+}
+
+/* ---- TIMELINE MAIN ---- */
+.schedule-main {
+  max-width: 900px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.5rem;
+  padding: 4rem 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
 }
 
-.qi-card {
-  background: var(--bg-card);
-  padding: 2rem;
-  border-radius: 16px;
-  border: 1px solid var(--border-light);
-  text-align: center;
-  transition: all 0.3s;
+/* ---- TIMELINE BLOCK ---- */
+.timeline-block {
+  position: relative;
 }
 
-.qi-card:hover {
-  border-color: var(--sda-gold);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-4px);
+/* Left gold rule */
+.timeline-block::before {
+  content: '';
+  position: absolute;
+  left: -1.5rem;
+  top: 28px;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--gold), rgba(201,162,39,0.10));
+  border-radius: 2px;
 }
 
-.qi-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, var(--sda-navy), var(--accent-crimson));
+.timeline-block:last-child::before {
+  display: none;
+}
+
+/* ---- DAY HEADER ---- */
+.timeline-day-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+/* Gold dot on the rule */
+.timeline-day-header::before {
+  content: '';
+  position: absolute;
+  left: -1.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--gold);
+  border: 3px solid var(--cream);
+  box-shadow: 0 0 0 3px rgba(201,162,39,0.20);
+}
+
+.day-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  margin: 0 auto 1rem;
+  flex-shrink: 0;
   color: white;
+}
+
+.day-sabbath   { background: linear-gradient(135deg, var(--gold), #a07a1a); color: var(--navy) !important; }
+.day-wednesday { background: linear-gradient(135deg, #6d28d9, #4c1d95); }
+.day-friday    { background: linear-gradient(135deg, var(--crimson), #5c0e25); }
+
+.day-sabbath svg { color: var(--navy); }
+
+.day-name {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.1;
+}
+
+.day-sub {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-top: 0.15rem;
+}
+
+/* ---- DAY EVENTS ---- */
+.day-events {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+/* ---- SCHEDULE CARD ---- */
+.sched-card {
+  display: grid;
+  grid-template-columns: 80px 1px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  background: white;
+  padding: 1.5rem 2rem;
+  transition: all 0.22s var(--ease);
+  position: relative;
+}
+
+/* Gold accent on left when featured */
+.sched-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: transparent;
+  transition: background 0.22s;
+}
+
+.sched-card:hover {
+  background: var(--off-white);
+}
+
+.sched-card:hover::before {
+  background: var(--gold);
+}
+
+.sched-card-featured::before {
+  background: var(--gold);
+}
+
+.sched-card-choir::before {
+  background: var(--crimson);
+}
+
+/* Time column */
+.sched-time {
+  text-align: center;
+  padding-top: 0.2rem;
+}
+
+.time-num {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1;
+}
+
+.time-period {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-top: 0.2rem;
+  display: block;
+}
+
+/* Divider */
+.sched-divider {
+  width: 1px;
+  background: var(--border);
+  align-self: stretch;
+}
+
+
+.sched-tag {
+  display: inline-block;
+  padding: 0.18rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.4rem;
+}
+
+.tag-study   { background: #dbeafe; color: #1e40af; }
+.tag-worship { background: #fef3c7; color: #78350f; }
+.tag-youth   { background: #dcfce7; color: #14532d; }
+.tag-choir   { background: #fee2e2; color: #991b1b; }
+.tag-prayer  { background: #ede9fe; color: #6d28d9; }
+
+.sched-details h3 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 0.4rem;
+  line-height: 1.2;
+}
+
+.sched-details p {
+  font-size: 0.875rem;
+  color: var(--text-2);
+  line-height: 1.65;
+  margin-bottom: 0.75rem;
+}
+
+.sched-loc {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--gold);
+  font-weight: 500;
+}
+
+.sched-loc svg { flex-shrink: 0; opacity: 0.8; }
+
+/* ---- QUICK INFO ---- */
+.quick-info {
+  padding: 5rem 2rem;
+  background: var(--cream);
+}
+
+.qi-grid {
+  max-width: 900px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.qi-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.28s var(--ease);
+}
+
+.qi-card:hover {
+  border-color: var(--gold);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.qi-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: var(--gold-dim);
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
 }
 
 .qi-card h4 {
   font-family: var(--font-display);
-  color: var(--sda-navy);
   font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--navy);
   margin-bottom: 0.5rem;
 }
 
 .qi-card p {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  color: var(--text-2);
   line-height: 1.7;
 }
 
 /* ---- RESPONSIVE ---- */
 @media (max-width: 768px) {
-  .schedule-page {
-    padding: 2rem 1rem;
-  }
+  .page-header { padding: 8rem 1.25rem 4rem; }
+  .chips-inner { padding: 0.875rem 1.25rem; }
+  .schedule-main { padding: 3rem 1.25rem 2rem; gap: 3rem; }
 
-  .schedule-timeline {
-    padding-left: 2rem;
-  }
+  .timeline-block::before { left: 0; }
+  .timeline-day-header::before { left: -0.35rem; }
 
-  .timeline-day::before {
-    left: -2rem;
-    width: 12px;
-    height: 12px;
-    transform: translateX(-4px);
-  }
-
-  .day-marker {
+  .sched-card {
+    grid-template-columns: 1fr;
     gap: 0.75rem;
+    padding: 1.25rem;
   }
 
-  .day-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 1.25rem;
-  }
+  .sched-divider { display: none; }
 
-  .day-name {
-    font-size: 1.3rem;
-  }
-
-  .event-card {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .event-time {
+  .sched-time {
     display: flex;
     align-items: baseline;
-    gap: 0.25rem;
-    min-width: auto;
+    gap: 0.3rem;
     text-align: left;
   }
 
-  .time-start {
-    font-size: 1.2rem;
-  }
+  .time-num { font-size: 1.15rem; }
+  .time-period { display: inline; margin-top: 0; }
+
+  .quick-info { padding: 3.5rem 1.25rem; }
+  .qi-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; }
 }

@@ -1,0 +1,409 @@
+/* =====================================================
+   ABOUT.CSS — SDA Ambassadors Club
+   ===================================================== */
+
+/* ---- STORY SECTION ---- */
+.about-story {
+  background: var(--cream);
+  padding: 7rem 2rem;
+}
+
+.about-story-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 5rem;
+  align-items: center;
+}
+
+.about-story-text p {
+  font-size: 1.02rem;
+  color: var(--text-2);
+  line-height: 1.85;
+  margin-bottom: 1.25rem;
+}
+
+.about-story-text p:last-child { margin-bottom: 0; }
+
+.story-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.story-stat {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  transition: all 0.28s var(--ease);
+}
+
+.story-stat:hover {
+  border-color: var(--gold);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.ss-num {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 0.4rem;
+}
+
+.ss-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* ---- MISSION / VISION / VALUES ---- */
+.mvv-section {
+  background: var(--navy);
+  padding: 7rem 2rem;
+}
+
+.mvv-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.mvv-card {
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: all 0.28s var(--ease);
+}
+
+.mvv-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(201,162,39,0.35);
+}
+
+.mvv-mission { background: rgba(255,255,255,0.04); }
+.mvv-vision  { background: rgba(201,162,39,0.06); }
+.mvv-motto   { background: rgba(123,18,48,0.10); }
+
+.mvv-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: rgba(201,162,39,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  margin-bottom: 1.25rem;
+}
+
+.mvv-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 0.75rem;
+}
+
+.mvv-card p {
+  font-size: 0.92rem;
+  color: rgba(255,255,255,0.60);
+  line-height: 1.7;
+}
+
+.mvv-motto-text {
+  font-family: var(--font-display);
+  font-size: 1.5rem !important;
+  font-style: italic;
+  color: var(--gold) !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* ---- BELIEFS ---- */
+.beliefs-section {
+  background: var(--off-white);
+  padding: 7rem 2rem;
+}
+
+.beliefs-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.beliefs-header {
+  margin-bottom: 4rem;
+}
+
+.beliefs-intro {
+  font-size: 1.05rem;
+  color: var(--text-2);
+  line-height: 1.75;
+  max-width: 600px;
+  margin-top: -0.5rem;
+}
+
+.beliefs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.belief-item {
+  display: flex;
+  gap: 1.5rem;
+  padding: 2rem 2rem;
+  background: white;
+  transition: background 0.22s var(--ease);
+}
+
+.belief-item:hover { background: var(--cream); }
+
+.belief-num {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  opacity: 0.8;
+  flex-shrink: 0;
+  padding-top: 0.2rem;
+}
+
+.belief-text h4 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 0.4rem;
+}
+
+.belief-text p {
+  font-size: 0.875rem;
+  color: var(--text-3);
+  line-height: 1.6;
+}
+
+/* ---- LEADERSHIP ---- */
+.leadership-section {
+  background: var(--cream);
+  padding: 7rem 2rem;
+}
+
+.leadership-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.leaders-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-top: 3rem;
+}
+
+.leader-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.28s var(--ease);
+}
+
+.leader-card:hover {
+  border-color: var(--gold);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.leader-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--navy), var(--navy-mid));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gold);
+  margin: 0 auto 1.25rem;
+  border: 2px solid var(--gold-dim);
+}
+
+.leader-card h4 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 0.2rem;
+}
+
+.leader-role {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.75rem;
+}
+
+.leader-desc {
+  font-size: 0.85rem;
+  color: var(--text-3);
+  line-height: 1.55;
+}
+
+/* ---- VERSE CTA ---- */
+.about-verse-section {
+  background: linear-gradient(135deg, var(--navy) 0%, #0c1830 100%);
+  padding: 7rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.about-verse-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(201,162,39,0.07) 0%, transparent 60%);
+}
+
+.about-verse-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.about-verse-section .verse-cross {
+  font-size: 1.5rem;
+  color: var(--gold);
+  opacity: 0.5;
+  margin-bottom: 1.75rem;
+}
+
+.about-verse-section .verse-quote {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  font-style: italic;
+  color: white;
+  line-height: 1.55;
+  margin-bottom: 1.25rem;
+  font-weight: 400;
+}
+
+.about-verse-section .verse-cite {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-style: normal;
+  margin-bottom: 2.5rem;
+}
+
+.about-cta-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ---- CONTACT SECTION ---- */
+.contact-section {
+  background: var(--off-white);
+  padding: 7rem 2rem;
+}
+
+.contact-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-top: 3rem;
+}
+
+.contact-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  transition: all 0.28s var(--ease);
+}
+
+.contact-card:hover {
+  border-color: var(--gold);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.contact-card-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: var(--gold-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  margin-bottom: 1.25rem;
+}
+
+.contact-card h4 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+}
+
+.contact-card p {
+  font-size: 0.9rem;
+  color: var(--text-2);
+  line-height: 1.6;
+}
+
+.contact-note {
+  font-family: var(--font-mono);
+  font-size: 0.72rem !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold) !important;
+  margin-top: 0.5rem;
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 1024px) {
+  .mvv-inner { grid-template-columns: 1fr; }
+  .leaders-grid { grid-template-columns: repeat(2, 1fr); }
+  .contact-grid { grid-template-columns: 1fr; max-width: 480px; }
+}
+
+@media (max-width: 768px) {
+  .about-story-inner { grid-template-columns: 1fr; gap: 3rem; }
+  .story-stat-grid { grid-template-columns: 1fr 1fr; }
+  .beliefs-grid { grid-template-columns: 1fr; }
+  .leaders-grid { grid-template-columns: 1fr; }
+  .about-cta-buttons { flex-direction: column; align-items: center; }
+}
