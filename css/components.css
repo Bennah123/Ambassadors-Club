@@ -93,13 +93,75 @@
   margin: 0 auto;
 }
 
-/* ---- SHARED FOOTER (used across all inner pages) ---- */
+/* =====================================================
+   NEWSLETTER — shared across all pages
+   ===================================================== */
+.newsletter-section {
+  background: var(--navy);
+  padding: 4.5rem 2rem;
+}
+
+.newsletter-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.newsletter-left h3 {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 0.6rem;
+}
+
+.newsletter-left p {
+  font-size: 0.95rem;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.7;
+}
+
+.newsletter-field {
+  display: flex;
+  gap: 0.625rem;
+  margin-bottom: 0.625rem;
+}
+
+.newsletter-field input {
+  flex: 1;
+  padding: 0.8rem 1.2rem;
+  border: 1.5px solid rgba(255,255,255,0.14);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.07);
+  color: white;
+  font-size: 0.9rem;
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.newsletter-field input::placeholder { color: rgba(255,255,255,0.35); }
+.newsletter-field input:focus { border-color: var(--gold); }
+
+.newsletter-note {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.30);
+  font-family: var(--font-mono);
+}
+
+/* =====================================================
+   FOOTER — shared across ALL pages (.footer + .site-footer)
+   ===================================================== */
+.footer,
 .site-footer {
   background: #0e1a35;
   border-top: 1px solid rgba(255,255,255,0.06);
 }
 
-.site-footer .footer-inner {
+.footer-inner {
   max-width: 1200px;
   margin: 0 auto;
   display: grid;
@@ -174,6 +236,8 @@
   flex-shrink: 0; margin-top: 0.15rem; color: var(--gold); opacity: 0.7;
 }
 
+/* Bottom bar — works for both .footer-bottom and .footer-bottom-bar */
+.footer-bottom,
 .footer-bottom-bar {
   border-top: 1px solid rgba(255,255,255,0.06);
   padding: 1.5rem 2rem;
@@ -186,6 +250,7 @@
   gap: 0.75rem;
 }
 
+.footer-bottom p,
 .footer-bottom-bar p { font-size: 0.8rem; color: rgba(255,255,255,0.28); }
 
 .footer-bottom-links { display: flex; gap: 0.6rem; align-items: center; }
@@ -209,7 +274,9 @@
   0%,100%{transform:scale(1);}14%{transform:scale(1.2);}28%{transform:scale(1);}42%{transform:scale(1.2);}
 }
 
-/* ---- CARDS ---- */
+/* =====================================================
+   CARDS / BADGES / TAGS / UTILITIES
+   ===================================================== */
 .card {
   background: white; border-radius: 14px;
   border: 1px solid var(--border); overflow: hidden;
@@ -217,7 +284,6 @@
 }
 .card:hover { box-shadow: var(--shadow-md); }
 
-/* ---- BADGES ---- */
 .badge {
   display: inline-flex; align-items: center; gap: 0.3rem;
   padding: 0.3rem 0.75rem; border-radius: 50px;
@@ -228,7 +294,6 @@
 .badge-navy    { background: rgba(22,32,64,0.10); color: var(--navy); }
 .badge-crimson { background: rgba(123,18,48,0.10); color: var(--crimson); }
 
-/* ---- EVENT TYPE TAGS ---- */
 .etag {
   display: inline-block; padding: 0.2rem 0.65rem; border-radius: 4px;
   font-size: 0.7rem; font-weight: 600; font-family: var(--font-mono);
@@ -243,7 +308,6 @@
 .etag-choir   { background: #fee2e2; color: #991b1b; }
 .etag-youth   { background: #dcfce7; color: #14532d; }
 
-/* ---- SPINNER ---- */
 .spinner {
   width: 24px; height: 24px;
   border: 3px solid rgba(255,255,255,0.15);
@@ -252,7 +316,6 @@
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ---- ALERTS ---- */
 .alert {
   padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1rem;
   display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem;
@@ -261,20 +324,40 @@
 .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
 .alert-warning { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
 
-/* ---- SCROLLBAR ---- */
+/* Reveal animations */
+.reveal-section,
+.reveal-child {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.65s var(--ease), transform 0.65s var(--ease);
+}
+.reveal-section.in-view,
+.reveal-child.in-view { opacity: 1; transform: none; }
+.reveal-child:nth-child(2) { transition-delay: 0.10s; }
+.reveal-child:nth-child(3) { transition-delay: 0.18s; }
+.reveal-child:nth-child(4) { transition-delay: 0.26s; }
+.reveal-child:nth-child(5) { transition-delay: 0.34s; }
+.reveal-child:nth-child(6) { transition-delay: 0.42s; }
+
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 4px; opacity: 0.5; }
+::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 4px; }
 
-/* ---- RESPONSIVE ---- */
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
 @media (max-width: 1024px) {
-  .site-footer .footer-inner { grid-template-columns: 1fr 1fr; gap: 2.5rem; }
-  .site-footer .footer-inner .footer-brand-col { grid-column: span 2; }
+  .footer-inner { grid-template-columns: 1fr 1fr; gap: 2.5rem; }
+  .footer-inner .footer-brand-col { grid-column: span 2; }
+  .newsletter-inner { grid-template-columns: 1fr; gap: 2rem; }
 }
 
 @media (max-width: 768px) {
   .page-header { padding: 7rem 1.5rem 4rem; }
-  .site-footer .footer-inner { grid-template-columns: 1fr; gap: 2rem; padding: 3rem 1.25rem 2rem; }
-  .site-footer .footer-inner .footer-brand-col { grid-column: span 1; }
+  .footer-inner { grid-template-columns: 1fr; gap: 2rem; padding: 3rem 1.25rem 2rem; }
+  .footer-inner .footer-brand-col { grid-column: span 1; }
+  .footer-bottom,
   .footer-bottom-bar { flex-direction: column; text-align: center; align-items: center; }
+  .newsletter-field { flex-direction: column; }
+  .newsletter-field .btn { width: 100%; }
 }
