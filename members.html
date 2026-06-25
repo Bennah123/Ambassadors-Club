@@ -3,267 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Meet the Ambassadors of SDA Church Embakasi Central - Youth Ministry Members">
-  <title>Ambassadors Members | SDA Church Embakasi Central</title>
+  <meta name="description" content="Meet the Ambassadors of SDA Church Embakasi Central">
+  <title>Members | SDA Church Embakasi Central</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/members.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- ── Admin + toast styles (self-contained, uses your CSS variables) ── -->
-  <style>
-    /* ---- ADMIN BAR ---- */
-    .admin-bar {
-      display: none;
-      align-items: center;
-      gap: 1rem;
-      background: var(--sda-navy);
-      color: white;
-      padding: 0.6rem 2rem;
-      font-size: 0.85rem;
-      font-family: var(--font-body);
-    }
-    .admin-bar span { opacity: 0.75; flex: 1; }
-    .admin-bar-btn {
-      padding: 0.45rem 1.1rem;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: var(--font-body);
-      transition: opacity 0.2s;
-    }
-    .admin-bar-btn:hover { opacity: 0.85; }
-    .admin-bar-btn.add { background: var(--sda-gold); color: var(--sda-navy); }
-    .admin-bar-btn.logout { background: rgba(255,255,255,0.15); color: white; }
-
-    .admin-login-btn {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-family: var(--font-body);
-      padding: 0.25rem 0.5rem;
-      text-decoration: underline;
-      transition: color 0.2s;
-    }
-    .admin-login-btn:hover { color: var(--sda-navy); }
-
-    /* ---- ADMIN CARD ACTIONS ---- */
-    .admin-card-actions {
-      position: absolute;
-      top: 0.6rem;
-      right: 0.6rem;
-      display: flex;
-      gap: 0.35rem;
-      z-index: 5;
-    }
-    .admin-card-btn {
-      width: 30px;
-      height: 30px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255,255,255,0.92);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-      transition: transform 0.15s, box-shadow 0.15s;
-    }
-    .admin-card-btn:hover { transform: scale(1.15); box-shadow: 0 4px 10px rgba(0,0,0,0.18); }
-
-    /* In-modal admin actions */
-    .admin-action-btn {
-      padding: 0.55rem 1.4rem;
-      border: none;
-      border-radius: 10px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: var(--font-body);
-      transition: opacity 0.2s;
-    }
-    .admin-action-btn:hover { opacity: 0.85; }
-    .admin-action-btn.edit   { background: var(--sda-navy); color: white; }
-    .admin-action-btn.delete { background: #dc2626;          color: white; }
-
-    /* ---- MEMBER FORM MODAL ---- */
-    #memberFormModal { z-index: 2100; }
-
-    .form-modal-content {
-      background: var(--bg-card);
-      border-radius: 24px;
-      max-width: 560px;
-      width: 100%;
-      max-height: 92vh;
-      overflow-y: auto;
-      position: relative;
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.28);
-      border: 1px solid var(--border-light);
-      animation: modalSlideIn 0.3s ease;
-      padding: 2rem;
-    }
-
-    .form-modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.75rem;
-    }
-    .form-modal-header h2 {
-      font-family: var(--font-display);
-      font-size: 1.5rem;
-      color: var(--sda-navy);
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-    }
-    .form-group.full { grid-column: 1 / -1; }
-    .form-group label {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-    }
-    .form-group input,
-    .form-group textarea,
-    .form-group select {
-      padding: 0.75rem 1rem;
-      border: 2px solid var(--border-light);
-      border-radius: 10px;
-      font-family: var(--font-body);
-      font-size: 0.92rem;
-      background: var(--bg-light);
-      color: var(--text-primary);
-      transition: border-color 0.2s, box-shadow 0.2s;
-      resize: vertical;
-    }
-    .form-group input:focus,
-    .form-group textarea:focus,
-    .form-group select:focus {
-      outline: none;
-      border-color: var(--sda-gold);
-      box-shadow: 0 0 0 4px rgba(201,162,39,0.1);
-    }
-    .form-group textarea { min-height: 90px; }
-
-    .dept-check-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 0.25rem;
-    }
-    .dept-check-label {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      background: var(--bg-light);
-      border: 2px solid var(--border-light);
-      border-radius: 8px;
-      padding: 0.4rem 0.85rem;
-      font-size: 0.83rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .dept-check-label:has(input:checked) {
-      border-color: var(--sda-navy);
-      background: rgba(26,54,93,0.07);
-      color: var(--sda-navy);
-    }
-    .dept-check-label input { display: none; }
-
-    .form-error {
-      color: #dc2626;
-      font-size: 0.83rem;
-      min-height: 1.2em;
-      margin-top: 0.25rem;
-    }
-
-    .form-actions {
-      display: flex;
-      gap: 0.75rem;
-      justify-content: flex-end;
-      margin-top: 1.5rem;
-    }
-    .form-btn {
-      padding: 0.7rem 1.75rem;
-      border: none;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: var(--font-body);
-      transition: opacity 0.2s, transform 0.15s;
-    }
-    .form-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-    .form-btn.primary  { background: var(--sda-navy); color: white; }
-    .form-btn.secondary { background: var(--bg-light); color: var(--text-secondary); border: 2px solid var(--border-light); }
-
-    /* ---- TOAST ---- */
-    .sda-toast {
-      position: fixed;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%) translateY(1rem);
-      background: var(--sda-navy);
-      color: white;
-      padding: 0.8rem 1.75rem;
-      border-radius: 50px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      font-family: var(--font-body);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-      opacity: 0;
-      transition: opacity 0.35s, transform 0.35s;
-      z-index: 9999;
-      white-space: nowrap;
-    }
-    .sda-toast--show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    .sda-toast--success { background: #16a34a; }
-    .sda-toast--error   { background: #dc2626; }
-
-    @media (max-width: 560px) {
-      .form-grid { grid-template-columns: 1fr; }
-      .form-modal-content { padding: 1.25rem; margin: 1rem; }
-    }
-  </style>
 </head>
 <body>
 
-  <!-- ==================== ADMIN BAR ==================== -->
   <div class="admin-bar" id="adminBar">
-    <span>&#128274; Admin Mode &mdash; changes save to this browser</span>
-    <button class="admin-bar-btn add"    id="adminAddBtn">+ Add Member</button>
+    <span>🔐 Admin Mode</span>
+    <button class="admin-bar-btn add" id="adminAddBtn">+ Add Member</button>
     <button class="admin-bar-btn logout" id="adminLogoutBtn">Log Out</button>
   </div>
 
-  <!-- ==================== NAVIGATION ==================== -->
   <nav class="navbar" id="navbar">
     <a href="index.html" class="nav-brand">
-      <img src="assets/logos/sda-logo-white.png" alt="SDA Logo" id="navLogo">
-      <div>
-        <span>SDA Embakasi Central</span>
-        <small>Ambassadors Club</small>
-      </div>
+      <div class="nav-brand-mark">AC</div>
+      <div class="nav-brand-text"><span>Ambassadors Club</span><small>SDA Embakasi Central</small></div>
     </a>
-    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
     <ul class="nav-links" id="navLinks">
@@ -277,235 +40,161 @@
     </ul>
   </nav>
 
-  <!-- ==================== PAGE HEADER ==================== -->
   <section class="page-header">
+    <div class="page-header-orb page-header-orb-1"></div>
+    <div class="page-header-orb page-header-orb-2"></div>
     <div class="page-header-content">
-      <span class="page-tag">The Team</span>
+      <div class="page-eyebrow">45+ Ambassadors · Est. 2023</div>
       <h1>The Ambassadors</h1>
-      <p>Meet the youth of SDA Church Embakasi Central &mdash; ambassadors for Christ in our community.</p>
+      <p>Meet the youth of SDA Church Embakasi Central — ambassadors for Christ in our community.</p>
     </div>
   </section>
 
-  <!-- ==================== MEMBERS TOOLBAR ==================== -->
-  <div class="members-toolbar-container">
+  <div class="members-toolbar-wrap">
     <div class="members-toolbar">
-      <div class="search-box">
-        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input type="text" id="memberSearch" placeholder="Search by name, department, or gift...">
+      <div class="members-search-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="memberSearch" placeholder="Search by name, department, or gift…" autocomplete="off">
       </div>
-      <div class="filter-tabs" id="filterTabs">
-        <button class="filter-btn active" data-filter="all">All Members</button>
-        <button class="filter-btn" data-filter="choir">Choir</button>
-        <button class="filter-btn" data-filter="ushering">Ushering</button>
-        <button class="filter-btn" data-filter="treasury">Treasury</button>
-        <button class="filter-btn" data-filter="welfare">Welfare</button>
-        <button class="filter-btn" data-filter="media">Media</button>
+      <div class="filter-chips" id="filterTabs">
+        <button class="filter-chip active" data-filter="all">All</button>
+        <button class="filter-chip" data-filter="choir">Choir</button>
+        <button class="filter-chip" data-filter="ushering">Ushering</button>
+        <button class="filter-chip" data-filter="treasury">Treasury</button>
+        <button class="filter-chip" data-filter="welfare">Welfare</button>
+        <button class="filter-chip" data-filter="media">Media</button>
       </div>
-      <button class="admin-login-btn" id="adminLoginBtn" title="Admin login">Admin</button>
+      <button class="admin-login-link" id="adminLoginBtn">Admin</button>
     </div>
   </div>
 
-  <!-- ==================== MEMBERS GRID ==================== -->
   <main class="members-page">
     <div class="members-grid" id="membersGrid">
-      <!-- Rendered dynamically via members.js -->
+      <div class="members-loading"><div class="spinner"></div><p>Loading members…</p></div>
     </div>
-    <div class="no-results" id="noResults" style="display: none;">
-      <div class="no-results-icon">&#128269;</div>
+    <div class="no-results" id="noResults" style="display:none;">
+      <div class="no-results-icon">🔍</div>
       <h3>No members found</h3>
-      <p>Try adjusting your search or filter criteria.</p>
+      <p>Try adjusting your search or filter.</p>
     </div>
   </main>
 
-  <!-- ==================== MEMBER DETAIL MODAL ==================== -->
+  <!-- Member Detail Modal -->
   <div class="modal" id="memberModal">
-    <div class="modal-overlay"></div>
+    <div class="modal-overlay" id="memberModalOverlay"></div>
     <div class="modal-content">
-      <button class="modal-close" id="modalClose" aria-label="Close modal">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 6 6 18M6 6l12 12"/>
-        </svg>
+      <button class="modal-close" id="modalClose" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
       <div class="modal-body" id="modalBody"></div>
     </div>
   </div>
 
-  <!-- ==================== MEMBER FORM MODAL (Admin) ==================== -->
+  <!-- Member Form Modal -->
   <div class="modal" id="memberFormModal">
     <div class="modal-overlay"></div>
-    <div class="form-modal-content">
-      <div class="form-modal-header">
-        <h2 id="memberFormTitle">Add New Member</h2>
-        <button class="modal-close" id="memberFormClose" aria-label="Close form" style="position:static;width:36px;height:36px;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 6 6 18M6 6l12 12"/>
-          </svg>
-        </button>
+    <div class="modal-content modal-lg">
+      <button class="modal-close" id="memberFormClose" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <div class="modal-header">
+        <h3 id="memberFormTitle">Add Member</h3>
+        <p>Fill in the details below</p>
       </div>
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="fFirstName">First Name *</label>
-          <input id="fFirstName" type="text" placeholder="e.g. John">
-        </div>
-        <div class="form-group">
-          <label for="fLastName">Last Name *</label>
-          <input id="fLastName" type="text" placeholder="e.g. Kamau">
-        </div>
-        <div class="form-group">
-          <label for="fRole">Role *</label>
-          <input id="fRole" type="text" placeholder="e.g. Choir Director">
-        </div>
-        <div class="form-group">
-          <label for="fGift">Spiritual Gift</label>
-          <input id="fGift" type="text" placeholder="e.g. Music">
-        </div>
-        <div class="form-group">
-          <label for="fPhone">Phone</label>
-          <input id="fPhone" type="tel" placeholder="+254 7XX XXX XXX">
-        </div>
-        <div class="form-group">
-          <label for="fEmail">Email</label>
-          <input id="fEmail" type="email" placeholder="name@email.com">
-        </div>
-        <div class="form-group">
-          <label for="fJoined">Year Joined</label>
-          <input id="fJoined" type="number" min="2000" max="2099" placeholder="2024">
-        </div>
-
-        <div class="form-group full">
-          <label>Departments *</label>
-          <div class="dept-check-group">
-            <label class="dept-check-label"><input type="checkbox" id="fDept_choir">    Choir</label>
-            <label class="dept-check-label"><input type="checkbox" id="fDept_ushering"> Ushering</label>
-            <label class="dept-check-label"><input type="checkbox" id="fDept_treasury"> Treasury</label>
-            <label class="dept-check-label"><input type="checkbox" id="fDept_welfare">  Welfare</label>
-            <label class="dept-check-label"><input type="checkbox" id="fDept_media">    Media</label>
+      <div class="modal-form">
+        <input type="hidden" id="fMemberId">
+        <div class="form-grid">
+          <div class="form-group"><label for="fFirstName">First Name *</label><input id="fFirstName" type="text" placeholder="e.g. John"></div>
+          <div class="form-group"><label for="fLastName">Last Name *</label><input id="fLastName" type="text" placeholder="e.g. Kamau"></div>
+          <div class="form-group"><label for="fRole">Role *</label><input id="fRole" type="text" placeholder="e.g. Choir Director"></div>
+          <div class="form-group"><label for="fGift">Spiritual Gift</label><input id="fGift" type="text" placeholder="e.g. Music"></div>
+          <div class="form-group"><label for="fPhone">Phone</label><input id="fPhone" type="tel" placeholder="+254 7XX XXX XXX"></div>
+          <div class="form-group"><label for="fEmail">Email</label><input id="fEmail" type="email" placeholder="name@email.com"></div>
+          <div class="form-group"><label for="fJoined">Year Joined</label><input id="fJoined" type="number" min="2000" max="2099" placeholder="2024"></div>
+          <div class="form-group full">
+            <label>Departments *</label>
+            <div class="dept-check-group">
+              <label class="dept-check-label"><input type="checkbox" id="fDept_choir"> Choir</label>
+              <label class="dept-check-label"><input type="checkbox" id="fDept_ushering"> Ushering</label>
+              <label class="dept-check-label"><input type="checkbox" id="fDept_treasury"> Treasury</label>
+              <label class="dept-check-label"><input type="checkbox" id="fDept_welfare"> Welfare</label>
+              <label class="dept-check-label"><input type="checkbox" id="fDept_media"> Media</label>
+            </div>
           </div>
+          <div class="form-group full"><label for="fBio">Bio</label><textarea id="fBio" placeholder="A short description about this member…"></textarea></div>
         </div>
-
-        <div class="form-group full">
-          <label for="fBio">Bio</label>
-          <textarea id="fBio" placeholder="A short description about this member..."></textarea>
+        <p class="form-error" id="memberFormError"></p>
+        <div class="form-actions">
+          <button class="btn btn-ghost-dark" id="memberFormCancel">Cancel</button>
+          <button class="btn btn-gold" id="memberFormSave">Save Member</button>
         </div>
-      </div>
-
-      <p class="form-error" id="memberFormError"></p>
-
-      <div class="form-actions">
-        <button class="form-btn secondary" id="memberFormCancel" onclick="closeMemberFormModal()">Cancel</button>
-        <button class="form-btn primary"   id="memberFormSave">Save Member</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== FOOTER ==================== -->
+  <!-- PIN Modal -->
+  <div class="modal" id="pinModal">
+    <div class="modal-overlay" id="pinModalOverlay"></div>
+    <div class="modal-content modal-sm">
+      <button class="modal-close" id="pinModalClose" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <div class="modal-header"><h3>Admin Access</h3><p>Enter your PIN to continue</p></div>
+      <div class="modal-body">
+        <input type="password" id="adminPinInput" class="pin-input" placeholder="••••" maxlength="8" autocomplete="off">
+        <p class="pin-error" id="pinError"></p>
+        <button class="btn btn-gold" id="pinSubmitBtn" style="width:100%;margin-top:.5rem">Unlock</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="newsletter-section">
+    <div class="newsletter-inner">
+      <div class="newsletter-left">
+        <h3>Stay Connected</h3>
+        <p>Weekly updates on events, devotionals, and club news — straight to your inbox.</p>
+      </div>
+      <form class="newsletter-form" id="newsletterForm" novalidate>
+        <div class="newsletter-field">
+          <input type="email" id="newsletterEmail" placeholder="your@email.com" required autocomplete="email">
+          <button type="submit" class="btn btn-gold">Subscribe</button>
+        </div>
+        <p class="newsletter-note">No spam. Unsubscribe anytime.</p>
+      </form>
+    </div>
+  </section>
+
   <footer class="footer">
-    <div class="footer-wave">
-      <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M0 120L60 105C120 90 240 60 360 52.5C480 45 600 60 720 67.5C840 75 960 75 1080 67.5C1200 60 1320 45 1380 37.5L1440 30V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="var(--sda-navy)"/>
-      </svg>
-    </div>
-
-    <div class="footer-main">
-      <div class="footer-container">
-        <div class="footer-brand-col">
-          <div class="footer-brand">
-            <div class="footer-logo-wrap">
-              <img src="assets/logos/sda-logo-white.png" alt="SDA Logo" class="footer-logo">
-            </div>
-            <div class="footer-brand-text">
-              <h4>SDA Church Embakasi Central</h4>
-              <p class="footer-tagline">Ambassadors Club Youth Ministry</p>
-              <p class="footer-motto">&ldquo;Go ye into all the world and preach the gospel&rdquo;</p>
-            </div>
-          </div>
-          <div class="footer-social">
-            <a href="https://www.tiktok.com/@embakasi.central?_r=1&_t=ZS-97RNHsU6ztQ" class="social-link" target="_blank" rel="noopener" aria-label="TikTok">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
-            </a>
-            <a href="#" class="social-link" target="_blank" rel="noopener" aria-label="Instagram">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-            </a>
-            <a href="https://youtube.com/@embakasicentralsdachurch2858?si=1UIQUKah5X-QKBns" class="social-link" target="_blank" rel="noopener" aria-label="YouTube">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-            </a>
-            <a href="https://chat.whatsapp.com/Ir49xa1Gvu8HYFnD82CthV" class="social-link" target="_blank" rel="noopener" aria-label="WhatsApp">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-            </a>
-          </div>
-        </div>
-
-        <div class="footer-links-col">
-          <h5>Quick Links</h5>
-          <ul>
-            <li><a href="members.html"><span class="link-arrow">&rarr;</span> Members</a></li>
-            <li><a href="choir.html"><span class="link-arrow">&rarr;</span> Choir</a></li>
-            <li><a href="activities.html"><span class="link-arrow">&rarr;</span> Activities</a></li>
-            <li><a href="treasury.html"><span class="link-arrow">&rarr;</span> Treasury</a></li>
-            <li><a href="schedule.html"><span class="link-arrow">&rarr;</span> Schedule</a></li>
-          </ul>
-        </div>
-
-        <div class="footer-links-col">
-          <h5>Resources</h5>
-          <ul>
-            <li><a href="about.html"><span class="link-arrow">&rarr;</span> About Us</a></li>
-            <li><a href="https://wa.me/254726473887"><span class="link-arrow">&rarr;</span> Contact</a></li>
-            <li><a href="https://wa.me/254726473887"><span class="link-arrow">&rarr;</span> Prayer Request</a></li>
-            <li><a href="https://youtube.com/@embakasicentralsdachurch2858?si=1UIQUKah5X-QKBns"><span class="link-arrow">&rarr;</span> Bible Study</a></li>
-            <li><a href="https://youtube.com/@embakasicentralsdachurch2858?si=1UIQUKah5X-QKBns"><span class="link-arrow">&rarr;</span> Sermons</a></li>
-          </ul>
-        </div>
-
-        <div class="footer-contact-col">
-          <h5>Visit Us</h5>
-          <div class="contact-item">
-            <span class="contact-icon">&#128205;</span>
-            <span>Embakasi, Nairobi, Kenya</span>
-          </div>
-          <div class="contact-item">
-            <span class="contact-icon">&#128222;</span>
-            <span>+254 726 473 887</span>
-          </div>
-          <div class="contact-item">
-            <span class="contact-icon">&#128231;</span>
-            <span>giftben593@gmail.com</span>
-          </div>
-          <div class="contact-item">
-            <span class="contact-icon">&#128337;</span>
-            <span>Sabbath Service: 8:00 AM - 5:00 PM</span>
-          </div>
-          <div class="footer-verse-box">
-            <p>&ldquo;Go ye into all the world and preach the gospel to every creature.&rdquo;</p>
-            <span>&mdash; Mark 16:15</span>
-          </div>
+    <div class="footer-inner">
+      <div class="footer-brand-col">
+        <div class="footer-mark">AC</div>
+        <p class="footer-brand-name">SDA Church Embakasi Central</p>
+        <p class="footer-brand-sub">Ambassadors Club Youth Ministry</p>
+        <p class="footer-motto">"Go ye into all the world and preach the gospel"</p>
+        <div class="footer-socials">
+          <a href="https://www.tiktok.com/@embakasi.central" class="social-btn" target="_blank" rel="noopener" aria-label="TikTok"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
+          <a href="#" class="social-btn" target="_blank" rel="noopener" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+          <a href="https://youtube.com/@embakasicentralsdachurch2858" class="social-btn" target="_blank" rel="noopener" aria-label="YouTube"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+          <a href="https://chat.whatsapp.com/Ir49xa1Gvu8HYFnD82CthV" class="social-btn" target="_blank" rel="noopener" aria-label="WhatsApp"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
         </div>
       </div>
+      <div class="footer-links-col"><h5>Quick Links</h5><ul><li><a href="members.html">Members</a></li><li><a href="choir.html">Choir</a></li><li><a href="activities.html">Activities</a></li><li><a href="treasury.html">Treasury</a></li><li><a href="schedule.html">Schedule</a></li></ul></div>
+      <div class="footer-links-col"><h5>Resources</h5><ul><li><a href="about.html">About Us</a></li><li><a href="https://wa.me/254726473887">Contact</a></li><li><a href="https://wa.me/254726473887">Prayer Request</a></li><li><a href="https://youtube.com/@embakasicentralsdachurch2858">Bible Study</a></li><li><a href="https://youtube.com/@embakasicentralsdachurch2858">Sermons</a></li></ul></div>
+      <div class="footer-contact-col">
+        <h5>Visit Us</h5>
+        <div class="contact-row"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Embakasi, Nairobi, Kenya</span></div>
+        <div class="contact-row"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.85a16 16 0 0 0 6 6l.9-.9a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/></svg><span>+254 726 473 887</span></div>
+        <div class="contact-row"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>giftben593@gmail.com</span></div>
+        <div class="contact-row"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Sabbath: 8:00 AM – 5:00 PM</span></div>
+      </div>
     </div>
-
     <div class="footer-bottom">
-      <div class="footer-bottom-container">
-        <p>&copy; <span class="current-year">2026</span> SDA Church Embakasi Central. All rights reserved.</p>
-        <div class="footer-bottom-links">
-          <a href="#">Privacy Policy</a>
-          <span class="divider">|</span>
-          <a href="#">Terms of Use</a>
-          <span class="divider">|</span>
-          <a href="#">Accessibility</a>
-        </div>
-        <p class="footer-credit">Built with <span class="heart">&#10084;</span> by the Ambassadors Club</p>
-      </div>
+      <p>© <span class="current-year"></span> SDA Church Embakasi Central. All rights reserved.</p>
+      <div class="footer-bottom-links"><a href="#">Privacy</a><span>·</span><a href="#">Terms</a><span>·</span><a href="#">Accessibility</a></div>
+      <p class="footer-credit">Built with <span class="heart">♥</span> by the Ambassadors Club</p>
     </div>
   </footer>
-
-  <button class="back-to-top" id="backToTop" aria-label="Back to top">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <path d="M18 15l-6-6-6 6"/>
-    </svg>
-  </button>
+  <button class="back-to-top" id="backToTop" aria-label="Back to top"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg></button>
 
   <script src="js/supabase-config.js"></script>
   <script src="js/main.js"></script>
