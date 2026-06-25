@@ -59,10 +59,13 @@
       <div class="filter-chips" id="filterTabs">
         <button class="filter-chip active" data-filter="all">All</button>
         <button class="filter-chip" data-filter="choir">Choir</button>
-        <button class="filter-chip" data-filter="ushering">Ushering</button>
+        <button class="filter-chip" data-filter="secretary">Secretary</button>
         <button class="filter-chip" data-filter="treasury">Treasury</button>
         <button class="filter-chip" data-filter="welfare">Welfare</button>
         <button class="filter-chip" data-filter="media">Media</button>
+        <button class="filter-chip" data-filter="uniform">Uniform</button>
+        <button class="filter-chip" data-filter="education">Education</button>
+        <button class="filter-chip" data-filter="outreach">Outreach</button>
       </div>
       <button class="admin-login-link" id="adminLoginBtn">Admin</button>
     </div>
@@ -103,6 +106,21 @@
       </div>
       <div class="modal-form">
         <input type="hidden" id="fMemberId">
+
+        <!-- ── AVATAR / PHOTO UPLOAD ── -->
+        <div class="avatar-upload-row">
+          <div class="avatar-preview" id="fAvatarPreview">
+            <span id="fAvatarInitials">?</span>
+          </div>
+          <div class="avatar-upload-info">
+            <label class="btn btn-ghost-dark" for="fAvatarInput" style="font-size:0.82rem;padding:0.4rem 1rem;cursor:pointer;">
+              📷 Upload Photo
+            </label>
+            <p>JPG or PNG · max 2 MB · square crop looks best</p>
+            <input type="file" id="fAvatarInput" class="avatar-upload-input" accept="image/jpeg,image/png,image/webp">
+          </div>
+        </div>
+
         <div class="form-grid">
           <div class="form-group"><label for="fFirstName">First Name *</label><input id="fFirstName" type="text" placeholder="e.g. John"></div>
           <div class="form-group"><label for="fLastName">Last Name *</label><input id="fLastName" type="text" placeholder="e.g. Kamau"></div>
@@ -199,5 +217,41 @@
   <script src="js/supabase-config.js"></script>
   <script src="js/main.js"></script>
   <script src="js/members.js"></script>
+
+  <!-- Avatar upload preview wiring -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const avatarInput   = document.getElementById('fAvatarInput');
+      const avatarPreview = document.getElementById('fAvatarPreview');
+      const firstNameEl   = document.getElementById('fFirstName');
+      const lastNameEl    = document.getElementById('fLastName');
+      const initialsEl    = document.getElementById('fAvatarInitials');
+
+      // Live-update initials as name is typed
+      function refreshInitials() {
+        const f = (firstNameEl.value || '').trim();
+        const l = (lastNameEl.value || '').trim();
+        if (!avatarPreview.querySelector('img')) {
+          initialsEl.textContent = ((f[0] || '') + (l[0] || '')).toUpperCase() || '?';
+        }
+      }
+      firstNameEl?.addEventListener('input', refreshInitials);
+      lastNameEl?.addEventListener('input', refreshInitials);
+
+      // Photo file → preview
+      avatarInput?.addEventListener('change', function () {
+        const file = this.files[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) {
+          alert('Photo must be under 2 MB.'); this.value = ''; return;
+        }
+        const reader = new FileReader();
+        reader.onload = e => {
+          avatarPreview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+  </script>
 </body>
 </html>

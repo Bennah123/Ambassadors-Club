@@ -100,79 +100,218 @@
 .members-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 /* ---- MEMBER CARD ---- */
 .member-card {
   background: white;
   border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 1.75rem 1.5rem 1.5rem;
+  border-radius: 20px;
+  padding: 0;
   cursor: pointer;
   position: relative;
-  transition: all 0.25s var(--ease);
+  transition: all 0.28s var(--ease);
   text-align: center;
+  overflow: hidden;
 }
 .member-card:hover {
   border-color: var(--gold);
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-6px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.12);
 }
+
+/* Card top accent bar */
+.member-card::before {
+  content: '';
+  display: block;
+  height: 4px;
+  background: linear-gradient(90deg, var(--navy), var(--gold));
+  opacity: 0;
+  transition: opacity 0.28s;
+}
+.member-card:hover::before { opacity: 1; }
+
+.member-card-inner {
+  padding: 2rem 1.5rem 1.5rem;
+}
+
+/* ---- AVATAR WITH PHOTO SUPPORT ---- */
 .member-avatar {
-  width: 72px; height: 72px;
+  width: 88px;
+  height: 88px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--navy), var(--navy-mid));
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-display); font-size: 1.5rem; font-weight: 700;
-  color: var(--gold);
-  margin: 0 auto 1rem;
-  border: 2px solid var(--gold-dim);
+  margin: 0 auto 1.1rem;
+  position: relative;
+  flex-shrink: 0;
 }
+
+/* Photo avatar (when img is present) */
+.member-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  border: 3px solid var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.18), 0 4px 16px rgba(0,0,0,0.15);
+  transition: box-shadow 0.25s;
+}
+.member-card:hover .member-avatar img {
+  box-shadow: 0 0 0 4px var(--gold), 0 6px 20px rgba(0,0,0,0.2);
+}
+
+/* Initials fallback (no photo) */
+.member-avatar-initials {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: var(--gold);
+  border: 3px solid var(--gold-dim);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.12), 0 4px 14px rgba(0,0,0,0.1);
+  transition: all 0.25s;
+  letter-spacing: 0.02em;
+  position: relative;
+  overflow: hidden;
+}
+.member-avatar-initials::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.12), transparent 65%);
+  border-radius: 50%;
+}
+.member-card:hover .member-avatar-initials {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px rgba(201,168,76,0.3), 0 6px 20px rgba(0,0,0,0.15);
+}
+
+/* Admin photo-upload overlay (visible in admin mode) */
+.member-avatar .avatar-upload-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.52);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  z-index: 2;
+}
+.member-card.admin-mode .member-avatar:hover .avatar-upload-overlay {
+  display: flex;
+}
+.avatar-upload-overlay svg { color: white; }
+.avatar-upload-overlay input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; border-radius: 50%;
+}
+
+/* Online / active status dot */
+.member-status-dot {
+  position: absolute;
+  bottom: 4px; right: 4px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 2px solid white;
+  background: #22c55e;
+}
+
+/* ---- CARD BODY ---- */
 .member-name {
   font-family: var(--font-display);
-  font-size: 1.15rem; font-weight: 600;
-  color: var(--navy); margin-bottom: 0.2rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 0.15rem;
+  line-height: 1.2;
 }
 .member-role {
   font-family: var(--font-mono);
-  font-size: 0.68rem; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--gold);
-  margin-bottom: 0.75rem;
+  font-size: 0.67rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.875rem;
 }
 .member-depts {
-  display: flex; flex-wrap: wrap; gap: 0.35rem;
-  justify-content: center; margin-bottom: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: center;
+  margin-bottom: 0.875rem;
 }
 .dept-tag {
-  padding: 0.15rem 0.55rem; border-radius: 4px;
-  font-size: 0.65rem; font-weight: 600;
-  font-family: var(--font-mono); text-transform: uppercase;
-  background: var(--gold-dim); color: #7a5c0a;
+  padding: 0.18rem 0.6rem;
+  border-radius: 50px;
+  font-size: 0.63rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  background: var(--gold-dim);
+  color: #7a5c0a;
+  border: 1px solid rgba(201,168,76,0.25);
+  letter-spacing: 0.06em;
 }
 .member-joined {
-  font-size: 0.78rem; color: var(--text-3);
+  font-size: 0.76rem;
+  color: var(--text-3);
   font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+.member-joined::before { content: '📅'; font-size: 0.7rem; }
+
+/* Card divider */
+.member-card-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.875rem 0;
+  opacity: 0.6;
 }
 
 /* Admin card actions */
 .admin-card-actions {
-  position: absolute; top: 0.6rem; right: 0.6rem;
-  display: flex; gap: 0.35rem; z-index: 5;
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: flex;
+  gap: 0.35rem;
+  z-index: 5;
 }
 .admin-card-btn {
-  width: 28px; height: 28px; border: none; border-radius: 7px;
-  cursor: pointer; font-size: 0.8rem;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(255,255,255,0.92);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-  transition: transform 0.15s;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.14);
+  transition: transform 0.15s, box-shadow 0.15s;
 }
-.admin-card-btn:hover { transform: scale(1.15); }
+.admin-card-btn:hover {
+  transform: scale(1.18);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+}
 
 /* ---- NO RESULTS ---- */
 .no-results {
-  text-align: center; padding: 4rem 2rem;
+  text-align: center;
+  padding: 4rem 2rem;
   color: var(--text-3);
 }
 .no-results-icon { font-size: 3rem; margin-bottom: 1rem; }
@@ -214,16 +353,60 @@
 .modal-body  { padding: 1.5rem 2rem 2rem; }
 .modal-form  { padding: 1.5rem 2rem 2rem; }
 
-/* Modal member detail */
+/* Modal member detail — enhanced avatar */
 .modal-member-avatar {
-  width: 60px; height: 60px; border-radius: 50%;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 3px solid var(--gold-dim);
+}
+.modal-member-avatar img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center top;
+  display: block;
+}
+.modal-member-avatar-initials {
+  width: 72px; height: 72px;
+  border-radius: 50%;
   background: linear-gradient(135deg, var(--navy), var(--navy-mid));
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-display); font-size: 1.3rem; font-weight: 700;
-  color: var(--gold); flex-shrink: 0;
-  border: 2px solid var(--gold-dim);
+  font-family: var(--font-display); font-size: 1.4rem; font-weight: 700;
+  color: var(--gold);
+  border: 3px solid var(--gold-dim);
 }
 .modal-role { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); }
+
+/* ---- MEMBER FORM — Photo upload row ---- */
+.avatar-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1rem;
+  background: var(--cream);
+  border: 1.5px dashed var(--border);
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+  transition: border-color 0.2s;
+}
+.avatar-upload-row:hover { border-color: var(--gold); }
+.avatar-preview {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--navy), var(--navy-mid));
+  border: 2px solid var(--gold-dim);
+  overflow: hidden; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 1.2rem; font-weight: 700;
+  color: var(--gold);
+}
+.avatar-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.avatar-upload-info { flex: 1; }
+.avatar-upload-info p { font-size: 0.8rem; color: var(--text-3); margin-top: 0.2rem; }
+.avatar-upload-info label.btn {
+  display: inline-block; cursor: pointer;
+}
+.avatar-upload-input { display: none; }
 
 /* Form */
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
@@ -280,4 +463,5 @@
   .filter-chips { justify-content: flex-start; }
   .members-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
   .form-grid { grid-template-columns: 1fr; }
+  .member-avatar, .member-avatar-initials { width: 72px; height: 72px; font-size: 1.4rem; }
 }

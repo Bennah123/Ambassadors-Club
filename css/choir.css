@@ -49,71 +49,162 @@
 .choir-hero-content h1 em { font-style: italic; }
 .choir-verse { font-size: 1.05rem; color: rgba(255,255,255,0.60); font-style: italic; margin-bottom: 2.5rem; line-height: 1.6; }
 .choir-stats-row {
-  display: flex; align-items: center; justify-content: center;
+  display: inline-flex; align-items: center; justify-content: center;
   gap: 0; background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.10);
   border-radius: 14px; padding: 1.5rem 2.5rem;
-  backdrop-filter: blur(8px); display: inline-flex;
+  backdrop-filter: blur(8px);
 }
 .choir-stat { text-align: center; padding: 0 1.5rem; }
 .choir-stat-num { display: block; font-family: var(--font-display); font-size: 2.5rem; font-weight: 700; color: var(--gold); line-height: 1; }
 .choir-stat-label { display: block; font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.45); margin-top: 0.3rem; }
 .choir-stat-divider { width: 1px; height: 40px; background: rgba(255,255,255,0.10); flex-shrink: 0; }
 
-/* ---- VOICE SECTIONS ---- */
+/* ====================================================
+   VOICE SECTIONS — All 4 panels visible at once
+   ==================================================== */
 .voice-sections { background: var(--off-white); padding: 7rem 2rem; }
 .voice-sections-inner { max-width: 1200px; margin: 0 auto; }
-.voice-tabs-wrap { margin: 2.5rem 0; }
-.voice-tabs {
-  display: flex; gap: 0.75rem; flex-wrap: wrap;
-  background: var(--cream); border-radius: 12px;
-  padding: 0.5rem; border: 1px solid var(--border);
-  width: fit-content;
+
+.voice-admin-bar {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin: 1.5rem 0 2.5rem;
+  flex-wrap: wrap;
 }
-.voice-tab {
-  display: flex; align-items: center; gap: 0.5rem;
-  padding: 0.65rem 1.25rem; border-radius: 8px;
-  border: none; background: none; cursor: pointer;
-  font-family: var(--font-body); font-size: 0.9rem; font-weight: 500;
-  color: var(--text-2); transition: all 0.2s; white-space: nowrap;
-}
-.voice-tab:hover { color: var(--navy); }
-.voice-tab.active { background: var(--navy); color: white; box-shadow: var(--shadow-sm); }
-.vtab-note { font-size: 1rem; }
-.vtab-count {
-  background: rgba(255,255,255,0.2);
-  border-radius: 50px; padding: 0.1rem 0.5rem;
-  font-family: var(--font-mono); font-size: 0.65rem; font-weight: 600;
-}
-.voice-tab:not(.active) .vtab-count { background: var(--border); color: var(--text-3); }
-.voice-admin-controls { margin-top: 0.75rem; display: flex; align-items: center; gap: 0.75rem; }
-.voice-roster {
+.voice-admin-bar .admin-login-link { margin-left: 0; }
+
+/* Four-column voice grid */
+.voice-panels-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem; margin-top: 2rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
 }
-.choir-member-card {
-  background: white; border: 1px solid var(--border);
-  border-radius: 14px; padding: 1.5rem; text-align: center;
-  transition: all 0.25s var(--ease); position: relative;
+
+/* Individual voice panel */
+.voice-panel {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  transition: box-shadow 0.25s;
 }
-.choir-member-card:hover { border-color: var(--gold); transform: translateY(-3px); box-shadow: var(--shadow-md); }
-.cmc-avatar {
-  width: 56px; height: 56px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--crimson), #5c0e25);
+.voice-panel:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.09); }
+
+.voice-panel-header {
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.voice-panel-icon {
+  width: 40px; height: 40px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-display); font-size: 1.2rem; font-weight: 700;
-  color: white; margin: 0 auto 0.875rem;
+  font-size: 1.2rem; flex-shrink: 0;
 }
-.cmc-name { font-family: var(--font-display); font-size: 1rem; font-weight: 600; color: var(--navy); margin-bottom: 0.2rem; }
-.cmc-role { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); }
-.section-leader-badge {
-  display: inline-block; margin-top: 0.5rem;
-  padding: 0.15rem 0.5rem; border-radius: 4px;
-  background: var(--gold-dim); color: #7a5c0a;
-  font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em;
+/* Per-voice colour accents */
+.voice-panel[data-voice="soprano"] .voice-panel-icon { background: rgba(201,168,76,0.14); }
+.voice-panel[data-voice="alto"]    .voice-panel-icon { background: rgba(123,18,48,0.10); }
+.voice-panel[data-voice="tenor"]   .voice-panel-icon { background: rgba(22,32,64,0.10); }
+.voice-panel[data-voice="bass"]    .voice-panel-icon { background: rgba(34,100,60,0.10); }
+
+.voice-panel[data-voice="soprano"] .voice-panel-header { border-top: 3px solid var(--gold); }
+.voice-panel[data-voice="alto"]    .voice-panel-header { border-top: 3px solid var(--crimson); }
+.voice-panel[data-voice="tenor"]   .voice-panel-header { border-top: 3px solid var(--navy); }
+.voice-panel[data-voice="bass"]    .voice-panel-header { border-top: 3px solid #22643c; }
+
+.voice-panel-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.1;
 }
-.voice-empty { grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--text-3); font-style: italic; }
+.voice-panel-count {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.voice-panel-body {
+  padding: 1rem;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Member row inside a voice panel */
+.vp-member-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  background: var(--cream);
+  border: 1px solid transparent;
+  transition: border-color 0.18s, background 0.18s;
+}
+.vp-member-row:hover { border-color: var(--gold); background: white; }
+
+.vp-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--navy), var(--navy-mid));
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 0.78rem; font-weight: 700;
+  color: var(--gold); flex-shrink: 0;
+  overflow: hidden;
+}
+.vp-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+.vp-name {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--navy);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vp-role {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-3);
+}
+.section-leader-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--gold); flex-shrink: 0;
+  title: "Section Leader";
+}
+
+/* Admin edit button on member row */
+.vp-edit-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-3); padding: 0.2rem;
+  border-radius: 5px; transition: color 0.15s, background 0.15s;
+  display: none;
+  align-items: center; justify-content: center;
+}
+.is-admin .vp-edit-btn { display: flex; }
+.vp-edit-btn:hover { color: var(--navy); background: rgba(22,32,64,0.08); }
+
+/* Empty state */
+.vp-empty {
+  text-align: center; padding: 1.5rem 0.5rem;
+  color: var(--text-3); font-size: 0.82rem; font-style: italic;
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 0.4rem;
+}
+.vp-empty-icon { font-size: 1.5rem; opacity: 0.5; }
+
+/* ---- OLD tab-based vars kept for compat (not used in new layout) ---- */
+.voice-tabs-wrap { display: none; }
 
 /* ---- REHEARSAL ---- */
 .rehearsal-section { background: var(--cream); padding: 7rem 2rem; }
@@ -162,7 +253,7 @@
 .choir-note-4 { font-size: 5rem; bottom: 20%; right: 5%; animation: note-float 4.5s ease-in-out infinite 0.4s; }
 @keyframes note-float { 0%,100%{transform:translateY(0) rotate(-5deg);}50%{transform:translateY(-20px) rotate(5deg);} }
 
-/* Modals (shared with members) */
+/* ---- MODALS (shared with members) ---- */
 .modal { display:none; position:fixed; inset:0; z-index:2000; align-items:center; justify-content:center; padding:2rem; }
 .modal.active { display:flex; }
 .modal-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); }
@@ -186,5 +277,15 @@
 .pin-error { color:#dc2626; font-size:0.82rem; text-align:center; min-height:1.2em; margin-top:0.5rem; }
 
 /* ---- RESPONSIVE ---- */
-@media (max-width: 1024px) { .rehearsal-grid { grid-template-columns: 1fr; } .choir-join-inner { grid-template-columns: 1fr; } }
-@media (max-width: 768px) { .choir-stats-row { flex-wrap:wrap; padding:1.25rem; } .choir-stat { padding:0.5rem 1rem; } .choir-stat-divider { display:none; } .voice-roster { grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); } .voice-tabs { width:100%; } .rehearsal-card { flex-direction:column; } }
+@media (max-width: 1024px) {
+  .voice-panels-grid { grid-template-columns: repeat(2, 1fr); }
+  .rehearsal-grid { grid-template-columns: 1fr; }
+  .choir-join-inner { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .choir-stats-row { flex-wrap:wrap; padding:1.25rem; }
+  .choir-stat { padding:0.5rem 1rem; }
+  .choir-stat-divider { display:none; }
+  .voice-panels-grid { grid-template-columns: 1fr; }
+  .rehearsal-card { flex-direction:column; }
+}
