@@ -31,7 +31,6 @@ function escHtml(str) {
 }
 
 function showToast(msg, type = 'info') {
-  if (typeof window.showToast === 'function') { window.showToast(msg, type); return; }
   const t = document.createElement('div');
   t.textContent = msg;
   Object.assign(t.style, {
