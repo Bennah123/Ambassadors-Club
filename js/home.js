@@ -4,28 +4,43 @@
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
-  animateCounters();
+  fetchAndAnimateStats();
   populateUpcomingEvents();
   initScrollReveal();
   initHeroParallax();
 });
 
 // =====================================================
-// COUNTER ANIMATION
+// LIVE STATS FROM SUPABASE
 // =====================================================
-function animateCounters() {
-  const counters = document.querySelectorAll('.stat-num');
-  if (!counters.length) return;
+async function fetchAndAnimateStats() {
+  // Animate all non-live counters immediately (Annual Events, Years Strong)
+  document.querySelectorAll('.stat-num:not(#statMembers):not(#statChoir)').forEach(el => {
+    animateCount(el, parseInt(el.dataset.count, 10));
+  });
 
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
-      animateCount(entry.target, parseInt(entry.target.dataset.count, 10));
-      io.unobserve(entry.target);
-    });
-  }, { threshold: 0.5 });
+  // Default fallback values from data-count
+  const membersEl = document.getElementById('statMembers');
+  const choirEl   = document.getElementById('statChoir');
+  let membersCount = parseInt(membersEl?.dataset.count || '0', 10);
+  let choirCount   = parseInt(choirEl?.dataset.count   || '0', 10);
 
-  counters.forEach(c => io.observe(c));
+  // Fetch live counts from Supabase
+  if (typeof supabaseClient !== 'undefined') {
+    try {
+      const [{ count: mCount }, { count: cCount }] = await Promise.all([
+        supabaseClient.from('members').select('*', { count: 'exact', head: true }),
+        supabaseClient.from('choir_members').select('*', { count: 'exact', head: true }),
+      ]);
+      if (mCount !== null) membersCount = mCount;
+      if (cCount !== null) choirCount   = cCount;
+    } catch (err) {
+      console.warn('Stats fetch failed, using fallback values:', err.message);
+    }
+  }
+
+  if (membersEl) animateCount(membersEl, membersCount);
+  if (choirEl)   animateCount(choirEl,   choirCount);
 }
 
 function animateCount(el, target) {
@@ -33,7 +48,7 @@ function animateCount(el, target) {
   const start    = performance.now();
   (function step(now) {
     const t = Math.min((now - start) / duration, 1);
-    const e = 1 - Math.pow(1 - t, 3);       // ease-out cubic
+    const e = 1 - Math.pow(1 - t, 3);
     el.textContent = Math.round(e * target);
     if (t < 1) requestAnimationFrame(step);
   })(performance.now());
