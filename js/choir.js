@@ -374,13 +374,13 @@ async function saveVoiceAssign() {
 // ============================================================
 
 const repertoireData = [
-  { title: "Great Is Thy Faithfulness", type: "hymn",    typeLabel: "Hymn",    description: "Thanksgiving hymn" },
-  { title: "How Great Thou Art",        type: "hymn",    typeLabel: "Hymn",    description: "Grand worship anthem" },
-  { title: "It Is Well",                type: "hymn",    typeLabel: "Hymn",    description: "Peaceful hymn arrangement" },
-  { title: "Mungu Yu Mwema",            type: "praise",  typeLabel: "Praise",  description: "Upbeat praise and worship" },
-  { title: "Kuna Siku",                 type: "special", typeLabel: "Special", description: "Special music for divine service" },
-  { title: "Revelation Song",           type: "worship", typeLabel: "Worship", description: "Contemporary worship piece" },
-  { title: "Blessed Assurance",         type: "hymn",    typeLabel: "Hymn",    description: "Classic SDA favourite" },
+  { title: "Nikikumbuka",                   type: "hymn",    typeLabel: "Album-1",    description: "He died for our sins" },
+  { title: "Mungu ni wa namna gani",        type: "hymn",    typeLabel: "Album-1",    description: "How Great Thou Art" },
+  { title: "Katika Pande Zote",             type: "hymn",    typeLabel: "Album-1",    description: "Preach the Gospel to all like he did" },
+  { title: "Waseol",                        type: "praise",  typeLabel: "Album-1",    description: "We're tired of the sinful life" },
+  { title: "Toiroka",                       type: "special", typeLabel: "Album-1",    description: "God is Great" },
+  { title: "Kati ya wenye Dhambi",          type: "worship", typeLabel: "Album-1",    description: "Forgive us our sins" },
+  { title: "Lakini Sasa",                   type: "hymn",    typeLabel: "Album-1",    description: "I will Protect You Always" },
 ];
 
 function renderRepertoire() {
