@@ -13,15 +13,7 @@
   <link rel="stylesheet" href="css/members.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
-
-  <div class="admin-bar" id="adminBar">
-    <span>🔐 Admin Mode</span>
-    <button class="admin-bar-btn add" id="adminAddBtn">+ Add Member</button>
-    <button class="admin-bar-btn logout" id="adminLogoutBtn">Log Out</button>
-  </div>
-
-  <nav class="navbar" id="navbar">
+<body>  <nav class="navbar" id="navbar">
     <a href="index.html" class="nav-brand">
       <div class="nav-brand-mark">AC</div>
       <div class="nav-brand-text"><span>Ambassadors Club</span><small>SDA Embakasi Central</small></div>
@@ -67,7 +59,6 @@
         <button class="filter-chip" data-filter="education">Education</button>
         <button class="filter-chip" data-filter="outreach">Outreach</button>
       </div>
-      <button class="admin-login-link" id="adminLoginBtn">Admin</button>
     </div>
   </div>
 
@@ -91,37 +82,7 @@
       </button>
       <div class="modal-body" id="modalBody"></div>
     </div>
-  </div>
-
-  <!-- Member Form Modal -->
-  <div class="modal" id="memberFormModal">
-    <div class="modal-overlay"></div>
-    <div class="modal-content modal-lg">
-      <button class="modal-close" id="memberFormClose" aria-label="Close">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
-      </button>
-      <div class="modal-header">
-        <h3 id="memberFormTitle">Add Member</h3>
-        <p>Fill in the details below</p>
-      </div>
-      <div class="modal-form">
-        <input type="hidden" id="fMemberId">
-
-        <!-- ── AVATAR / PHOTO UPLOAD ── -->
-        <div class="avatar-upload-row">
-          <div class="avatar-preview" id="fAvatarPreview">
-            <span id="fAvatarInitials">?</span>
-          </div>
-          <div class="avatar-upload-info">
-            <label class="btn btn-ghost-dark" for="fAvatarInput" style="font-size:0.82rem;padding:0.4rem 1rem;cursor:pointer;">
-              📷 Upload Photo
-            </label>
-            <p>JPG or PNG · max 2 MB · square crop looks best</p>
-            <input type="file" id="fAvatarInput" class="avatar-upload-input" accept="image/jpeg,image/png,image/webp">
-          </div>
-        </div>
-
-        <div class="form-grid">
+  </div>        <div class="form-grid">
           <div class="form-group"><label for="fFirstName">First Name *</label><input id="fFirstName" type="text" placeholder="e.g. John"></div>
           <div class="form-group"><label for="fLastName">Last Name *</label><input id="fLastName" type="text" placeholder="e.g. Kamau"></div>
           <div class="form-group"><label for="fRole">Role *</label><input id="fRole" type="text" placeholder="e.g. Choir Director"></div>
@@ -148,24 +109,6 @@
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- PIN Modal -->
-  <div class="modal" id="pinModal">
-    <div class="modal-overlay" id="pinModalOverlay"></div>
-    <div class="modal-content modal-sm">
-      <button class="modal-close" id="pinModalClose" aria-label="Close">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
-      </button>
-      <div class="modal-header"><h3>Admin Access</h3><p>Enter your PIN to continue</p></div>
-      <div class="modal-body">
-        <input type="password" id="adminPinInput" class="pin-input" placeholder="••••" maxlength="8" autocomplete="off">
-        <p class="pin-error" id="pinError"></p>
-        <button class="btn btn-gold" id="pinSubmitBtn" style="width:100%;margin-top:.5rem">Unlock</button>
-      </div>
-    </div>
-  </div>
-
 
   <footer class="footer">
     <div class="footer-inner">
@@ -202,41 +145,5 @@
   <script src="js/supabase-config.js"></script>
   <script src="js/main.js"></script>
   <script src="js/members.js"></script>
-
-  <!-- Avatar upload preview wiring -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const avatarInput   = document.getElementById('fAvatarInput');
-      const avatarPreview = document.getElementById('fAvatarPreview');
-      const firstNameEl   = document.getElementById('fFirstName');
-      const lastNameEl    = document.getElementById('fLastName');
-      const initialsEl    = document.getElementById('fAvatarInitials');
-
-      // Live-update initials as name is typed
-      function refreshInitials() {
-        const f = (firstNameEl.value || '').trim();
-        const l = (lastNameEl.value || '').trim();
-        if (!avatarPreview.querySelector('img')) {
-          initialsEl.textContent = ((f[0] || '') + (l[0] || '')).toUpperCase() || '?';
-        }
-      }
-      firstNameEl?.addEventListener('input', refreshInitials);
-      lastNameEl?.addEventListener('input', refreshInitials);
-
-      // Photo file → preview
-      avatarInput?.addEventListener('change', function () {
-        const file = this.files[0];
-        if (!file) return;
-        if (file.size > 2 * 1024 * 1024) {
-          alert('Photo must be under 2 MB.'); this.value = ''; return;
-        }
-        const reader = new FileReader();
-        reader.onload = e => {
-          avatarPreview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
-        };
-        reader.readAsDataURL(file);
-      });
-    });
-  </script>
 </body>
 </html>
