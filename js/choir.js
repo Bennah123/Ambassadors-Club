@@ -133,13 +133,13 @@ function renderPanel(voice) {
 
   body.innerHTML = members.map(m => {
     const initials  = getInitials(m.firstName, m.lastName).toUpperCase() || '?';
-    const isLeader  = m.role && m.role.toLowerCase().includes('leader') || m.role === 'Choir Director';
+    const isLeader  = (m.role && m.role.toLowerCase().includes('leader')) || m.role === 'Choir Director';
     const avatarHtml = m.avatarUrl
       ? `<div class="vp-avatar"><img src="${escHtml(m.avatarUrl)}" alt="${escHtml(m.firstName)}" loading="lazy" onerror="this.parentElement.innerHTML='${escHtml(initials)}'"></div>`
       : `<div class="vp-avatar">${escHtml(initials)}</div>`;
 
     return `
-      <div class="vp-member-row" data-id="${m.id}">
+      <div class="vp-member-row" data-id="${escHtml(m.id)}">
         ${avatarHtml}
         <div style="flex:1;min-width:0;">
           <div class="vp-name">${escHtml(m.firstName)} ${escHtml(m.lastName)}</div>
@@ -147,7 +147,7 @@ function renderPanel(voice) {
         </div>
         ${isLeader ? '<div class="section-leader-dot" title="Section Leader"></div>' : ''}
         ${isAdmin ? `
-          <button class="vp-edit-btn" onclick="openEditFromRow(event,${m.id})" title="Edit voice / role">
+          <button class="vp-edit-btn" onclick="openEditFromRow(event,'${escHtml(m.id)}')" title="Edit voice / role">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -290,14 +290,14 @@ function closeVoiceAssignForm() {
 function openEditFromRow(event, choirMemberId) {
   event.stopPropagation();
   // find memberId from choirRoster
-  const m = flatRoster().find(x => x.id === choirMemberId);
+  const m = flatRoster().find(x => String(x.id) === String(choirMemberId));
   openVoiceAssignForm(m?.memberId || null);
 }
 
 async function saveVoiceAssign() {
   const memberSelect = document.getElementById('vaMember');
   const selectedOpt  = memberSelect.options[memberSelect.selectedIndex];
-  const memberId     = parseInt(memberSelect.value);
+  const memberId     = memberSelect.value;
   const voice        = document.getElementById('vaVoice').value;
   const role         = document.getElementById('vaRole').value || 'Member';
   const errEl        = document.getElementById('vaError');
@@ -316,12 +316,25 @@ async function saveVoiceAssign() {
 
   try {
     if (hasSupabase()) {
-      // Check if this member already has a choir_members row (by member_id FK or name)
-      const { data: existing } = await supabaseClient
-        .from('choir_members')
-        .select('id')
-        .or(`member_id.eq.${memberId},and(first_name.eq.${firstName},last_name.eq.${lastName})`)
-        .maybeSingle();
+      // Check if this member already has a choir_members row (by member_id FK, else by name)
+      let existing = null;
+      if (memberId) {
+        const { data } = await supabaseClient
+          .from('choir_members')
+          .select('id')
+          .eq('member_id', memberId)
+          .maybeSingle();
+        existing = data;
+      }
+      if (!existing) {
+        const { data } = await supabaseClient
+          .from('choir_members')
+          .select('id')
+          .eq('first_name', firstName)
+          .eq('last_name', lastName)
+          .maybeSingle();
+        existing = data;
+      }
 
       if (existing) {
         const { error } = await supabaseClient
@@ -339,21 +352,23 @@ async function saveVoiceAssign() {
       }
     }
 
-    // Update local roster
-    VOICE_PARTS.forEach(p => {
-      choirRoster[p] = choirRoster[p].filter(
-        x => !(x.memberId === memberId || (x.firstName === firstName && x.lastName === lastName))
-      );
-    });
-    if (!choirRoster[voice]) choirRoster[voice] = [];
-    choirRoster[voice].push({
-      id: Date.now(), firstName, lastName,
-      voicePart: voice, role, avatarUrl, memberId
-    });
-
-    // Cache
-    localStorage.setItem(CHOIR_STORAGE_KEY,
-      JSON.stringify(VOICE_PARTS.flatMap(p => choirRoster[p])));
+    // Reload roster from Supabase so IDs stay consistent with the server
+    if (hasSupabase()) {
+      await loadChoir();
+    } else {
+      VOICE_PARTS.forEach(p => {
+        choirRoster[p] = choirRoster[p].filter(
+          x => !(x.memberId === memberId || (x.firstName === firstName && x.lastName === lastName))
+        );
+      });
+      if (!choirRoster[voice]) choirRoster[voice] = [];
+      choirRoster[voice].push({
+        id: Date.now(), firstName, lastName,
+        voicePart: voice, role, avatarUrl, memberId
+      });
+      localStorage.setItem(CHOIR_STORAGE_KEY,
+        JSON.stringify(VOICE_PARTS.flatMap(p => choirRoster[p])));
+    }
 
     saveBtn.disabled    = false;
     saveBtn.textContent = 'Save';

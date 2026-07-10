@@ -123,7 +123,7 @@ function renderMembers() {
       `<span class="dept-tag">${escHtml(deptLabels[d]||d)}</span>`).join('');
 
     return `
-      <div class="member-card" onclick="openMemberModal(${m.id})">
+      <div class="member-card" onclick="openMemberModal('${escHtml(m.id)}')">
         <div class="member-card-inner">
           ${avatarHtml}
           <div class="member-name">${escHtml(m.firstName)} ${escHtml(m.lastName)}</div>
@@ -149,7 +149,7 @@ function updateFilterCounts() {
 // ============================================================
 
 function openMemberModal(id) {
-  const m = membersData.find(x => x.id === id);
+  const m = membersData.find(x => String(x.id) === String(id));
   if (!m) return;
 
   const initials   = getInitials(m.firstName, m.lastName);

@@ -37,7 +37,7 @@
       const { data: profile } = await supabaseClient
         .from('profiles').select('approved').eq('id', session.user.id).single();
 
-      window.location.href = profile?.approved ? 'index.html' : 'auth.html?pending=1';
+      window.location.href = profile?.approved ? 'members.html' : 'auth.html?pending=1';
     });
   </script>
 </body>

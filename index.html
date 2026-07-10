@@ -295,11 +295,25 @@
         if (error) throw error;
         const userId = data.user.id;
 
+        // If email confirmation is required, there's no active session yet —
+        // RLS will block the profiles/members inserts below, so stop here
+        // and tell the user instead of failing silently.
+        if (!data.session) {
+          document.getElementById('signupForm').style.display = 'none';
+          document.getElementById('signupPending').style.display = 'block';
+          document.querySelector('#signupPending h3').textContent = 'Check your email!';
+          document.querySelector('#signupPending p').textContent =
+            'We sent a confirmation link to ' + email + '. Click it, then sign in to finish creating your profile.';
+          btn.disabled=false; btn.textContent='Create Account';
+          return;
+        }
+
         // 2. Insert into profiles
-        await supabaseClient.from('profiles').upsert({
+        const { error: profErr } = await supabaseClient.from('profiles').upsert({
           id: userId, first_name: firstName, last_name: lastName,
           email, phone: phone||null, role: 'member', approved: false
         });
+        if (profErr) throw new Error('Profile creation failed: ' + profErr.message);
 
         // 3. Insert into members table (will appear on members page after admin approves)
         const departments = selectedVoice ? ['choir'] : [];
@@ -312,17 +326,18 @@
             joined_year: new Date().getFullYear(),
           }])
           .select('id').single();
-        if (mErr) console.warn('members insert:', mErr.message);
+        if (mErr) throw new Error('Member record failed: ' + mErr.message);
 
         // 4. If voice selected → insert into choir_members
         if (selectedVoice && memberRow) {
-          await supabaseClient.from('choir_members').insert([{
+          const { error: cErr } = await supabaseClient.from('choir_members').insert([{
             member_id:  memberRow.id,
             first_name: firstName,
             last_name:  lastName,
             voice_part: selectedVoice,
             role:       'Member',
           }]);
+          if (cErr) console.warn('choir_members insert:', cErr.message);
         }
 
         // 5. Show pending screen
@@ -340,7 +355,7 @@
       try {
         const { error } = await supabaseClient.auth.signInWithOAuth({
           provider: 'google',
-          options: { redirectTo: window.location.origin + '/auth-callback.html' }
+          options: { redirectTo: window.location.origin + '/authcallback.html' }
         });
         if (error) throw error;
       } catch(err) {
