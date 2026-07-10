@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Signing you in… | SDA Ambassadors Club</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { background:#162040; display:flex; align-items:center; justify-content:center;
+           min-height:100vh; font-family:'DM Sans',sans-serif; color:white; text-align:center; }
+    .spinner { width:48px; height:48px; border:3px solid rgba(201,162,39,0.2);
+               border-top-color:#c9a227; border-radius:50%;
+               animation:spin 0.8s linear infinite; margin:0 auto 1.5rem; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    p { color:rgba(255,255,255,0.5); font-size:0.9rem; }
+  </style>
+</head>
+<body>
+  <div>
+    <div class="spinner"></div>
+    <p>Completing sign-in…</p>
+  </div>
+  <script src="js/supabase-config.js"></script>
+  <script>
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      if (!session) return;
+      // Insert profile if Google sign-in (first time)
+      const meta = session.user.user_metadata || {};
+      await supabaseClient.from('profiles').upsert({
+        id:         session.user.id,
+        first_name: meta.given_name  || meta.full_name?.split(' ')[0] || '',
+        last_name:  meta.family_name || meta.full_name?.split(' ')[1] || '',
+        email:      session.user.email,
+        role:       'member',
+        approved:   false,
+      }, { onConflict: 'id', ignoreDuplicates: true });
+
+      const { data: profile } = await supabaseClient
+        .from('profiles').select('approved').eq('id', session.user.id).single();
+
+      window.location.href = profile?.approved ? 'index.html' : 'auth.html?pending=1';
+    });
+  </script>
+</body>
+</html>

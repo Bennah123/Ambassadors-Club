@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In | SDA Ambassadors Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { background: var(--navy); min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* ---- BG ORBS ---- */
+    .auth-bg {
+      position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+    }
+    .auth-orb {
+      position: absolute; border-radius: 50%; filter: blur(90px);
+    }
+    .auth-orb-1 {
+      width: 600px; height: 600px; top: -150px; left: -100px;
+      background: radial-gradient(circle, rgba(201,162,39,0.10) 0%, transparent 65%);
+      animation: orb-drift 20s ease-in-out infinite;
+    }
+    .auth-orb-2 {
+      width: 400px; height: 400px; bottom: -80px; right: -60px;
+      background: radial-gradient(circle, rgba(123,18,48,0.10) 0%, transparent 65%);
+      animation: orb-drift 25s ease-in-out infinite reverse;
+    }
+    .auth-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    @keyframes orb-drift {
+      0%,100%{transform:translate(0,0) scale(1);}
+      33%{transform:translate(40px,-30px) scale(1.08);}
+      66%{transform:translate(-25px,25px) scale(0.93);}
+    }
+
+    /* ---- WRAPPER ---- */
+    .auth-wrapper {
+      position: relative; z-index: 1;
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    /* ---- CARD ---- */
+    .auth-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 24px;
+      padding: 3rem 2.5rem;
+      width: 100%; max-width: 440px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 32px 64px rgba(0,0,0,0.4);
+    }
+
+    /* ---- BRAND ---- */
+    .auth-brand {
+      text-align: center; margin-bottom: 2.5rem;
+    }
+    .auth-brand-mark {
+      width: 56px; height: 56px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--gold), #a07a1a);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-weight: 700; font-size: 1.4rem;
+      color: var(--navy); margin: 0 auto 1rem;
+    }
+    .auth-brand h1 {
+      font-family: var(--font-display); font-size: 1.8rem; font-weight: 700;
+      color: white; margin-bottom: 0.25rem;
+    }
+    .auth-brand p {
+      font-family: var(--font-mono); font-size: 0.65rem;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold);
+    }
+
+    /* ---- TABS ---- */
+    .auth-tabs {
+      display: flex; gap: 0; margin-bottom: 2rem;
+      background: rgba(255,255,255,0.05); border-radius: 10px; padding: 4px;
+    }
+    .auth-tab {
+      flex: 1; padding: 0.65rem; border: none; border-radius: 7px;
+      font-family: var(--font-body); font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; background: none; color: rgba(255,255,255,0.45);
+    }
+    .auth-tab.active { background: var(--gold); color: var(--navy); }
+
+    /* ---- PANELS ---- */
+    .auth-panel { display: none; }
+    .auth-panel.active { display: block; }
+
+    /* ---- FORM ---- */
+    .auth-form-group {
+      display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.1rem;
+    }
+    .auth-form-group label {
+      font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.05em; color: rgba(255,255,255,0.55);
+    }
+    .auth-input {
+      padding: 0.8rem 1rem;
+      border: 1.5px solid rgba(255,255,255,0.10);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.06);
+      font-family: var(--font-body); font-size: 0.9rem;
+      color: white; outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .auth-input::placeholder { color: rgba(255,255,255,0.25); }
+    .auth-input:focus {
+      border-color: var(--gold);
+      background: rgba(255,255,255,0.09);
+    }
+    .auth-input-row {
+      position: relative;
+    }
+    .auth-input-row .auth-input { width: 100%; padding-right: 3rem; }
+    .toggle-pw {
+      position: absolute; right: 0.875rem; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: rgba(255,255,255,0.35); transition: color 0.2s; padding: 0;
+      display: flex; align-items: center;
+    }
+    .toggle-pw:hover { color: var(--gold); }
+
+    /* ---- NAME ROW ---- */
+    .auth-name-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+    /* ---- FORGOT ---- */
+    .auth-forgot {
+      text-align: right; margin-top: -0.6rem; margin-bottom: 1rem;
+    }
+    .auth-forgot button {
+      background: none; border: none; cursor: pointer;
+      font-size: 0.78rem; color: rgba(255,255,255,0.4);
+      font-family: var(--font-body); transition: color 0.2s;
+    }
+    .auth-forgot button:hover { color: var(--gold); }
+
+    /* ---- SUBMIT ---- */
+    .auth-submit {
+      width: 100%; padding: 0.9rem;
+      background: var(--gold); color: var(--navy);
+      border: none; border-radius: 10px;
+      font-family: var(--font-body); font-size: 0.95rem; font-weight: 700;
+      cursor: pointer; transition: all 0.22s var(--ease);
+      margin-top: 0.5rem;
+    }
+    .auth-submit:hover:not(:disabled) {
+      background: var(--gold-light); transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(201,162,39,0.3);
+    }
+    .auth-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+    /* ---- DIVIDER ---- */
+    .auth-divider {
+      display: flex; align-items: center; gap: 1rem;
+      margin: 1.5rem 0; color: rgba(255,255,255,0.2); font-size: 0.78rem;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.10);
+    }
+
+    /* ---- GOOGLE ---- */
+    .auth-google {
+      width: 100%; padding: 0.8rem;
+      background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.80);
+      border: 1.5px solid rgba(255,255,255,0.12); border-radius: 10px;
+      font-family: var(--font-body); font-size: 0.88rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 0.625rem;
+    }
+    .auth-google:hover {
+      background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25);
+    }
+
+    /* ---- ERROR / SUCCESS ---- */
+    .auth-msg {
+      font-size: 0.82rem; min-height: 1.2em; margin-bottom: 0.75rem;
+      text-align: center; border-radius: 8px; padding: 0.5rem 0.75rem;
+      display: none;
+    }
+    .auth-msg.error   { display: block; background: rgba(123,18,48,0.25); color: #f87171; }
+    .auth-msg.success { display: block; background: rgba(77,114,89,0.25); color: #86efac; }
+
+    /* ---- TERMS ---- */
+    .auth-terms {
+      font-size: 0.74rem; color: rgba(255,255,255,0.30);
+      text-align: center; margin-top: 1.25rem; line-height: 1.5;
+    }
+
+    /* ---- BOTTOM LINK ---- */
+    .auth-bottom {
+      text-align: center; margin-top: 1.5rem;
+      font-size: 0.82rem; color: rgba(255,255,255,0.35);
+    }
+    .auth-bottom button {
+      background: none; border: none; cursor: pointer;
+      color: var(--gold); font-family: var(--font-body);
+      font-size: 0.82rem; font-weight: 600; text-decoration: underline;
+    }
+
+    /* ---- FOOTER NOTE ---- */
+    .auth-footer-note {
+      text-align: center; padding: 1.5rem;
+      font-family: var(--font-mono); font-size: 0.62rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: rgba(255,255,255,0.15); position: relative; z-index: 1;
+    }
+    .auth-footer-note a { color: rgba(201,162,39,0.5); text-decoration: none; }
+
+    /* ---- PENDING APPROVAL ---- */
+    .auth-pending {
+      display: none; text-align: center; padding: 1rem;
+    }
+    .auth-pending-icon { font-size: 3rem; margin-bottom: 0.75rem; }
+    .auth-pending h3 {
+      font-family: var(--font-display); font-size: 1.4rem;
+      color: white; margin-bottom: 0.5rem;
+    }
+    .auth-pending p { color: rgba(255,255,255,0.5); font-size: 0.88rem; line-height: 1.6; }
+
+    @media (max-width: 480px) {
+      .auth-card { padding: 2rem 1.5rem; }
+      .auth-name-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-bg">
+    <div class="auth-orb auth-orb-1"></div>
+    <div class="auth-orb auth-orb-2"></div>
+    <div class="auth-grid"></div>
+  </div>
+
+  <div class="auth-wrapper">
+    <div class="auth-card">
+
+      <!-- Brand -->
+      <div class="auth-brand">
+        <a href="index.html" style="text-decoration:none;">
+          <div class="auth-brand-mark">AC</div>
+          <h1>Ambassadors Club</h1>
+          <p>SDA Embakasi Central</p>
+        </a>
+      </div>
+
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabSignIn" onclick="switchTab('signin')">Sign In</button>
+        <button class="auth-tab" id="tabSignUp" onclick="switchTab('signup')">Sign Up</button>
+      </div>
+
+      <!-- ===== SIGN IN PANEL ===== -->
+      <div class="auth-panel active" id="panelSignin">
+        <p class="auth-msg" id="signinMsg"></p>
+
+        <div class="auth-form-group">
+          <label>Email</label>
+          <input class="auth-input" type="email" id="siEmail" placeholder="your@email.com" autocomplete="email">
+        </div>
+        <div class="auth-form-group">
+          <label>Password</label>
+          <div class="auth-input-row">
+            <input class="auth-input" type="password" id="siPassword" placeholder="••••••••" autocomplete="current-password">
+            <button class="toggle-pw" onclick="togglePw('siPassword', this)" tabindex="-1" type="button">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="auth-forgot">
+          <button onclick="handleForgotPassword()" type="button">Forgot password?</button>
+        </div>
+
+        <button class="auth-submit" id="signinBtn" onclick="handleSignIn()">Sign In</button>
+
+        <div class="auth-divider">or</div>
+
+        <button class="auth-google" onclick="handleGoogleSignIn()">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Continue with Google
+        </button>
+
+        <div class="auth-bottom">
+          Don't have an account? <button onclick="switchTab('signup')">Sign Up</button>
+        </div>
+      </div>
+
+      <!-- ===== SIGN UP PANEL ===== -->
+      <div class="auth-panel" id="panelSignup">
+        <p class="auth-msg" id="signupMsg"></p>
+
+        <!-- Pending state shown after successful signup -->
+        <div class="auth-pending" id="signupPending">
+          <div class="auth-pending-icon">⏳</div>
+          <h3>Request Sent!</h3>
+          <p>Your account is pending approval by an admin. You'll receive an email once you're approved to access the site.</p>
+          <br>
+          <a href="index.html" class="btn btn-ghost" style="margin:0 auto;">Back to Home</a>
+        </div>
+
+        <div id="signupForm">
+          <div class="auth-name-row">
+            <div class="auth-form-group">
+              <label>First Name</label>
+              <input class="auth-input" type="text" id="suFirstName" placeholder="John" autocomplete="given-name">
+            </div>
+            <div class="auth-form-group">
+              <label>Last Name</label>
+              <input class="auth-input" type="text" id="suLastName" placeholder="Kamau" autocomplete="family-name">
+            </div>
+          </div>
+          <div class="auth-form-group">
+            <label>Email</label>
+            <input class="auth-input" type="email" id="suEmail" placeholder="your@email.com" autocomplete="email">
+          </div>
+          <div class="auth-form-group">
+            <label>Phone</label>
+            <input class="auth-input" type="tel" id="suPhone" placeholder="+254 7XX XXX XXX" autocomplete="tel">
+          </div>
+          <div class="auth-form-group">
+            <label>Password</label>
+            <div class="auth-input-row">
+              <input class="auth-input" type="password" id="suPassword" placeholder="Min. 8 characters" autocomplete="new-password">
+              <button class="toggle-pw" onclick="togglePw('suPassword', this)" tabindex="-1" type="button">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="auth-form-group">
+            <label>Confirm Password</label>
+            <div class="auth-input-row">
+              <input class="auth-input" type="password" id="suConfirm" placeholder="Re-enter password" autocomplete="new-password">
+              <button class="toggle-pw" onclick="togglePw('suConfirm', this)" tabindex="-1" type="button">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <button class="auth-submit" id="signupBtn" onclick="handleSignUp()">Create Account</button>
+
+          <div class="auth-divider">or</div>
+
+          <button class="auth-google" onclick="handleGoogleSignIn()">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Continue with Google
+          </button>
+
+          <p class="auth-terms">By signing up you agree to be a member in good standing of the SDA Embakasi Central Ambassadors Club.</p>
+
+          <div class="auth-bottom">
+            Already have an account? <button onclick="switchTab('signin')">Sign In</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <p class="auth-footer-note">
+    <a href="index.html">← Back to Home</a> &nbsp;·&nbsp; SDA Church Embakasi Central © <span class="current-year"></span>
+  </p>
+
+  <script src="js/supabase-config.js"></script>
+  <script>
+    document.querySelector('.current-year').textContent = new Date().getFullYear();
+
+    // ── TAB SWITCH ──
+    function switchTab(tab) {
+      document.getElementById('panelSignin').classList.toggle('active', tab === 'signin');
+      document.getElementById('panelSignup').classList.toggle('active', tab === 'signup');
+      document.getElementById('tabSignIn').classList.toggle('active', tab === 'signin');
+      document.getElementById('tabSignUp').classList.toggle('active', tab === 'signup');
+      clearMsgs();
+    }
+
+    function clearMsgs() {
+      ['signinMsg','signupMsg'].forEach(id => {
+        const el = document.getElementById(id);
+        el.className = 'auth-msg'; el.textContent = '';
+      });
+    }
+
+    function showMsg(id, text, type = 'error') {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = `auth-msg ${type}`;
+    }
+
+    // ── PASSWORD TOGGLE ──
+    function togglePw(inputId, btn) {
+      const inp = document.getElementById(inputId);
+      const show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      btn.innerHTML = show
+        ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    }
+
+    // ── SIGN IN ──
+    async function handleSignIn() {
+      const email    = document.getElementById('siEmail').value.trim();
+      const password = document.getElementById('siPassword').value;
+      const btn      = document.getElementById('signinBtn');
+
+      if (!email || !password) { showMsg('signinMsg', 'Please fill in all fields.'); return; }
+
+      btn.disabled = true; btn.textContent = 'Signing in…';
+
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+
+        // Check approval status from profiles table
+        const { data: profile } = await supabaseClient
+          .from('profiles')
+          .select('approved, role')
+          .eq('id', data.user.id)
+          .single();
+
+        if (!profile?.approved) {
+          await supabaseClient.auth.signOut();
+          showMsg('signinMsg', 'Your account is pending admin approval. Please wait for confirmation.');
+          btn.disabled = false; btn.textContent = 'Sign In';
+          return;
+        }
+
+        // Redirect based on role
+        const dest = profile.role === 'admin' ? 'members.html' : 'index.html';
+        window.location.href = dest;
+
+      } catch (err) {
+        showMsg('signinMsg', err.message || 'Sign in failed. Check your credentials.');
+        btn.disabled = false; btn.textContent = 'Sign In';
+      }
+    }
+
+    // ── SIGN UP ──
+    async function handleSignUp() {
+      const firstName = document.getElementById('suFirstName').value.trim();
+      const lastName  = document.getElementById('suLastName').value.trim();
+      const email     = document.getElementById('suEmail').value.trim();
+      const phone     = document.getElementById('suPhone').value.trim();
+      const password  = document.getElementById('suPassword').value;
+      const confirm   = document.getElementById('suConfirm').value;
+      const btn       = document.getElementById('signupBtn');
+
+      if (!firstName || !lastName || !email || !password)
+        { showMsg('signupMsg', 'Please fill in all required fields.'); return; }
+      if (password.length < 8)
+        { showMsg('signupMsg', 'Password must be at least 8 characters.'); return; }
+      if (password !== confirm)
+        { showMsg('signupMsg', 'Passwords do not match.'); return; }
+
+      btn.disabled = true; btn.textContent = 'Creating account…';
+
+      try {
+        // 1. Create auth user
+        const { data, error } = await supabaseClient.auth.signUp({
+          email, password,
+          options: { data: { first_name: firstName, last_name: lastName } }
+        });
+        if (error) throw error;
+
+        // 2. Insert into profiles (approved: false by default — admin must approve)
+        await supabaseClient.from('profiles').upsert({
+          id:         data.user.id,
+          first_name: firstName,
+          last_name:  lastName,
+          email,
+          phone:      phone || null,
+          role:       'member',
+          approved:   false,
+        });
+
+        // 3. Show pending state
+        document.getElementById('signupForm').style.display = 'none';
+        document.getElementById('signupPending').style.display = 'block';
+
+      } catch (err) {
+        showMsg('signupMsg', err.message || 'Sign up failed. Please try again.');
+        btn.disabled = false; btn.textContent = 'Create Account';
+      }
+    }
+
+    // ── GOOGLE ──
+    async function handleGoogleSignIn() {
+      try {
+        const { error } = await supabaseClient.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: window.location.origin + '/auth-callback.html' }
+        });
+        if (error) throw error;
+      } catch (err) {
+        showMsg('signinMsg', err.message || 'Google sign-in failed.');
+        showMsg('signupMsg', err.message || 'Google sign-in failed.');
+      }
+    }
+
+    // ── FORGOT PASSWORD ──
+    async function handleForgotPassword() {
+      const email = document.getElementById('siEmail').value.trim();
+      if (!email) { showMsg('signinMsg', 'Enter your email above first.'); return; }
+      try {
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/auth.html'
+        });
+        if (error) throw error;
+        showMsg('signinMsg', 'Password reset email sent! Check your inbox.', 'success');
+      } catch (err) {
+        showMsg('signinMsg', err.message || 'Failed to send reset email.');
+      }
+    }
+
+    // ── ENTER KEY ──
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      if (document.getElementById('panelSignin').classList.contains('active')) handleSignIn();
+      else handleSignUp();
+    });
+
+    // ── ALREADY LOGGED IN? ──
+    supabaseClient.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      const { data: profile } = await supabaseClient
+        .from('profiles').select('approved').eq('id', session.user.id).single();
+      if (profile?.approved) window.location.href = 'index.html';
+    });
+  </script>
+</body>
+</html>
