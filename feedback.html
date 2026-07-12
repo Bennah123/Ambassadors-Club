@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Help & Feedback | SDA Ambassadors Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+  /* =====================================================
+     FEEDBACK PAGE — inline styles
+  ===================================================== */
+
+  /* ---- HERO CARDS (top 3 help categories) ---- */
+  .help-cards-section { background: var(--off-white); padding: 4rem 2rem 5rem; margin-top: -2px; }
+  .help-cards-inner   { max-width: 1100px; margin: 0 auto; }
+  .help-cards-grid    { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.25rem; margin-top: 2.5rem; }
+
+  .help-card {
+    background: white; border: 1px solid var(--border);
+    border-radius: 18px; padding: 2rem 1.75rem;
+    display: flex; flex-direction: column; gap: 1rem;
+    transition: all 0.25s var(--ease); text-decoration: none; color: inherit;
+  }
+  .help-card:hover { border-color: var(--gold); transform: translateY(-4px); box-shadow: var(--shadow-md); }
+  .help-card-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; flex-shrink: 0;
+  }
+  .hci-gold   { background: rgba(201,162,39,0.12); }
+  .hci-navy   { background: rgba(22,32,64,0.08); }
+  .hci-sage   { background: rgba(77,114,89,0.10); }
+  .help-card h3 { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: var(--navy); }
+  .help-card p  { font-size: 0.875rem; color: var(--text-2); line-height: 1.65; flex: 1; }
+  .help-card-link {
+    font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--gold); display: flex; align-items: center; gap: 0.35rem;
+  }
+
+  /* ---- FAQ ---- */
+  .faq-section  { background: var(--cream); padding: 6rem 2rem; }
+  .faq-inner    { max-width: 800px; margin: 0 auto; }
+  .faq-list     { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 2.5rem; }
+
+  .faq-item {
+    background: white; border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; transition: border-color 0.2s;
+  }
+  .faq-item:hover { border-color: var(--gold); }
+  .faq-item.open  { border-color: var(--gold); }
+
+  .faq-question {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 1.5rem; cursor: pointer; gap: 1rem;
+    font-family: var(--font-body); font-size: 0.95rem; font-weight: 600;
+    color: var(--navy); background: none; border: none; width: 100%; text-align: left;
+  }
+  .faq-chevron { color: var(--text-3); transition: transform 0.25s; flex-shrink: 0; }
+  .faq-item.open .faq-chevron { transform: rotate(180deg); color: var(--gold); }
+
+  .faq-answer {
+    display: none; padding: 0 1.5rem 1.25rem;
+    font-size: 0.9rem; color: var(--text-2); line-height: 1.75;
+    border-top: 1px solid var(--border);
+  }
+  .faq-item.open .faq-answer { display: block; padding-top: 1rem; }
+
+  /* ---- FEEDBACK FORM ---- */
+  .feedback-section { background: var(--off-white); padding: 6rem 2rem; }
+  .feedback-inner   { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1.1fr; gap: 4rem; align-items: start; }
+
+  .feedback-left h2  { margin-bottom: 1rem; }
+  .feedback-left p   { font-size: 0.95rem; color: var(--text-2); line-height: 1.75; margin-bottom: 1.5rem; }
+
+  .contact-pill {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.875rem 1.25rem; background: white;
+    border: 1px solid var(--border); border-radius: 12px;
+    margin-bottom: 0.75rem; text-decoration: none; color: var(--text-2);
+    font-size: 0.875rem; transition: all 0.18s;
+  }
+  .contact-pill:hover { border-color: var(--gold); color: var(--navy); }
+  .contact-pill svg   { color: var(--gold); flex-shrink: 0; }
+  .contact-pill strong { color: var(--navy); display: block; font-size: 0.78rem; margin-bottom: 0.05rem; }
+
+  /* Form card */
+  .feedback-form-card {
+    background: white; border: 1px solid var(--border);
+    border-radius: 20px; padding: 2.5rem 2rem;
+    box-shadow: var(--shadow-sm);
+  }
+  .feedback-form-card h3 {
+    font-family: var(--font-display); font-size: 1.35rem; color: var(--navy);
+    margin-bottom: 0.25rem;
+  }
+  .feedback-form-card > p { font-size: 0.85rem; color: var(--text-3); margin-bottom: 1.75rem; }
+
+  /* Type selector */
+  .fb-type-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.5rem; margin-bottom: 1.25rem; }
+  .fb-type-btn {
+    padding: 0.6rem 0.4rem; border-radius: 10px;
+    border: 1.5px solid var(--border); background: var(--cream);
+    font-family: var(--font-body); font-size: 0.78rem; font-weight: 600;
+    color: var(--text-2); cursor: pointer; transition: all 0.18s;
+    display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
+  }
+  .fb-type-btn:hover  { border-color: var(--gold); color: var(--navy); }
+  .fb-type-btn.active { border-color: var(--navy); background: var(--navy); color: white; }
+  .fb-type-icon { font-size: 1.1rem; }
+
+  .form-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
+  .form-group label {
+    font-size: 0.75rem; font-weight: 600; color: var(--text-2);
+    text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .form-group input, .form-group textarea, .form-group select {
+    padding: 0.75rem 1rem; border: 1.5px solid var(--border); border-radius: 8px;
+    font-family: var(--font-body); font-size: 0.9rem; color: var(--text-1);
+    background: var(--cream); transition: border-color 0.2s; outline: none; resize: vertical;
+  }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+    border-color: var(--gold); background: white;
+  }
+  .form-group textarea { min-height: 120px; }
+
+  /* Star rating */
+  .star-row { display: flex; gap: 0.35rem; flex-direction: row-reverse; justify-content: flex-end; }
+  .star-row input { display: none; }
+  .star-row label {
+    font-size: 1.75rem; cursor: pointer; color: var(--border);
+    transition: color 0.15s; text-transform: none; letter-spacing: 0;
+    font-weight: 400;
+  }
+  .star-row label:hover,
+  .star-row label:hover ~ label,
+  .star-row input:checked ~ label { color: var(--gold); }
+
+  .form-error   { color: #dc2626; font-size: 0.82rem; min-height: 1.2em; }
+  .form-success {
+    display: none; text-align: center; padding: 2rem 1rem;
+  }
+  .form-success-icon { font-size: 3rem; margin-bottom: 0.75rem; }
+  .form-success h4   { font-family: var(--font-display); font-size: 1.3rem; color: var(--navy); margin-bottom: 0.5rem; }
+  .form-success p    { font-size: 0.88rem; color: var(--text-3); }
+
+  /* ---- ADMIN INBOX ---- */
+  .inbox-section  { background: var(--cream); padding: 6rem 2rem; }
+  .inbox-inner    { max-width: 900px; margin: 0 auto; }
+  .inbox-toolbar  {
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    margin: 1.5rem 0 1.25rem;
+  }
+  .inbox-search {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: white; border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 0.55rem 1rem; flex: 1; min-width: 200px;
+  }
+  .inbox-search:focus-within { border-color: var(--gold); }
+  .inbox-search input { border: none; outline: none; background: none; font-family: var(--font-body); font-size: 0.9rem; width: 100%; color: var(--text-1); }
+  .inbox-search svg   { color: var(--text-3); flex-shrink: 0; }
+  .admin-login-link {
+    font-size: 0.75rem; color: var(--text-3); background: none; border: none;
+    cursor: pointer; font-family: var(--font-body); text-decoration: underline;
+    padding: 0.25rem; transition: color 0.2s; margin-left: auto;
+  }
+  .admin-login-link:hover { color: var(--navy); }
+
+  .inbox-list   { display: flex; flex-direction: column; gap: 0.75rem; }
+  .inbox-locked {
+    text-align: center; padding: 3.5rem 2rem; color: var(--text-3);
+  }
+  .inbox-locked-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+  .inbox-locked h4   { font-family: var(--font-display); font-size: 1.2rem; color: var(--navy); margin-bottom: 0.4rem; }
+
+  .fb-card {
+    background: white; border: 1px solid var(--border); border-radius: 14px;
+    overflow: hidden; transition: border-color 0.2s;
+  }
+  .fb-card:hover  { border-color: var(--gold); }
+  .fb-card.unread { border-left: 3px solid var(--gold); }
+
+  .fb-card-header {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1rem 1.25rem; cursor: pointer;
+  }
+  .fb-type-dot {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1rem;
+  }
+  .fb-type-dot.suggestion { background: rgba(201,162,39,0.12); }
+  .fb-type-dot.complaint  { background: rgba(123,18,48,0.10); }
+  .fb-type-dot.praise     { background: rgba(77,114,89,0.10); }
+  .fb-type-dot.question   { background: rgba(22,32,64,0.08); }
+  .fb-type-dot.prayer     { background: rgba(124,58,237,0.08); }
+  .fb-type-dot.other      { background: rgba(0,0,0,0.05); }
+
+  .fb-meta       { flex: 1; min-width: 0; }
+  .fb-name       { font-weight: 600; font-size: 0.9rem; color: var(--navy); }
+  .fb-subject    { font-size: 0.82rem; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fb-date       { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-3); flex-shrink: 0; }
+  .fb-stars      { color: var(--gold); font-size: 0.8rem; flex-shrink: 0; }
+  .fb-unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+
+  .fb-card-body {
+    display: none; padding: 0 1.25rem 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+  .fb-card.expanded .fb-card-body { display: block; padding-top: 1rem; }
+  .fb-card-body p { font-size: 0.88rem; color: var(--text-2); line-height: 1.7; }
+  .fb-card-footer {
+    display: flex; gap: 0.625rem; margin-top: 1rem;
+    padding-top: 0.875rem; border-top: 1px solid var(--border);
+  }
+  .fb-mark-read {
+    background: none; border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 0.4rem 0.875rem; font-family: var(--font-body); font-size: 0.78rem;
+    font-weight: 600; color: var(--text-2); cursor: pointer; transition: all 0.18s;
+  }
+  .fb-mark-read:hover  { border-color: var(--navy); color: var(--navy); }
+  .fb-delete-btn {
+    background: none; border: 1.5px solid transparent; border-radius: 8px;
+    padding: 0.4rem 0.875rem; font-family: var(--font-body); font-size: 0.78rem;
+    font-weight: 600; color: var(--text-3); cursor: pointer; transition: all 0.18s;
+    margin-left: auto;
+  }
+  .fb-delete-btn:hover { border-color: #dc2626; color: #dc2626; }
+
+  /* PIN Modal */
+  .modal { display:none; position:fixed; inset:0; z-index:2000; align-items:center; justify-content:center; padding:2rem; }
+  .modal.active { display:flex; }
+  .modal-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); }
+  .modal-content { background:white; border-radius:20px; max-width:420px; width:100%; position:relative; box-shadow:0 25px 50px rgba(0,0,0,0.2); border:1px solid var(--border); animation:modalIn 0.25s var(--ease); }
+  @keyframes modalIn { from{opacity:0;transform:translateY(16px) scale(0.97);}to{opacity:1;transform:none;} }
+  .modal-close { position:absolute; top:1.25rem; right:1.25rem; width:36px; height:36px; border-radius:50%; border:none; background:var(--cream); color:var(--text-3); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
+  .modal-close:hover { background:var(--crimson); color:white; transform:rotate(90deg); }
+  .modal-header { padding:2rem 2rem 0; }
+  .modal-header h3 { font-family:var(--font-display); color:var(--navy); font-size:1.4rem; margin-bottom:0.2rem; }
+  .modal-header p  { color:var(--text-3); font-size:0.88rem; }
+  .modal-body { padding:1.5rem 2rem 2rem; }
+  .pin-input { width:100%; padding:0.85rem 1rem; border:2px solid var(--border); border-radius:10px; font-size:1.5rem; letter-spacing:0.5rem; text-align:center; font-family:var(--font-body); color:var(--text-1); background:var(--cream); transition:border-color 0.2s; outline:none; }
+  .pin-input:focus { border-color:var(--gold); }
+  .pin-error { color:#dc2626; font-size:0.82rem; text-align:center; min-height:1.2em; margin-top:0.5rem; }
+
+  /* Responsive */
+  @media (max-width:1024px) { .feedback-inner { grid-template-columns:1fr; gap:2.5rem; } }
+  @media (max-width:768px)  { .help-cards-grid { grid-template-columns:1fr; } .fb-type-grid { grid-template-columns:repeat(3,1fr); } }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="navbar" id="navbar">
+    <a href="index.html" class="nav-brand">
+      <div class="nav-brand-mark">AC</div>
+      <div class="nav-brand-text"><span>Ambassadors Club</span><small>SDA Embakasi Central</small></div>
+    </a>
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="members.html">Members</a></li>
+      <li><a href="choir.html">Choir</a></li>
+      <li><a href="activities.html">Activities</a></li>
+      <li><a href="treasury.html">Treasury</a></li>
+      <li><a href="schedule.html">Schedule</a></li>
+      <li><a href="secretary.html">Secretary</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="feedback.html" class="active">Help</a></li>
+    </ul>
+  </nav>
+
+  <!-- PAGE HEADER -->
+  <header class="page-header">
+    <div class="page-header-orb page-header-orb-1"></div>
+    <div class="page-header-orb page-header-orb-2"></div>
+    <div class="page-header-content">
+      <div class="page-eyebrow">We're Here For You</div>
+      <h1>Help & Feedback</h1>
+      <p>Got a question, suggestion, or concern? We'd love to hear from you. Your voice shapes the Ambassadors Club.</p>
+    </div>
+  </header>
+
+  <!-- HELP CARDS -->
+  <section class="help-cards-section">
+    <div class="help-cards-inner">
+      <p class="section-label">How Can We Help?</p>
+      <div class="help-cards-grid">
+        <a class="help-card" href="https://wa.me/254726473887" target="_blank" rel="noopener">
+          <div class="help-card-icon hci-gold">💬</div>
+          <h3>Chat With Us</h3>
+          <p>Send us a WhatsApp message directly. We respond within 24 hours on weekdays.</p>
+          <span class="help-card-link">Open WhatsApp →</span>
+        </a>
+        <a class="help-card" href="mailto:giftben593@gmail.com">
+          <div class="help-card-icon hci-navy">✉️</div>
+          <h3>Email Us</h3>
+          <p>Prefer email? Write to us at giftben593@gmail.com and we'll get back to you soon.</p>
+          <span class="help-card-link">Send Email →</span>
+        </a>
+        <div class="help-card" style="cursor:default;" onclick="document.getElementById('feedbackFormCard').scrollIntoView({behavior:'smooth'})">
+          <div class="help-card-icon hci-sage">📝</div>
+          <h3>Leave Feedback</h3>
+          <p>Use our feedback form below to share suggestions, complaints, prayer requests, or praise.</p>
+          <span class="help-card-link" style="cursor:pointer;">Fill Form ↓</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq-section">
+    <div class="faq-inner">
+      <p class="section-label">Common Questions</p>
+      <h2 class="section-heading">Frequently Asked</h2>
+      <div class="faq-list" id="faqList">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- FEEDBACK FORM + CONTACT -->
+  <section class="feedback-section">
+    <div class="feedback-inner">
+      <!-- Left: contact info -->
+      <div class="feedback-left">
+        <p class="section-label">Reach Out</p>
+        <h2 class="section-heading">Get In <em>Touch</em></h2>
+        <p>Whether it's a question about membership, a concern about club operations, or just a word of encouragement — we're listening.</p>
+        <a class="contact-pill" href="https://wa.me/254726473887" target="_blank" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          <div><strong>WhatsApp</strong>+254 726 473 887</div>
+        </a>
+        <a class="contact-pill" href="mailto:giftben593@gmail.com">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <div><strong>Email</strong>giftben593@gmail.com</div>
+        </a>
+        <a class="contact-pill" href="https://chat.whatsapp.com/Ir49xa1Gvu8HYFnD82CthV" target="_blank" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <div><strong>WhatsApp Group</strong>Join the Ambassadors Club group</div>
+        </a>
+        <div class="contact-pill" style="cursor:default;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <div><strong>Response Time</strong>Within 24 hours on weekdays</div>
+        </div>
+      </div>
+
+      <!-- Right: form card -->
+      <div class="feedback-form-card" id="feedbackFormCard">
+        <h3>Send Us a Message</h3>
+        <p>All feedback is read by club leadership.</p>
+
+        <!-- Success state -->
+        <div class="form-success" id="formSuccess">
+          <div class="form-success-icon">🙏</div>
+          <h4>Thank You!</h4>
+          <p>Your message has been received. We'll get back to you soon.</p>
+          <button class="btn btn-gold" style="margin:1.25rem auto 0;" onclick="resetForm()">Send Another</button>
+        </div>
+
+        <!-- Form -->
+        <div id="feedbackFormInner">
+          <!-- Type -->
+          <div style="margin-bottom:1.25rem;">
+            <label style="font-size:0.75rem;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:0.6rem;">Type *</label>
+            <div class="fb-type-grid">
+              <button type="button" class="fb-type-btn active" data-type="suggestion" onclick="selectType(this)"><span class="fb-type-icon">💡</span>Suggestion</button>
+              <button type="button" class="fb-type-btn" data-type="complaint"   onclick="selectType(this)"><span class="fb-type-icon">⚠️</span>Complaint</button>
+              <button type="button" class="fb-type-btn" data-type="praise"      onclick="selectType(this)"><span class="fb-type-icon">🙌</span>Praise</button>
+              <button type="button" class="fb-type-btn" data-type="question"    onclick="selectType(this)"><span class="fb-type-icon">❓</span>Question</button>
+              <button type="button" class="fb-type-btn" data-type="prayer"      onclick="selectType(this)"><span class="fb-type-icon">🙏</span>Prayer</button>
+              <button type="button" class="fb-type-btn" data-type="other"       onclick="selectType(this)"><span class="fb-type-icon">💬</span>Other</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Your Name</label>
+            <input id="fbName" type="text" placeholder="Anonymous (optional)">
+          </div>
+          <div class="form-group">
+            <label>Email <span style="font-weight:400;color:var(--text-3);">(optional — for a reply)</span></label>
+            <input id="fbEmail" type="email" placeholder="your@email.com">
+          </div>
+          <div class="form-group">
+            <label>Subject *</label>
+            <input id="fbSubject" type="text" placeholder="Brief subject…">
+          </div>
+          <div class="form-group">
+            <label>Message *</label>
+            <textarea id="fbMessage" placeholder="Write your message here…"></textarea>
+          </div>
+
+          <!-- Star rating -->
+          <div class="form-group">
+            <label>Overall Club Rating <span style="font-weight:400;color:var(--text-3);">(optional)</span></label>
+            <div class="star-row">
+              <input type="radio" id="s5" name="rating" value="5"><label for="s5">★</label>
+              <input type="radio" id="s4" name="rating" value="4"><label for="s4">★</label>
+              <input type="radio" id="s3" name="rating" value="3"><label for="s3">★</label>
+              <input type="radio" id="s2" name="rating" value="2"><label for="s2">★</label>
+              <input type="radio" id="s1" name="rating" value="1"><label for="s1">★</label>
+            </div>
+          </div>
+
+          <p class="form-error" id="fbError"></p>
+          <button class="btn btn-gold" style="width:100%;margin-top:0.5rem;justify-content:center;" id="fbSubmitBtn" onclick="submitFeedback()">Send Message</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADMIN INBOX -->
+  <section class="inbox-section">
+    <div class="inbox-inner">
+      <p class="section-label">Leadership</p>
+      <h2 class="section-heading">Feedback Inbox</h2>
+
+      <div class="inbox-toolbar">
+        <div class="inbox-search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="inboxSearch" placeholder="Search feedback…" autocomplete="off" oninput="renderInbox()">
+        </div>
+        <button class="admin-login-link" id="inboxAdminBtn">Admin</button>
+        <span id="inboxAdminStatus" style="display:none;font-size:0.78rem;color:var(--text-3);">
+          🔐 Admin ·
+          <button onclick="inboxLogout()" style="background:none;border:none;cursor:pointer;font-size:0.78rem;color:var(--crimson);font-family:var(--font-body);text-decoration:underline;">Log out</button>
+        </span>
+      </div>
+
+      <div id="inboxContainer">
+        <div class="inbox-locked">
+          <div class="inbox-locked-icon">🔒</div>
+          <h4>Admin Access Required</h4>
+          <p>Click <strong>Admin</strong> above and enter your PIN to view submitted feedback.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEWSLETTER -->
+  <section class="newsletter-section">
+    <div class="newsletter-inner">
+      <div class="newsletter-left">
+        <h3>Stay Connected</h3>
+        <p>Weekly updates on events, devotionals, and club news — straight to your inbox.</p>
+      </div>
+      <form class="newsletter-form" id="newsletterForm" novalidate>
+        <div class="newsletter-field">
+          <input type="email" id="newsletterEmail" placeholder="your@email.com" required autocomplete="email">
+          <button type="submit" class="btn btn-gold">Subscribe</button>
+        </div>
+        <p class="newsletter-note">No spam. Unsubscribe anytime.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand-col">
+        <div class="footer-mark">AC</div>
+        <p class="footer-brand-name">SDA Church Embakasi Central</p>
+        <p class="footer-brand-sub">Ambassadors Club Youth Ministry</p>
+        <p class="footer-motto">"Go ye into all the world and preach the gospel"</p>
+        <div class="footer-socials">
+          <a href="https://www.tiktok.com/@embakasi.central" class="social-btn" target="_blank" rel="noopener" aria-label="TikTok"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
+          <a href="#" class="social-btn" target="_blank" rel="noopener" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+          <a href="https://youtube.com/@embakasicentralsdachurch2858" class="social-btn" target="_blank" rel="noopener" aria-label="YouTube"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+          <a href="https://chat.whatsapp.com/Ir49xa1Gvu8HYFnD82CthV" class="social-btn" target="_blank" rel="noopener" aria-label="WhatsApp"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
+        </div>
+      </div>
+      <div class="footer-links-col"><h5>Quick Links</h5><ul><li><a href="members.html">Members</a></li><li><a href="choir.html">Choir</a></li><li><a href="activities.html">Activities</a></li><li><a href="treasury.html">Treasury</a></li><li><a href="schedule.html">Schedule</a></li></ul></div>
+      <div class="footer-links-col"><h5>Resources</h5><ul><li><a href="about.html">About Us</a></li><li><a href="secretary.html">Secretary</a></li><li><a href="feedback.html">Help & Feedback</a></li><li><a href="https://youtube.com/@embakasicentralsdachurch2858">Bible Study</a></li><li><a href="auth.html">Sign In</a></li></ul></div>
+      <div class="footer-contact-col">
+        <h5>Visit Us</h5>
+        <div class="contact-row"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Embakasi, Nairobi, Kenya</span></div>
+        <div class="contact-row"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.85a16 16 0 0 0 6 6l.9-.9a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/></svg><span>+254 726 473 887</span></div>
+        <div class="contact-row"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>giftben593@gmail.com</span></div>
+        <div class="contact-row"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Sabbath: 8:00 AM – 5:00 PM</span></div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© <span class="current-year"></span> SDA Church Embakasi Central. All rights reserved.</p>
+      <div class="footer-bottom-links"><a href="#">Privacy</a><span>·</span><a href="#">Terms</a><span>·</span><a href="#">Accessibility</a></div>
+      <p class="footer-credit">Built with <span class="heart">♥</span> by the Ambassadors Club</p>
+    </div>
+  </footer>
+
+  <button class="back-to-top" id="backToTop" aria-label="Back to top">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
+  </button>
+
+  <!-- PIN MODAL -->
+  <div class="modal" id="pinModal">
+    <div class="modal-overlay" id="pinOverlay"></div>
+    <div class="modal-content">
+      <button class="modal-close" id="pinClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <div class="modal-header"><h3>Admin Access</h3><p>Enter your PIN to view the feedback inbox</p></div>
+      <div class="modal-body">
+        <input type="password" id="pinInput" class="pin-input" placeholder="••••" maxlength="8" autocomplete="off">
+        <p class="pin-error" id="pinError"></p>
+        <button class="btn btn-gold" id="pinSubmit" style="width:100%;margin-top:.75rem;justify-content:center;">Unlock</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/supabase-config.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+  // ============================================================
+  //  FEEDBACK.JS — inline
+  // ============================================================
+  const FB_ADMIN_PIN = '0000';
+  let fbIsAdmin      = false;
+  let selectedType   = 'suggestion';
+  let allFeedback    = [];
+
+  const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  function toast(msg, type='info') {
+    const t = document.createElement('div');
+    t.className = `toast-notification toast-${type}`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('toast-visible'));
+    setTimeout(() => { t.classList.remove('toast-visible'); setTimeout(() => t.remove(), 350); }, 3200);
+  }
+
+  // ---- TYPE SELECTOR ----
+  function selectType(btn) {
+    document.querySelectorAll('.fb-type-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedType = btn.dataset.type;
+  }
+
+  // ---- FAQ ----
+  const FAQS = [
+    { q: 'How do I become a member of the Ambassadors Club?', a: 'Attend any of our Sabbath meetings or contact us on WhatsApp. You can also sign up on this website and your membership request will be reviewed by leadership.' },
+    { q: 'When and where does the club meet?', a: 'We meet every Sabbath (Saturday) at SDA Church Embakasi Central, starting at 8:00 AM. Midweek activities vary — check the Schedule page for current events.' },
+    { q: 'How do I join the choir?', a: 'Let the choir director know your voice part (Soprano, Alto, Tenor, or Bass). You can also indicate your voice when signing up on this website.' },
+    { q: 'How are club contributions managed?', a: 'All contributions are recorded in the Treasury page, which is updated by the club treasurer after every collection. You can view contribution history there.' },
+    { q: 'How do I get meeting minutes?', a: 'All official meeting minutes are posted on the Secretary page after every meeting. Anyone can read them — no login required.' },
+    { q: 'Who do I contact for urgent matters?', a: 'Send a WhatsApp message to +254 726 473 887 or email giftben593@gmail.com. For urgent issues, WhatsApp is fastest.' },
+  ];
+
+  function renderFaqs() {
+    document.getElementById('faqList').innerHTML = FAQS.map((f, i) => `
+      <div class="faq-item" id="faq${i}">
+        <button class="faq-question" onclick="toggleFaq(${i})">
+          ${esc(f.q)}
+          <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-answer">${esc(f.a)}</div>
+      </div>`).join('');
+  }
+
+  function toggleFaq(i) {
+    const item = document.getElementById('faq' + i);
+    item.classList.toggle('open');
+  }
+
+  // ---- SUBMIT FEEDBACK ----
+  async function submitFeedback() {
+    const subject = document.getElementById('fbSubject').value.trim();
+    const message = document.getElementById('fbMessage').value.trim();
+    const errEl   = document.getElementById('fbError');
+    const btn     = document.getElementById('fbSubmitBtn');
+    const rating  = document.querySelector('input[name="rating"]:checked')?.value || null;
+
+    if (!subject) { errEl.textContent = 'Please enter a subject.'; return; }
+    if (!message) { errEl.textContent = 'Please write your message.'; return; }
+    errEl.textContent = '';
+
+    btn.disabled = true; btn.textContent = 'Sending…';
+
+    const payload = {
+      type:    selectedType,
+      name:    document.getElementById('fbName').value.trim()  || 'Anonymous',
+      email:   document.getElementById('fbEmail').value.trim() || null,
+      subject, message,
+      rating:  rating ? parseInt(rating) : null,
+      is_read: false,
+    };
+
+    try {
+      if (typeof supabaseClient !== 'undefined') {
+        const { error } = await supabaseClient.from('feedback').insert([payload]);
+        if (error) throw error;
+      }
+      document.getElementById('feedbackFormInner').style.display = 'none';
+      document.getElementById('formSuccess').style.display = 'block';
+    } catch(err) {
+      errEl.textContent = 'Send failed: ' + err.message;
+      btn.disabled = false; btn.textContent = 'Send Message';
+    }
+  }
+
+  function resetForm() {
+    document.getElementById('feedbackFormInner').style.display = 'block';
+    document.getElementById('formSuccess').style.display = 'none';
+    ['fbName','fbEmail','fbSubject','fbMessage'].forEach(id => document.getElementById(id).value = '');
+    document.querySelectorAll('input[name="rating"]').forEach(r => r.checked = false);
+    selectType(document.querySelector('.fb-type-btn[data-type="suggestion"]'));
+    document.getElementById('fbSubmitBtn').disabled = false;
+    document.getElementById('fbSubmitBtn').textContent = 'Send Message';
+  }
+
+  // ---- ADMIN INBOX ----
+  const TYPE_ICONS = { suggestion:'💡', complaint:'⚠️', praise:'🙌', question:'❓', prayer:'🙏', other:'💬' };
+
+  async function loadInbox() {
+    if (typeof supabaseClient === 'undefined') { renderInbox(); return; }
+    try {
+      const { data, error } = await supabaseClient
+        .from('feedback').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      allFeedback = data || [];
+    } catch(e) { allFeedback = []; }
+    renderInbox();
+  }
+
+  function renderInbox() {
+    const container = document.getElementById('inboxContainer');
+    if (!fbIsAdmin) {
+      container.innerHTML = `<div class="inbox-locked"><div class="inbox-locked-icon">🔒</div><h4>Admin Access Required</h4><p>Click <strong>Admin</strong> above and enter your PIN to view submitted feedback.</p></div>`;
+      return;
+    }
+    const q = (document.getElementById('inboxSearch')?.value || '').toLowerCase();
+    const filtered = allFeedback.filter(f =>
+      !q || f.subject?.toLowerCase().includes(q) || f.name?.toLowerCase().includes(q)
+        || f.message?.toLowerCase().includes(q) || f.type?.toLowerCase().includes(q));
+
+    if (!filtered.length) {
+      container.innerHTML = `<div class="inbox-locked"><div class="inbox-locked-icon">📭</div><h4>No feedback yet</h4><p>Submitted messages will appear here.</p></div>`;
+      return;
+    }
+
+    const unread = filtered.filter(f => !f.is_read).length;
+    container.innerHTML = `
+      <p style="font-size:0.82rem;color:var(--text-3);margin-bottom:1rem;">${filtered.length} message${filtered.length!==1?'s':''} · <strong style="color:var(--navy);">${unread} unread</strong></p>
+      <div class="inbox-list">${filtered.map(f => buildFbCard(f)).join('')}</div>`;
+
+    container.querySelectorAll('.fb-card-header').forEach(h => {
+      h.addEventListener('click', () => {
+        const card = h.closest('.fb-card');
+        card.classList.toggle('expanded');
+        const id = card.dataset.id;
+        if (card.classList.contains('expanded')) markRead(id);
+      });
+    });
+  }
+
+  function buildFbCard(f) {
+    const date    = f.created_at ? new Date(f.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
+    const stars   = f.rating ? '★'.repeat(f.rating) + '☆'.repeat(5 - f.rating) : '';
+    const unread  = !f.is_read;
+    return `
+      <div class="fb-card ${unread?'unread':''}" data-id="${f.id}">
+        <div class="fb-card-header">
+          <div class="fb-type-dot ${esc(f.type)}">${TYPE_ICONS[f.type]||'💬'}</div>
+          <div class="fb-meta">
+            <div class="fb-name">${esc(f.name||'Anonymous')}</div>
+            <div class="fb-subject">${esc(f.subject)}</div>
+          </div>
+          ${stars ? `<div class="fb-stars">${stars}</div>` : ''}
+          <div class="fb-date">${date}</div>
+          ${unread ? '<div class="fb-unread-dot"></div>' : ''}
+        </div>
+        <div class="fb-card-body">
+          <p>${esc(f.message).replace(/\n/g,'<br>')}</p>
+          ${f.email ? `<p style="margin-top:.75rem;font-size:.8rem;color:var(--text-3);">Reply to: <a href="mailto:${esc(f.email)}" style="color:var(--gold);">${esc(f.email)}</a></p>` : ''}
+          <div class="fb-card-footer">
+            ${unread ? `<button class="fb-mark-read" onclick="markRead('${f.id}',true)">✓ Mark Read</button>` : `<span style="font-size:0.78rem;color:var(--text-3);">✓ Read</span>`}
+            <button class="fb-delete-btn" onclick="deleteFb('${f.id}')">Delete</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  async function markRead(id, rerender=false) {
+    const item = allFeedback.find(f => String(f.id) === String(id));
+    if (!item || item.is_read) return;
+    item.is_read = true;
+    try { await supabaseClient.from('feedback').update({ is_read: true }).eq('id', id); } catch(e) {}
+    if (rerender) renderInbox();
+  }
+
+  async function deleteFb(id) {
+    if (!confirm('Delete this feedback? Cannot be undone.')) return;
+    try {
+      await supabaseClient.from('feedback').delete().eq('id', id);
+      allFeedback = allFeedback.filter(f => String(f.id) !== String(id));
+      renderInbox();
+      toast('Deleted', 'info');
+    } catch(e) { toast(e.message, 'error'); }
+  }
+
+  // ---- PIN ----
+  function openPin() {
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinError').textContent = '';
+    document.getElementById('pinModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('pinInput').focus(), 60);
+  }
+  function closePin() {
+    document.getElementById('pinModal').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  function attemptPin() {
+    if (document.getElementById('pinInput').value.trim() === FB_ADMIN_PIN) {
+      fbIsAdmin = true;
+      sessionStorage.setItem('fb_admin','1');
+      closePin();
+      document.getElementById('inboxAdminBtn').style.display    = 'none';
+      document.getElementById('inboxAdminStatus').style.display = 'flex';
+      loadInbox();
+      toast('Admin mode enabled ✓', 'success');
+    } else {
+      document.getElementById('pinError').textContent = 'Incorrect PIN.';
+      document.getElementById('pinInput').value = '';
+      document.getElementById('pinInput').focus();
+    }
+  }
+  function inboxLogout() {
+    fbIsAdmin = false;
+    sessionStorage.removeItem('fb_admin');
+    document.getElementById('inboxAdminBtn').style.display    = 'inline';
+    document.getElementById('inboxAdminStatus').style.display = 'none';
+    renderInbox();
+  }
+
+  // ---- INIT ----
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.current-year').forEach(el => el.textContent = new Date().getFullYear());
+    renderFaqs();
+
+    if (sessionStorage.getItem('fb_admin') === '1') {
+      fbIsAdmin = true;
+      document.getElementById('inboxAdminBtn').style.display    = 'none';
+      document.getElementById('inboxAdminStatus').style.display = 'flex';
+      loadInbox();
+    } else {
+      renderInbox();
+    }
+
+    document.getElementById('inboxAdminBtn')?.addEventListener('click', openPin);
+    document.getElementById('pinSubmit')?.addEventListener('click', attemptPin);
+    document.getElementById('pinInput')?.addEventListener('keydown', e => { if(e.key==='Enter') attemptPin(); });
+    document.getElementById('pinClose')?.addEventListener('click', closePin);
+    document.getElementById('pinOverlay')?.addEventListener('click', closePin);
+    document.addEventListener('keydown', e => { if(e.key==='Escape') closePin(); });
+  });
+  </script>
+</body>
+</html>
