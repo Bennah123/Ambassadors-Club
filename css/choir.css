@@ -233,9 +233,44 @@
   transition: background 0.18s;
 }
 .repertoire-item:hover { background: var(--cream); }
+.repertoire-item { cursor: pointer; }
 .rep-num { font-family: var(--font-mono); font-size: 0.7rem; color: var(--gold); opacity: 0.6; min-width: 24px; }
 .rep-title { font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; color: var(--navy); flex: 1; }
 .rep-type { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
+
+.rep-chevron { color: var(--text-3); flex-shrink: 0; transition: transform 0.2s; }
+.rep-chevron.open { transform: rotate(180deg); }
+
+.rep-delete-btn {
+  background: none; border: none; cursor: pointer; color: var(--text-3);
+  padding: 0.3rem; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  transition: color 0.15s, background 0.15s; flex-shrink: 0;
+}
+.rep-delete-btn:hover { color: #dc2626; background: rgba(220,38,38,0.08); }
+
+.repertoire-item-wrap { background: white; }
+.repertoire-item-wrap .repertoire-item { background: transparent; }
+.repertoire-item-wrap:hover .repertoire-item { background: var(--cream); }
+
+.repertoire-detail {
+  padding: 0 1.75rem 1.5rem;
+  background: white;
+}
+.rep-lyrics {
+  font-family: var(--font-body); font-size: 0.9rem; color: var(--text-2);
+  line-height: 1.8; white-space: pre-wrap;
+  background: var(--cream); border-radius: 10px; padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+}
+.rep-no-audio {
+  font-size: 0.82rem; color: var(--text-3); font-style: italic; margin-bottom: 0.75rem;
+}
+
+.repertoire-add-row {
+  cursor: pointer; background: var(--cream) !important;
+  border-top: 1px dashed var(--border);
+}
+.repertoire-add-row:hover { background: rgba(201,162,39,0.08) !important; }
 
 /* ---- JOIN CTA ---- */
 .choir-join-cta { background: var(--navy); padding: 7rem 2rem; position: relative; overflow: hidden; }
