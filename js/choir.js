@@ -394,7 +394,7 @@ async function saveVoiceAssign() {
 // ============================================================
 
 const SONGS_STORAGE_KEY = 'sda_songs_data';
-const SONG_TYPE_LABELS = { hymn: 'Hymn', praise: 'Praise', special: 'Special', worship: 'Worship' };
+const SONG_TYPE_LABELS = { hymn: 'Hymn', praise: 'Praise', special: 'Special', worship: 'Worship', 'album-1': 'Album 1', 'album-2': 'Album 2' };
 
 let songsData    = [];
 let expandedSong  = null; // id of currently expanded song
