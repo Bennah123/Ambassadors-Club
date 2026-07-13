@@ -205,7 +205,7 @@ async function saveVoiceAssign() {
 
 // ---- REPERTOIRE (songs table + song-audio storage bucket) ----
 const SONGS_STORAGE_KEY = 'sda_songs_data';
-const SONG_TYPE_LABELS = { hymn:'Hymn', praise:'Praise', special:'Special', worship:'Worship' };
+const SONG_TYPE_LABELS = { hymn:'Hymn', praise:'Praise', special:'Special', worship:'Worship', album1:'Album 1', album2:'Album 2' };
 
 let songsData = [];
 let expandedSong = null;
@@ -320,6 +320,7 @@ function openSongForm(songId = null) {
             <select id="songType">
               <option value="hymn">Hymn</option><option value="praise">Praise</option>
               <option value="special">Special</option><option value="worship">Worship</option>
+              <option value="album1">Album 1</option><option value="album2">Album 2</option>
             </select>
           </div>
           <div class="form-group"><label>Lyrics <span style="text-transform:none;font-weight:400;">(optional)</span></label>
