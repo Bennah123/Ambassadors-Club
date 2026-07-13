@@ -36,7 +36,7 @@ async function loadMembers() {
   try {
     const cached=localStorage.getItem(STORAGE_KEY);
     if (cached) { membersData=JSON.parse(cached); renderMembers(); return; }
-  } catch {}
+  } catch (error) { console.warn('Load failed:', error.message); }
   membersData=[]; renderMembers();
 }
 
@@ -64,12 +64,12 @@ function renderMembers() {
       ?`<div class="member-avatar"><img src="${escHtml(m.avatarUrl)}" alt="${escHtml(m.firstName)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="member-avatar-initials" style="display:none;">${initials}</div></div>`
       :`<div class="member-avatar"><div class="member-avatar-initials">${initials}</div></div>`;
     const deptTags=(m.departments||[]).map(d=>`<span class="dept-tag">${escHtml(deptLabels[d]||d)}</span>`).join('');
-    const adminBtns=window.isAdmin?`<div class="admin-card-actions" onclick="event.stopPropagation()">
-      <button class="admin-card-btn" onclick="openEditMember(${m.id})" title="Edit">✏️</button>
-      <button class="admin-card-btn" onclick="deleteMember(${m.id})" title="Delete">🗑️</button>
+    const adminBtns=globalThis.isAdmin?`<div class="admin-card-actions" onclick="event.stopPropagation()">
+      <button class="admin-card-btn" onclick="_openEditMember(${m.id})" title="Edit">✏️</button>
+      <button class="admin-card-btn" onclick="_deleteMember(${m.id})" title="Delete">🗑️</button>
     </div>`:'';
     return `
-      <div class="member-card" onclick="openMemberModal(${m.id})">
+      <div class="member-card" onclick="_openMemberModal(${m.id})">
         ${adminBtns}
         <div class="member-card-inner">
           ${avatarHtml}
@@ -82,7 +82,7 @@ function renderMembers() {
   }).join('');
 }
 
-function openMemberModal(id) {
+function _openMemberModal(id) {
   const m=membersData.find(x=>x.id===id); if(!m) return;
   const initials=getInitials(m.firstName,m.lastName);
   const avatarHtml=m.avatarUrl
@@ -111,9 +111,9 @@ function openMemberModal(id) {
 
 function closeMemberModal() { document.getElementById('memberModal')?.classList.remove('active'); document.body.style.overflow=''; }
 
-// Admin edit/delete (only visible when window.isAdmin)
-function openEditMember(id) { console.log('Edit member:', id); /* hook into your existing form if needed */ }
-async function deleteMember(id) {
+// Admin edit/delete (only visible when globalThis.isAdmin)
+function _openEditMember(id) { console.log('Edit member:', id); /* hook into your existing form if needed */ }
+async function _deleteMember(id) {
   const m=membersData.find(x=>x.id===id); if(!m) return;
   if (!confirm(`Remove ${m.firstName} ${m.lastName}?`)) return;
   try {

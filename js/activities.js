@@ -72,7 +72,7 @@ const eventTypeColors = {
 };
 
 let eventsData = [...fallbackEventsData];
-let isSupabaseConnected = false;
+let _isSupabaseConnected = false;
 
 // Calendar state
 let currentMonth = new Date().getMonth();
@@ -107,7 +107,7 @@ async function loadEventsFromSupabase() {
         location:    e.location    || 'TBD',
         description: e.description || ''
       }));
-      isSupabaseConnected = true;
+      _isSupabaseConnected = true;
       console.log(`✅ Loaded ${data.length} events from Supabase`);
       return true;
     }
@@ -185,7 +185,7 @@ function renderCalendar() {
       const target  = document.querySelector(`[data-event-date="${dateStr}"]`);
       if (target) {
         const offset = (document.getElementById('navbar')?.offsetHeight || 80) + 16;
-        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+        globalThis.scrollTo({ top: target.getBoundingClientRect().top + globalThis.pageYOffset - offset, behavior: 'smooth' });
         target.classList.add('highlight-flash');
         setTimeout(() => target.classList.remove('highlight-flash'), 1200);
       }

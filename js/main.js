@@ -6,7 +6,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   // ---- ACTIVE NAV LINK ----
-  const rawPage = window.location.pathname.split('/').pop();
+  const rawPage = globalThis.location.pathname.split('/').pop();
   const currentPage = rawPage === '' ? 'index.html' : rawPage;
   document.querySelectorAll('.nav-links a').forEach(link => {
     const href = link.getAttribute('href') || '';
@@ -55,8 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---- NAVBAR SCROLL ----
   const navbar = document.getElementById('navbar');
   if (navbar) {
-    window.addEventListener('scroll', () => {
-      navbar.classList.toggle('scrolled', window.scrollY > 60);
+    globalThis.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', globalThis.scrollY > 60);
     }, { passive: true });
   }
 
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const target = document.querySelector(href);
       if (target) {
         const offset = (document.querySelector('.navbar')?.offsetHeight || 0) + 16;
-        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+        globalThis.scrollTo({ top: target.getBoundingClientRect().top + globalThis.pageYOffset - offset, behavior: 'smooth' });
       }
     });
   });
@@ -80,8 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---- BACK TO TOP ----
   const btn = document.getElementById('backToTop');
   if (btn) {
-    window.addEventListener('scroll', () => btn.classList.toggle('visible', window.scrollY > 500), { passive: true });
-    btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    globalThis.addEventListener('scroll', () => btn.classList.toggle('visible', globalThis.scrollY > 500), { passive: true });
+    btn.addEventListener('click', () => globalThis.scrollTo({ top: 0, behavior: 'smooth' }));
   }
 
   // ---- NEWSLETTER ----
@@ -107,11 +107,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ---- UTILITIES ----
-function formatKES(amount) {
+function _formatKES(amount) {
   return 'KES ' + Number(amount).toLocaleString('en-KE');
 }
 
-function debounce(fn, ms = 300) {
+function _debounce(fn, ms = 300) {
   let timer;
   return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); };
 }

@@ -49,8 +49,8 @@ function initChipSmoothScroll() {
       e.preventDefault();
       const target = document.querySelector(chip.getAttribute('href'));
       if (!target) return;
-      const top = target.getBoundingClientRect().top + window.pageYOffset - navbarH() - 16;
-      window.scrollTo({ top, behavior: 'smooth' });
+      const top = target.getBoundingClientRect().top + globalThis.pageYOffset - navbarH() - 16;
+      globalThis.scrollTo({ top, behavior: 'smooth' });
     });
   });
 }

@@ -1,11 +1,11 @@
 // ============================================================
 //  SHARED-AUTH.JS — SDA Ambassadors Club
 //  Load this on EVERY page before any other page script.
-//  Sets window.isAdmin = true/false based on Supabase session.
+//  Sets globalThis.isAdmin = true/false based on Supabase session.
 //  Dispatches 'adminReady' event when resolved.
 // ============================================================
 
-window.isAdmin = false;
+globalThis.isAdmin = false;
 
 (async () => {
   if (typeof supabaseClient === 'undefined') {
@@ -22,9 +22,9 @@ window.isAdmin = false;
         .eq('id', session.user.id)
         .single();
 
-      window.isAdmin    = profile?.role === 'admin' && profile?.approved === true;
-      window.userProfile = profile;
-      window.authUser    = session.user;
+      globalThis.isAdmin    = profile?.role === 'admin' && profile?.approved === true;
+      globalThis.userProfile = profile;
+      globalThis.authUser    = session.user;
     }
   } catch (e) {
     console.warn('Auth check failed:', e.message);

@@ -138,25 +138,25 @@ function initHeroParallax() {
   const heroContent = document.querySelector('.hero-content');
   if (!heroContent) return;
 
-  let enabled = window.innerWidth >= 768;
+  let enabled = globalThis.innerWidth >= 768;
   let ticking  = false;
 
-  window.addEventListener('resize', () => {
-    enabled = window.innerWidth >= 768;
+  globalThis.addEventListener('resize', () => {
+    enabled = globalThis.innerWidth >= 768;
     if (!enabled) {
       heroContent.style.transform = 'none';
       heroContent.style.opacity   = '1';
     }
   }, { passive: true });
 
-  window.addEventListener('scroll', () => {
+  globalThis.addEventListener('scroll', () => {
     if (!enabled || ticking) return;
     ticking = true;
     requestAnimationFrame(() => {
-      const y = window.pageYOffset;
-      if (y < window.innerHeight) {
+      const y = globalThis.pageYOffset;
+      if (y < globalThis.innerHeight) {
         heroContent.style.transform = `translateY(${y * 0.12}px)`;
-        heroContent.style.opacity   = String(1 - (y / window.innerHeight) * 0.55);
+        heroContent.style.opacity   = String(1 - (y / globalThis.innerHeight) * 0.55);
       }
       ticking = false;
     });

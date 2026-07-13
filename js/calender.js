@@ -34,9 +34,9 @@
   let selectedDate = null;
 
   // ---- EVENTS SOURCE ----
-  // Reads window.eventsData if set by the page, else empty
+  // Reads globalThis.eventsData if set by the page, else empty
   function getEvents() {
-    return Array.isArray(window.eventsData) ? window.eventsData : [];
+    return Array.isArray(globalThis.eventsData) ? globalThis.eventsData : [];
   }
 
   // ---- RENDER ----
@@ -181,6 +181,6 @@
   }
 
   // Expose refresh method so pages can call Calendar.refresh() after async data loads
-  window.Calendar = { refresh: render };
+  globalThis.Calendar = { refresh: render };
 
 })();

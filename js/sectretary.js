@@ -1,11 +1,10 @@
 // ============================================================
 //  SECRETARY.JS — SDA Ambassadors Club
-//  Admin via shared-auth.js (window.isAdmin)
+//  Admin via shared-auth.js (globalThis.isAdmin)
 // ============================================================
 
-const ADMIN_PIN = '0000'; // kept for fallback but primary auth is role-based
-let allMinutes   = [];
-let activeFilter = 'all';
+import { error } from "node:console";
+
 
 const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
@@ -43,7 +42,7 @@ async function loadOfficers() {
       const avatar=m.avatar_url?`<img src="${esc(m.avatar_url)}" alt="${esc(m.first_name)}">`:initials.toUpperCase();
       return `<div class="officer-row"><div class="officer-avatar">${avatar}</div><div><div class="officer-name">${esc(m.first_name)} ${esc(m.last_name)}</div><div class="officer-role">${esc(m.role)}</div></div></div>`;
     }).join('');
-  } catch(e) { list.innerHTML='<p style="font-size:.82rem;color:var(--text-3);">Could not load officers.</p>'; }
+  } catch(_error) { list.innerHTML='<p style="font-size:.82rem;color:var(--text-3);">Could not load officers.</p>'; }
 }
 
 function getFiltered() {
@@ -63,7 +62,7 @@ function renderMinutes() {
 
   // Update admin bar visibility
   const adminBar = document.getElementById('adminBar');
-  if (adminBar) adminBar.style.display = window.isAdmin ? 'flex' : 'none';
+  if (adminBar) adminBar.style.display = globalThis.isAdmin ? 'flex' : 'none';
 
   if (!filtered.length) {
     container.innerHTML='';
@@ -77,7 +76,7 @@ function renderMinutes() {
     hdr.addEventListener('click', () => hdr.closest('.minute-card').classList.toggle('expanded'));
   });
 
-  if (window.isAdmin) {
+  if (globalThis.isAdmin) {
     container.querySelectorAll('.action-checkbox').forEach(cb => {
       cb.addEventListener('click', e => {
         e.stopPropagation();
@@ -97,13 +96,13 @@ function buildCard(m) {
   const attendees=(m.attendees||[]).map(a=>`<span class="attendee-chip">${esc(a)}</span>`).join('');
   const actions=(m.action_items||[]).map((a,i)=>`
     <div class="action-item ${a.done?'done':''}">
-      <div class="action-checkbox" data-minute-id="${m.id}" data-idx="${i}" ${!window.isAdmin?'style="pointer-events:none;"':''}>
+      <div class="action-checkbox" data-minute-id="${m.id}" data-idx="${i}" ${!globalThis.isAdmin?'style="pointer-events:none;"':''}>
         ${a.done?'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}
       </div>
       <span>${esc(a.text)}</span>
       ${a.assignee?`<span class="action-assignee">${esc(a.assignee)}</span>`:''}
     </div>`).join('');
-  const adminBtns=window.isAdmin?`<div class="admin-card-actions">
+  const adminBtns=globalThis.isAdmin?`<div class="admin-card-actions">
     <button class="admin-card-btn" onclick="openEdit(event,${m.id})">✏️</button>
     <button class="admin-card-btn" onclick="deleteMinute(event,${m.id})">🗑️</button>
   </div>`:'';
@@ -156,7 +155,7 @@ function openAdd() {
   openModal('minutesModal');
 }
 
-function openEdit(e,id) {
+function _openEdit(e,id) {
   e.stopPropagation();
   const m=allMinutes.find(x=>x.id===id); if(!m) return;
   editingId=id;
@@ -221,7 +220,7 @@ async function saveMinutes() {
   } finally { btn.disabled=false; btn.textContent='Save Minutes'; }
 }
 
-async function deleteMinute(e,id) {
+async function _deleteMinute(e,id) {
   e.stopPropagation();
   if(!confirm('Delete these minutes?')) return;
   try {
@@ -235,7 +234,7 @@ async function deleteMinute(e,id) {
 async function toggleActionDone(minuteId,idx,done) {
   const m=allMinutes.find(x=>x.id===minuteId); if(!m) return;
   m.action_items[idx].done=done;
-  try { await supabaseClient.from('meeting_minutes').update({action_items:m.action_items}).eq('id',minuteId); updateStats(); } catch(e){}
+  try { await supabaseClient.from('meeting_minutes').update({action_items:m.action_items}).eq('id',minuteId); updateStats(); } catch{error('Failed to update action item status');}
 }
 
 function addActionRow(text='',assignee='') {
@@ -273,18 +272,18 @@ async function initSecretary() {
 
   // Admin bar — show/hide based on role
   const adminBar=document.getElementById('adminBar');
-  if (adminBar) adminBar.style.display=window.isAdmin?'flex':'none';
+  if (adminBar) adminBar.style.display=globalThis.isAdmin?'flex':'none';
 
   // Replace admin login button with sign-in redirect
   const loginBtn=document.getElementById('adminLoginBtn');
   if (loginBtn) {
-    if (window.isAdmin) { loginBtn.style.display='none'; }
-    else { loginBtn.addEventListener('click',()=>window.location.href='auth.html'); }
+    if (globalThis.isAdmin) { loginBtn.style.display='none'; }
+    else { loginBtn.addEventListener('click',()=>globalThis.location.href='auth.html'); }
   }
 
   document.getElementById('adminAddBtn')?.addEventListener('click', openAdd);
   document.getElementById('adminLogoutBtn')?.addEventListener('click', async()=>{
-    await supabaseClient.auth.signOut(); window.location.href='auth.html';
+    await supabaseClient.auth.signOut(); globalThis.location.href='auth.html';
   });
   document.getElementById('minutesSearch')?.addEventListener('input', ()=>renderMinutes());
   document.getElementById('filterChips')?.addEventListener('click', e=>{

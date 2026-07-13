@@ -1,6 +1,6 @@
 // ============================================================
 //  CHOIR.JS — SDA Ambassadors Club
-//  Admin via shared-auth.js (window.isAdmin)
+//  Admin via shared-auth.js (globalThis.isAdmin)
 // ============================================================
 
 const CHOIR_STORAGE_KEY = 'sda_choir_data';
@@ -39,7 +39,9 @@ async function loadChoir() {
   try {
     const stored = localStorage.getItem(CHOIR_STORAGE_KEY);
     if (stored) { buildRosterFromArray(JSON.parse(stored)); return; }
-  } catch {}
+  } catch (error) {
+    console.error('Failed to parse cached choir data:', error);
+  }
   buildRosterFromArray([]);
 }
 
@@ -59,7 +61,7 @@ function renderAllPanels() {
   const heroEl = document.getElementById('heroTotalCount');
   if (heroEl) heroEl.textContent = total;
   const grid = document.getElementById('voicePanelsGrid');
-  if (grid) grid.classList.toggle('is-admin', window.isAdmin);
+  if (grid) grid.classList.toggle('is-admin', globalThis.isAdmin);
 }
 
 function renderPanel(voice) {
@@ -87,7 +89,7 @@ function renderPanel(voice) {
           <div class="vp-role">${escHtml(m.role||'Member')}</div>
         </div>
         ${isLeader?'<div class="section-leader-dot" title="Section Leader"></div>':''}
-        ${window.isAdmin?`<button class="vp-edit-btn" onclick="openEditFromRow(event,'${escHtml(m.id)}')" title="Edit">
+        ${globalThis.isAdmin?`<button class="vp-edit-btn" onclick="openEditFromRow(event,'${escHtml(m.id)}')" title="Edit">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -100,8 +102,8 @@ function renderPanel(voice) {
 function updateAdminUI() {
   const loginBtn   = document.getElementById('adminLoginBtn');
   const adminStatus = document.getElementById('adminStatus');
-  if (loginBtn)    loginBtn.style.display    = window.isAdmin ? 'none'  : 'inline';
-  if (adminStatus) adminStatus.style.display = window.isAdmin ? 'flex'  : 'none';
+  if (loginBtn)    loginBtn.style.display    = globalThis.isAdmin ? 'none'  : 'inline';
+  if (adminStatus) adminStatus.style.display = globalThis.isAdmin ? 'flex'  : 'none';
 }
 
 // ---- VOICE ASSIGN FORM ----
@@ -147,7 +149,7 @@ async function openVoiceAssignForm(prefillMemberId) {
 
 function closeVoiceAssignForm() { document.getElementById('voiceAssignModal')?.classList.remove('active'); document.body.style.overflow=''; }
 
-function openEditFromRow(event, choirMemberId) {
+function _openEditFromRow(event, choirMemberId) {
   event.stopPropagation();
   const m = flatRoster().find(x=>String(x.id)===String(choirMemberId));
   openVoiceAssignForm(m?.memberId||null);
@@ -227,7 +229,9 @@ async function loadSongs() {
   try {
     const cached = localStorage.getItem(SONGS_STORAGE_KEY);
     if (cached) { songsData = JSON.parse(cached); return; }
-  } catch {}
+  } catch (error) {
+    console.error('Failed to parse cached songs data:', error);
+  }
   songsData = [];
 }
 
@@ -235,7 +239,7 @@ function renderRepertoire() {
   const container = document.getElementById('repertoireList');
   if (!container) return;
 
-  const addBtnHtml = window.isAdmin ? `
+  const addBtnHtml = globalThis.isAdmin ? `
     <div class="repertoire-item repertoire-add-row" id="addSongRow">
       <span class="rep-num">＋</span>
       <div class="rep-title" style="color:var(--gold);">Add a Song</div>
@@ -257,7 +261,7 @@ function renderRepertoire() {
         <span class="rep-num">${String(i+1).padStart(2,'0')}</span>
         <div class="rep-title">${escHtml(s.title)}</div>
         <span class="rep-type">${escHtml(SONG_TYPE_LABELS[s.type]||s.type)}</span>
-        ${window.isAdmin ? `
+        ${globalThis.isAdmin ? `
         <button class="rep-edit-btn" data-song-edit="${escHtml(s.id)}" title="Edit song">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
@@ -378,7 +382,7 @@ function openSongForm(songId = null) {
 }
 
 function resetSongForm() {
-  const ids = ['songTitle','songType','songLyrics','songAudio','songError'];
+  const _ids = ['songTitle','songType','songLyrics','songAudio','songError'];
   const t=document.getElementById('songTitle'), ty=document.getElementById('songType'),
         l=document.getElementById('songLyrics'), a=document.getElementById('songAudio'),
         e=document.getElementById('songError');
@@ -496,10 +500,10 @@ async function initChoir() {
   if (heroEl) animateCounter(heroEl, flatRoster().length);
 
   // Admin login → redirect to auth page
-  document.getElementById('adminLoginBtn')?.addEventListener('click', () => window.location.href='auth.html');
+  document.getElementById('adminLoginBtn')?.addEventListener('click', () => globalThis.location.href='auth.html');
   document.getElementById('adminLogoutBtn')?.addEventListener('click', async () => {
     await supabaseClient.auth.signOut();
-    window.location.href = 'auth.html';
+    globalThis.location.href = 'auth.html';
   });
 
   document.getElementById('assignVoiceBtn')?.addEventListener('click', () => openVoiceAssignForm());

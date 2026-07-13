@@ -1,6 +1,6 @@
 // ============================================================
 //  TREASURY.JS — SDA Embakasi Central Ambassadors Club
-//  Admin detected automatically via shared-auth.js (window.isAdmin,
+//  Admin detected automatically via shared-auth.js (globalThis.isAdmin,
 //  based on the signed-in user's profiles.role === 'admin')
 // ============================================================
 
@@ -64,17 +64,17 @@ async function loadContributions() {
 }
 
 // ============================================================
-//  ADMIN UI — driven by window.isAdmin (set by shared-auth.js
+//  ADMIN UI — driven by globalThis.isAdmin (set by shared-auth.js
 //  after checking the logged-in user's profiles.role)
 // ============================================================
 function applyAdminUI() {
   document.querySelectorAll('.admin-only').forEach(el => {
-    el.style.display = window.isAdmin ? '' : 'none';
+    el.style.display = globalThis.isAdmin ? '' : 'none';
   });
 
   const toggleBtn = document.getElementById('adminToggleBtn');
   if (toggleBtn) {
-    if (window.isAdmin) {
+    if (globalThis.isAdmin) {
       toggleBtn.textContent = '🔓 Admin Mode';
       toggleBtn.classList.add('admin-active');
       toggleBtn.title = 'Signed in as admin';
@@ -189,7 +189,7 @@ function renderContributions() {
         <button class="action-btn" data-view="${esc(c.id)}" title="View details">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
-        ${window.isAdmin ? `
+        ${globalThis.isAdmin ? `
         <button class="action-btn" data-edit="${esc(c.id)}" title="Edit">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
@@ -357,7 +357,7 @@ function closeDetailModal() { document.getElementById('detailModal')?.classList.
 //  MODALS — ADD/EDIT CONTRIBUTION / CATEGORY
 // ============================================================
 function openModal(contribId = null) {
-  if (!window.isAdmin) { alert('Admin access required. Please unlock admin mode first.'); return; }
+  if (!globalThis.isAdmin) { alert('Admin access required. Please unlock admin mode first.'); return; }
   editingContribId = contribId;
   const modalTitle = document.querySelector('#addContribModal .modal-header h3');
   const submitBtn  = document.querySelector('#contribForm button[type="submit"]');
@@ -392,7 +392,7 @@ function closeModal() {
   setDefaultDate();
 }
 function openCategoryModal() {
-  if (!window.isAdmin) return;
+  if (!globalThis.isAdmin) return;
   document.getElementById('addCategoryModal')?.classList.add('active');
   document.body.style.overflow = 'hidden';
 }
@@ -426,7 +426,7 @@ async function saveContributionToSupabase(data, editId) {
 }
 
 async function deleteContribution(id) {
-  if (!window.isAdmin) return;
+  if (!globalThis.isAdmin) return;
   if (!confirm('Delete this record? Cannot be undone.')) return;
   try {
     if (isSupabaseConnected && !String(id).startsWith('local-')) {
@@ -456,8 +456,8 @@ function esc(str) { return String(str ?? '').replace(/&/g, '&amp;').replace(/</g
 //  INIT
 // ============================================================
 async function initTreasury() {
-  if (window.__treasuryInited) return;
-  window.__treasuryInited = true;
+  if (globalThis.__treasuryInited) return;
+  globalThis.__treasuryInited = true;
 
   await Promise.all([loadMembers(), loadCategories()]);
   await loadContributions();
@@ -555,8 +555,8 @@ async function initTreasury() {
 
 document.addEventListener('adminReady', initTreasury);
 // Fallback: if shared-auth.js never fires adminReady (e.g. script missing/blocked), still init.
-window.addEventListener('load', () => {
+globalThis.addEventListener('load', () => {
   setTimeout(() => {
-    if (!window.__treasuryInited) initTreasury();
+    if (!globalThis.__treasuryInited) initTreasury();
   }, 1200);
 });
