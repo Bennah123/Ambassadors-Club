@@ -103,14 +103,18 @@
         <h2 class="section-heading" style="margin-bottom:0.25rem;">Event Calendar</h2>
         <p class="cal-sub">Never miss an important date</p>
       </div>
-      <div class="calendar-nav-group">
-        <button class="cal-nav-btn" id="prevMonth" aria-label="Previous month">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <span class="cal-month-label" id="calendarTitle">June 2026</span>
-        <button class="cal-nav-btn" id="nextMonth" aria-label="Next month">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-        </button>
+      <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+        <span class="admin-only" id="adminBadge" style="display:none; font-family:var(--font-mono); font-size:0.7rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold); border:1px solid rgba(201,162,39,0.4); border-radius:50px; padding:0.3rem 0.8rem;">🔓 Admin Mode</span>
+        <button class="btn btn-gold admin-only" id="addEventBtn" style="display:none;">＋ Add Event</button>
+        <div class="calendar-nav-group">
+          <button class="cal-nav-btn" id="prevMonth" aria-label="Previous month">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <span class="cal-month-label" id="calendarTitle">June 2026</span>
+          <button class="cal-nav-btn" id="nextMonth" aria-label="Next month">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -178,6 +182,39 @@
       </div>
     </div>
   </section>
+
+  <!-- MODAL: Add/Edit Event -->
+  <div class="modal" id="eventModal">
+    <div class="modal-overlay"></div>
+    <div class="modal-content modal-lg">
+      <button class="modal-close" id="eventModalClose" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <div class="modal-header"><h3 id="eventModalTitle">Add Event</h3><p>Add this to the club calendar and upcoming events list</p></div>
+      <form id="eventForm" class="modal-form">
+        <div class="form-row">
+          <div class="form-group"><label for="evTitle">Title *</label><input type="text" id="evTitle" required></div>
+          <div class="form-group"><label for="evDate">Date *</label><input type="date" id="evDate" required></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label for="evType">Category *</label>
+            <select id="evType" required>
+              <option value="camp">Camp</option>
+              <option value="service">Service</option>
+              <option value="social">Social</option>
+              <option value="study">Bible Study</option>
+            </select>
+          </div>
+          <div class="form-group"><label for="evTime">Time</label><input type="text" id="evTime" placeholder="e.g. 8:00 AM"></div>
+        </div>
+        <div class="form-group"><label for="evLocation">Location</label><input type="text" id="evLocation" placeholder="e.g. Church Sanctuary"></div>
+        <div class="form-group"><label for="evDescription">Description</label><textarea id="evDescription" rows="3" placeholder="What's happening at this event?"></textarea></div>
+        <p class="form-error" id="eventError" style="color:#dc2626; font-size:0.82rem; min-height:1.2em;"></p>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost-dark" id="cancelEvent">Cancel</button>
+          <button type="submit" class="btn btn-gold" id="eventSaveBtn">Save Event</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- ==================== FOOTER ==================== -->
   <footer class="footer">

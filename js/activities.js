@@ -1,13 +1,15 @@
 // ============================================
 // ACTIVITIES.JS – Activities page logic
 // SDA Embakasi Central – Ambassadors Club
+// Admin detected via shared-auth.js (globalThis.isAdmin)
 // ============================================
 
 // =====================================================
-// FALLBACK EVENT DATA
+// FALLBACK EVENT DATA (used only if Supabase has no rows)
 // =====================================================
 const fallbackEventsData = [
   {
+    id: 'fallback-1',
     date: '2026-06-28',
     title: 'Youth Camp Meeting',
     type: 'camp',
@@ -17,6 +19,7 @@ const fallbackEventsData = [
     description: 'Annual weekend retreat. Worship, workshops, team building, and spiritual growth.'
   },
   {
+    id: 'fallback-2',
     date: '2026-07-05',
     title: 'Community Health Outreach',
     type: 'service',
@@ -26,6 +29,7 @@ const fallbackEventsData = [
     description: 'Free health screening and wellness education for the local community.'
   },
   {
+    id: 'fallback-3',
     date: '2026-07-12',
     title: 'Ambassadors Fellowship Night',
     type: 'social',
@@ -35,6 +39,7 @@ const fallbackEventsData = [
     description: 'An evening of music, games, food, and bonding for all club members.'
   },
   {
+    id: 'fallback-4',
     date: '2026-07-19',
     title: 'Sabbath School Rally',
     type: 'study',
@@ -44,6 +49,7 @@ const fallbackEventsData = [
     description: 'Combined Sabbath School program with quiz competitions and presentations.'
   },
   {
+    id: 'fallback-5',
     date: '2026-07-26',
     title: 'Youth Evangelistic Series',
     type: 'study',
@@ -53,6 +59,7 @@ const fallbackEventsData = [
     description: 'Week-long evangelistic meetings targeting youth in the Embakasi area.'
   },
   {
+    id: 'fallback-6',
     date: '2026-08-02',
     title: 'Sports Day & Picnic',
     type: 'social',
@@ -63,7 +70,9 @@ const fallbackEventsData = [
   }
 ];
 
-// Dot colours matching the new design tokens
+const typeLabelMap = { camp: 'Camp', service: 'Service', social: 'Social', study: 'Bible Study' };
+
+// Dot colours matching the design tokens
 const eventTypeColors = {
   camp:    '#1e40af',
   service: '#14532d',
@@ -73,6 +82,7 @@ const eventTypeColors = {
 
 let eventsData = [...fallbackEventsData];
 let _isSupabaseConnected = false;
+let editingEventId = null;
 
 // Calendar state
 let currentMonth = new Date().getMonth();
@@ -97,11 +107,12 @@ async function loadEventsFromSupabase() {
 
     if (data && data.length > 0) {
       eventsData = data.map(e => ({
+        id:        e.id,
         date:      e.event_date,
         title:     e.title,
         type:      e.event_type || 'other',
         typeLabel: e.event_type
-          ? e.event_type.charAt(0).toUpperCase() + e.event_type.slice(1)
+          ? (typeLabelMap[e.event_type] || (e.event_type.charAt(0).toUpperCase() + e.event_type.slice(1)))
           : 'Other',
         time:        e.time        || 'TBD',
         location:    e.location    || 'TBD',
@@ -118,6 +129,15 @@ async function loadEventsFromSupabase() {
 }
 
 // =====================================================
+// ADMIN UI
+// =====================================================
+function applyAdminUI() {
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = globalThis.isAdmin ? '' : 'none';
+  });
+}
+
+// =====================================================
 // CALENDAR RENDERER
 // =====================================================
 function renderCalendar() {
@@ -130,11 +150,9 @@ function renderCalendar() {
   ];
   const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-  // Update title
   const titleEl = document.getElementById('calendarTitle');
   if (titleEl) titleEl.textContent = `${MONTHS[currentMonth]} ${currentYear}`;
 
-  // Day-of-week headers
   let html = DAYS.map(d => `<div class="cal-day-header">${d}</div>`).join('');
 
   const firstDay      = new Date(currentYear, currentMonth, 1).getDay();
@@ -143,12 +161,10 @@ function renderCalendar() {
   const today         = new Date();
   const isCurMonth    = today.getMonth() === currentMonth && today.getFullYear() === currentYear;
 
-  // Previous-month overflow
   for (let i = firstDay - 1; i >= 0; i--) {
     html += `<div class="cal-day other-month">${daysInPrevMo - i}</div>`;
   }
 
-  // Current month days
   for (let day = 1; day <= daysInMonth; day++) {
     const dateStr   = `${currentYear}-${pad(currentMonth + 1)}-${pad(day)}`;
     const dayEvents = eventsData.filter(e => e.date === dateStr);
@@ -166,10 +182,9 @@ function renderCalendar() {
       </div>`;
     }
 
-    html += `<div class="${cls}" data-date="${dateStr}" title="${dayEvents.map(e=>e.title).join(', ')}">${day}${dotsHtml}</div>`;
+    html += `<div class="${cls}" data-date="${dateStr}" title="${esc(dayEvents.map(e=>e.title).join(', '))}">${day}${dotsHtml}</div>`;
   }
 
-  // Next-month overflow (fill to 6 rows = 42 cells)
   const totalCells    = firstDay + daysInMonth;
   const remainingCells = 42 - totalCells;
   for (let day = 1; day <= remainingCells; day++) {
@@ -178,7 +193,6 @@ function renderCalendar() {
 
   grid.innerHTML = html;
 
-  // Click on a day with events → scroll to that event in the timeline
   grid.querySelectorAll('.cal-day.has-event').forEach(cell => {
     cell.addEventListener('click', () => {
       const dateStr = cell.dataset.date;
@@ -216,7 +230,7 @@ function renderEventsTimeline() {
     const month = d.toLocaleDateString('en-US', { month: 'short' });
 
     return `
-      <div class="event-timeline-item reveal-child" data-event-date="${event.date}">
+      <div class="event-timeline-item reveal-child" data-event-date="${event.date}" data-event-id="${esc(event.id)}">
         <div class="et-date">
           <span class="day">${day}</span>
           <span class="month">${month}</span>
@@ -235,13 +249,147 @@ function renderEventsTimeline() {
           </div>
           <p>${esc(event.description)}</p>
           <span class="et-tag ${esc(event.type)}">${esc(event.typeLabel)}</span>
+          ${globalThis.isAdmin ? `
+          <div class="et-admin-actions">
+            <button class="et-action-btn" data-edit-event="${esc(event.id)}">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+            <button class="et-action-btn danger" data-delete-event="${esc(event.id)}">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+              Delete
+            </button>
+          </div>` : ''}
         </div>
       </div>
     `;
   }).join('');
 
-  // Trigger scroll reveal on newly injected items
+  container.querySelectorAll('[data-edit-event]').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); openEventForm(btn.dataset.editEvent); });
+  });
+  container.querySelectorAll('[data-delete-event]').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); deleteEvent(btn.dataset.deleteEvent); });
+  });
+
   initScrollReveal();
+}
+
+// =====================================================
+// ADD / EDIT EVENT MODAL
+// =====================================================
+function openEventForm(eventId = null) {
+  if (!globalThis.isAdmin) return;
+  editingEventId = eventId;
+  const existing = eventId ? eventsData.find(e => String(e.id) === String(eventId)) : null;
+
+  const modalTitle = document.getElementById('eventModalTitle');
+  const saveBtn    = document.getElementById('eventSaveBtn');
+  const errEl      = document.getElementById('eventError');
+
+  errEl.textContent = '';
+  saveBtn.disabled = false;
+
+  if (existing) {
+    modalTitle.textContent = 'Edit Event';
+    saveBtn.textContent = 'Save Changes';
+    document.getElementById('evTitle').value = existing.title;
+    document.getElementById('evDate').value = existing.date;
+    document.getElementById('evType').value = existing.type;
+    document.getElementById('evTime').value = existing.time === 'TBD' ? '' : existing.time;
+    document.getElementById('evLocation').value = existing.location === 'TBD' ? '' : existing.location;
+    document.getElementById('evDescription').value = existing.description || '';
+  } else {
+    modalTitle.textContent = 'Add Event';
+    saveBtn.textContent = 'Save Event';
+    document.getElementById('eventForm').reset();
+  }
+
+  document.getElementById('eventModal')?.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEventForm() {
+  document.getElementById('eventModal')?.classList.remove('active');
+  document.body.style.overflow = '';
+  document.getElementById('eventForm')?.reset();
+  document.getElementById('eventError').textContent = '';
+  editingEventId = null;
+}
+
+async function saveEvent(e) {
+  e.preventDefault();
+  const title = document.getElementById('evTitle').value.trim();
+  const date = document.getElementById('evDate').value;
+  const type = document.getElementById('evType').value;
+  const time = document.getElementById('evTime').value.trim() || 'TBD';
+  const location = document.getElementById('evLocation').value.trim() || 'TBD';
+  const description = document.getElementById('evDescription').value.trim();
+  const errEl = document.getElementById('eventError');
+  const saveBtn = document.getElementById('eventSaveBtn');
+  const isEdit = !!editingEventId;
+
+  if (!title || !date || !type) { errEl.textContent = 'Please fill in all required fields.'; return; }
+
+  errEl.textContent = '';
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving…';
+
+  try {
+    const typeLabel = typeLabelMap[type] || type;
+
+    if (typeof supabaseClient !== 'undefined') {
+      if (isEdit && !String(editingEventId).startsWith('fallback-') && !String(editingEventId).startsWith('local-')) {
+        const { data: updated, error } = await supabaseClient.from('events')
+          .update({ title, event_date: date, event_type: type, time, location, description })
+          .eq('id', editingEventId)
+          .select('id');
+        if (error) throw error;
+        if (!updated || !updated.length) throw new Error('No event was updated — check permissions.');
+      } else {
+        const { error } = await supabaseClient.from('events')
+          .insert([{ title, event_date: date, event_type: type, time, location, description }]);
+        if (error) throw error;
+      }
+      await loadEventsFromSupabase();
+    } else {
+      if (isEdit) {
+        const idx = eventsData.findIndex(ev => String(ev.id) === String(editingEventId));
+        if (idx !== -1) eventsData[idx] = { ...eventsData[idx], title, date, type, typeLabel, time, location, description };
+      } else {
+        eventsData.push({ id: 'local-' + Date.now(), title, date, type, typeLabel, time, location, description });
+      }
+    }
+
+    closeEventForm();
+    renderCalendar();
+    renderEventsTimeline();
+  } catch (err) {
+    console.error('Save event failed:', err);
+    errEl.textContent = err.message || 'Failed to save event.';
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = isEdit ? 'Save Changes' : 'Save Event';
+  }
+}
+
+async function deleteEvent(id) {
+  if (!globalThis.isAdmin) return;
+  if (!confirm('Delete this event? This cannot be undone.')) return;
+  try {
+    if (typeof supabaseClient !== 'undefined' && !String(id).startsWith('fallback-') && !String(id).startsWith('local-')) {
+      const { error } = await supabaseClient.from('events').delete().eq('id', id);
+      if (error) throw error;
+      await loadEventsFromSupabase();
+    } else {
+      eventsData = eventsData.filter(e => String(e.id) !== String(id));
+    }
+    renderCalendar();
+    renderEventsTimeline();
+  } catch (err) {
+    console.error('Delete event failed:', err);
+    alert('Failed to delete: ' + err.message);
+  }
 }
 
 // =====================================================
@@ -255,7 +403,7 @@ function initScrollReveal() {
     el.style.opacity   = '0';
     el.style.transform = 'translateY(24px)';
     el.style.transition = 'opacity 0.55s ease, transform 0.55s ease';
-    el.classList.add('revealed'); // prevent double-init
+    el.classList.add('revealed');
   });
 
   const io = new IntersectionObserver((entries) => {
@@ -288,7 +436,7 @@ document.head.appendChild(styleTag);
 // =====================================================
 function pad(n)   { return String(n).padStart(2, '0'); }
 function esc(str) {
-  return String(str)
+  return String(str ?? '')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -296,14 +444,17 @@ function esc(str) {
 // =====================================================
 // INIT
 // =====================================================
-document.addEventListener('DOMContentLoaded', async () => {
+async function initActivities() {
+  if (globalThis.__activitiesInited) return;
+  globalThis.__activitiesInited = true;
+
   await loadEventsFromSupabase();
 
   renderCalendar();
   renderEventsTimeline();
   initScrollReveal();
+  applyAdminUI();
 
-  // Month navigation
   document.getElementById('prevMonth')?.addEventListener('click', () => {
     currentMonth--;
     if (currentMonth < 0) { currentMonth = 11; currentYear--; }
@@ -315,4 +466,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (currentMonth > 11) { currentMonth = 0; currentYear++; }
     renderCalendar();
   });
-});
+
+  document.getElementById('addEventBtn')?.addEventListener('click', () => openEventForm());
+  document.getElementById('eventModalClose')?.addEventListener('click', closeEventForm);
+  document.getElementById('cancelEvent')?.addEventListener('click', closeEventForm);
+  document.getElementById('eventForm')?.addEventListener('submit', saveEvent);
+  document.getElementById('eventModal')?.addEventListener('click', e => {
+    if (e.target.classList.contains('modal-overlay')) closeEventForm();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEventForm(); });
+}
+
+document.addEventListener('DOMContentLoaded', initActivities);
+document.addEventListener('adminReady', initActivities);
