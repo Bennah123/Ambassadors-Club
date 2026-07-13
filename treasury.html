@@ -85,6 +85,11 @@
 
   <!-- CATEGORY TABS -->
   <div class="category-tabs-section">
+    <div class="admin-toolbar">
+      <button id="adminToggleBtn" class="admin-only" style="display:none;">🔓 Admin Mode</button>
+      <button class="btn btn-gold admin-only" id="addContributionBtn" style="display:none;">＋ Add Contribution</button>
+      <button class="btn btn-ghost-dark admin-only" id="addCategoryBtn" style="display:none;">＋ Add Category</button>
+    </div>
     <div class="category-tabs" id="categoryTabs">
       <button class="cat-tab active" data-cat="all">All Categories</button>
     </div>
@@ -119,7 +124,7 @@
             <th>Method</th>
             <th>Status</th>
             <th class="text-right">Amount (KES)</th>
-            <th></th>
+            <th class="admin-only" id="deleteColHeader" style="display:none;"></th>
           </tr>
         </thead>
         <tbody id="contribTableBody"><tr><td colspan="7" class="empty-state">Loading contributions…</td></tr></tbody>
@@ -203,22 +208,6 @@
           <button type="submit" class="btn btn-gold">Create Category</button>
         </div>
       </form>
-    </div>
-  </div>
-
-  <!-- MODAL: Admin PIN -->
-  <div class="modal" id="adminPinModal">
-    <div class="modal-overlay"></div>
-    <div class="modal-content modal-sm">
-      <div class="modal-header"><h3>Admin Access</h3><p>Enter your PIN to unlock admin features</p></div>
-      <div class="modal-body">
-        <input type="password" id="adminPinInput" class="pin-input" maxlength="8" placeholder="••••" autocomplete="off" inputmode="numeric">
-        <p class="pin-error" id="pinError"></p>
-        <div class="form-actions" style="padding-top:0;border-top:none;">
-          <button class="btn btn-ghost-dark" id="pinCancelBtn">Cancel</button>
-          <button class="btn btn-gold" id="pinSubmitBtn">Unlock</button>
-        </div>
-      </div>
     </div>
   </div>
 
