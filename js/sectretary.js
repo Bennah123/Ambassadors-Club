@@ -1,11 +1,10 @@
 // ============================================================
 //  SECRETARY.JS — SDA Ambassadors Club
-//  Meeting minutes with Supabase backend
+//  Admin via shared-auth.js (window.isAdmin)
 // ============================================================
 
-const ADMIN_PIN = '0000';
-let isAdmin     = false;
-let allMinutes  = [];
+const ADMIN_PIN = '0000'; // kept for fallback but primary auth is role-based
+let allMinutes   = [];
 let activeFilter = 'all';
 
 const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -16,145 +15,108 @@ function toast(msg, type='info') {
   t.textContent = msg;
   document.body.appendChild(t);
   requestAnimationFrame(() => t.classList.add('toast-visible'));
-  setTimeout(() => { t.classList.remove('toast-visible'); setTimeout(() => t.remove(), 350); }, 3000);
+  setTimeout(() => { t.classList.remove('toast-visible'); setTimeout(()=>t.remove(),350); }, 3000);
 }
 
-// ============================================================
-//  SUPABASE
-// ============================================================
 async function loadMinutes() {
-  if (typeof supabaseClient === 'undefined') { renderMinutes([]); return; }
+  if (typeof supabaseClient === 'undefined') { renderMinutes(); return; }
   try {
-    const { data, error } = await supabaseClient
-      .from('meeting_minutes')
-      .select('*')
-      .order('date', { ascending: false });
+    const { data, error } = await supabaseClient.from('meeting_minutes')
+      .select('*').order('date', { ascending: false });
     if (error) throw error;
     allMinutes = data || [];
-  } catch(e) {
-    console.warn('Minutes load failed:', e.message);
-    allMinutes = [];
-  }
-  renderMinutes(allMinutes);
+  } catch(e) { console.warn('Minutes load failed:', e.message); allMinutes = []; }
+  renderMinutes();
   updateStats();
 }
 
 async function loadOfficers() {
   const list = document.getElementById('officerList');
-  if (typeof supabaseClient === 'undefined') { list.innerHTML = '<p style="font-size:.82rem;color:var(--text-3);">Connect Supabase to load officers.</p>'; return; }
+  if (!list) return;
+  if (typeof supabaseClient === 'undefined') { list.innerHTML='<p style="font-size:.82rem;color:var(--text-3);">Connect Supabase to load officers.</p>'; return; }
   try {
-    const { data } = await supabaseClient
-      .from('members')
-      .select('first_name, last_name, role, avatar_url')
-      .in('role', ['President','Vice President','Secretary','Treasurer','Chaplain'])
-      .order('role');
-    if (!data || !data.length) { list.innerHTML = '<p style="font-size:.82rem;color:var(--text-3);">No officers found.</p>'; return; }
+    const { data } = await supabaseClient.from('members').select('first_name,last_name,role,avatar_url')
+      .in('role',['President','Vice President','Secretary','Treasurer','Chaplain']).order('role');
+    if (!data||!data.length) { list.innerHTML='<p style="font-size:.82rem;color:var(--text-3);">No officers found.</p>'; return; }
     list.innerHTML = data.map(m => {
-      const initials = ((m.first_name||'')[0]||('')+((m.last_name||'')[0]||'')).toUpperCase();
-      const avatar   = m.avatar_url
-        ? `<img src="${esc(m.avatar_url)}" alt="${esc(m.first_name)}">`
-        : initials;
-      return `<div class="officer-row">
-        <div class="officer-avatar">${avatar}</div>
-        <div>
-          <div class="officer-name">${esc(m.first_name)} ${esc(m.last_name)}</div>
-          <div class="officer-role">${esc(m.role)}</div>
-        </div>
-      </div>`;
+      const initials=((m.first_name||'')[0]||'')+((m.last_name||'')[0]||'');
+      const avatar=m.avatar_url?`<img src="${esc(m.avatar_url)}" alt="${esc(m.first_name)}">`:initials.toUpperCase();
+      return `<div class="officer-row"><div class="officer-avatar">${avatar}</div><div><div class="officer-name">${esc(m.first_name)} ${esc(m.last_name)}</div><div class="officer-role">${esc(m.role)}</div></div></div>`;
     }).join('');
-  } catch(e) {
-    list.innerHTML = '<p style="font-size:.82rem;color:var(--text-3);">Could not load officers.</p>';
-  }
+  } catch(e) { list.innerHTML='<p style="font-size:.82rem;color:var(--text-3);">Could not load officers.</p>'; }
 }
 
-// ============================================================
-//  RENDER
-// ============================================================
 function getFiltered() {
-  const q = (document.getElementById('minutesSearch')?.value || '').toLowerCase();
+  const q = (document.getElementById('minutesSearch')?.value||'').toLowerCase();
   return allMinutes.filter(m => {
-    const matchFilter = activeFilter === 'all' || m.type === activeFilter;
+    const matchFilter = activeFilter==='all' || m.type===activeFilter;
     const matchSearch = !q || m.title?.toLowerCase().includes(q) || m.type?.toLowerCase().includes(q)
       || m.recorded_by?.toLowerCase().includes(q) || (m.date||'').includes(q);
     return matchFilter && matchSearch;
   });
 }
 
-function renderMinutes(list) {
+function renderMinutes() {
   const container = document.getElementById('minutesList');
   const noRes     = document.getElementById('noResults');
   const filtered  = getFiltered();
 
+  // Update admin bar visibility
+  const adminBar = document.getElementById('adminBar');
+  if (adminBar) adminBar.style.display = window.isAdmin ? 'flex' : 'none';
+
   if (!filtered.length) {
-    container.innerHTML = '';
-    noRes.style.display = 'block';
+    container.innerHTML='';
+    if (noRes) noRes.style.display='block';
     return;
   }
-  noRes.style.display = 'none';
-
+  if (noRes) noRes.style.display='none';
   container.innerHTML = filtered.map(m => buildCard(m)).join('');
 
-  // Expand/collapse
   container.querySelectorAll('.minute-card-header').forEach(hdr => {
-    hdr.addEventListener('click', () => {
-      hdr.closest('.minute-card').classList.toggle('expanded');
-    });
+    hdr.addEventListener('click', () => hdr.closest('.minute-card').classList.toggle('expanded'));
   });
 
-  // Action checkboxes (admin only)
-  if (isAdmin) {
+  if (window.isAdmin) {
     container.querySelectorAll('.action-checkbox').forEach(cb => {
       cb.addEventListener('click', e => {
         e.stopPropagation();
-        const row = cb.closest('.action-item');
+        const row=cb.closest('.action-item');
         row.classList.toggle('done');
-        const minuteId = parseInt(cb.dataset.minuteId);
-        const idx      = parseInt(cb.dataset.idx);
-        toggleActionDone(minuteId, idx, row.classList.contains('done'));
+        toggleActionDone(parseInt(cb.dataset.minuteId), parseInt(cb.dataset.idx), row.classList.contains('done'));
       });
     });
   }
 }
 
 function buildCard(m) {
-  const d         = m.date ? new Date(m.date) : null;
-  const day       = d ? d.getDate() : '--';
-  const mon       = d ? d.toLocaleDateString('en-GB',{month:'short',year:'numeric'}) : '';
-  const typeClass = { general:'type-general', special:'type-special', agm:'type-agm', emergency:'type-emergency' }[m.type] || 'type-general';
-  const typeLabel = (m.type||'General').toUpperCase();
-  const attendees = (m.attendees||[]).map(a => `<span class="attendee-chip">${esc(a)}</span>`).join('');
-  const actions   = (m.action_items||[]).map((a,i) => `
+  const d=m.date?new Date(m.date):null;
+  const day=d?d.getDate():'--';
+  const mon=d?d.toLocaleDateString('en-GB',{month:'short',year:'numeric'}):'';
+  const typeClass={general:'type-general',special:'type-special',agm:'type-agm',emergency:'type-emergency'}[m.type]||'type-general';
+  const attendees=(m.attendees||[]).map(a=>`<span class="attendee-chip">${esc(a)}</span>`).join('');
+  const actions=(m.action_items||[]).map((a,i)=>`
     <div class="action-item ${a.done?'done':''}">
-      <div class="action-checkbox ${isAdmin?'':''}${a.done?' done':''}"
-           data-minute-id="${m.id}" data-idx="${i}"
-           ${!isAdmin?'style="pointer-events:none;"':''}>
+      <div class="action-checkbox" data-minute-id="${m.id}" data-idx="${i}" ${!window.isAdmin?'style="pointer-events:none;"':''}>
         ${a.done?'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}
       </div>
       <span>${esc(a.text)}</span>
       ${a.assignee?`<span class="action-assignee">${esc(a.assignee)}</span>`:''}
     </div>`).join('');
-
-  const adminBtns = isAdmin ? `
-    <div class="admin-card-actions">
-      <button class="admin-card-btn" onclick="openEdit(event,${m.id})" title="Edit">✏️</button>
-      <button class="admin-card-btn" onclick="deleteMinute(event,${m.id})" title="Delete">🗑️</button>
-    </div>` : '';
-
+  const adminBtns=window.isAdmin?`<div class="admin-card-actions">
+    <button class="admin-card-btn" onclick="openEdit(event,${m.id})">✏️</button>
+    <button class="admin-card-btn" onclick="deleteMinute(event,${m.id})">🗑️</button>
+  </div>`:'';
   return `
     <div class="minute-card" data-id="${m.id}">
       ${adminBtns}
       <div class="minute-card-header">
-        <div class="minute-date-block">
-          <span class="minute-date-day">${day}</span>
-          <span class="minute-date-mon">${mon}</span>
-        </div>
+        <div class="minute-date-block"><span class="minute-date-day">${day}</span><span class="minute-date-mon">${mon}</span></div>
         <div class="minute-meta">
           <div class="minute-title">${esc(m.title)}</div>
           <div class="minute-sub">${m.venue?esc(m.venue)+' · ':''}Chaired by ${esc(m.chaired_by||'—')}</div>
         </div>
-        <div class="minute-badges">
-          <span class="minute-type-badge ${typeClass}">${typeLabel}</span>
-        </div>
+        <div class="minute-badges"><span class="minute-type-badge ${typeClass}">${(m.type||'general').toUpperCase()}</span></div>
         <svg class="minute-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
       </div>
       <div class="minute-body">
@@ -165,150 +127,121 @@ function buildCard(m) {
         ${attendees?`<div class="minute-section"><div class="minute-section-title">Attendance (${(m.attendees||[]).length})</div><div class="minute-attendance">${attendees}</div></div>`:''}
         <div class="minute-footer-row">
           <span class="minute-recorded-by">Recorded by: ${esc(m.recorded_by||'—')}</span>
-          ${m.next_meeting_date?`<span class="minute-recorded-by">Next meeting: ${new Date(m.next_meeting_date).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</span>`:''}
+          ${m.next_meeting_date?`<span class="minute-recorded-by">Next: ${new Date(m.next_meeting_date).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</span>`:''}
         </div>
       </div>
     </div>`;
 }
 
 function updateStats() {
-  const year = new Date().getFullYear();
+  const year=new Date().getFullYear();
   document.getElementById('statTotal').textContent   = allMinutes.length;
-  document.getElementById('statYear').textContent    = allMinutes.filter(m => (m.date||'').startsWith(year)).length;
-  const actions = allMinutes.flatMap(m => m.action_items||[]);
-  document.getElementById('statPending').textContent = actions.filter(a => !a.done).length;
-  document.getElementById('statDone').textContent    = actions.filter(a =>  a.done).length;
+  document.getElementById('statYear').textContent    = allMinutes.filter(m=>(m.date||'').startsWith(year)).length;
+  const actions=allMinutes.flatMap(m=>m.action_items||[]);
+  document.getElementById('statPending').textContent = actions.filter(a=>!a.done).length;
+  document.getElementById('statDone').textContent    = actions.filter(a=>a.done).length;
 }
 
-// ============================================================
-//  ADMIN — SAVE / EDIT / DELETE
-// ============================================================
-let editingId = null;
+let editingId=null;
 
 function openAdd() {
-  editingId = null;
-  document.getElementById('minutesModalTitle').textContent = 'New Meeting Minutes';
-  document.getElementById('fMinuteId').value = '';
-  ['fTitle','fVenue','fChair','fAttendees','fAgenda','fMinutes','fAob','fRecordedBy'].forEach(id => {
-    document.getElementById(id).value = '';
-  });
-  document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
-  document.getElementById('fNextDate').value = '';
-  document.getElementById('fType').value = 'general';
-  document.getElementById('actionItemsForm').innerHTML = '';
-  document.getElementById('minutesFormError').textContent = '';
+  editingId=null;
+  document.getElementById('minutesModalTitle').textContent='New Meeting Minutes';
+  ['fTitle','fVenue','fChair','fAttendees','fAgenda','fMinutes','fAob','fRecordedBy'].forEach(id=>{ document.getElementById(id).value=''; });
+  document.getElementById('fDate').value=new Date().toISOString().split('T')[0];
+  document.getElementById('fNextDate').value='';
+  document.getElementById('fType').value='general';
+  document.getElementById('actionItemsForm').innerHTML='';
+  document.getElementById('minutesFormError').textContent='';
   openModal('minutesModal');
 }
 
-function openEdit(e, id) {
+function openEdit(e,id) {
   e.stopPropagation();
-  const m = allMinutes.find(x => x.id === id);
-  if (!m) return;
-  editingId = id;
-  document.getElementById('minutesModalTitle').textContent = 'Edit Minutes';
-  document.getElementById('fMinuteId').value   = id;
-  document.getElementById('fTitle').value      = m.title || '';
-  document.getElementById('fDate').value       = m.date  || '';
-  document.getElementById('fType').value       = m.type  || 'general';
-  document.getElementById('fVenue').value      = m.venue || '';
-  document.getElementById('fChair').value      = m.chaired_by   || '';
+  const m=allMinutes.find(x=>x.id===id); if(!m) return;
+  editingId=id;
+  document.getElementById('minutesModalTitle').textContent='Edit Minutes';
+  document.getElementById('fTitle').value      = m.title||'';
+  document.getElementById('fDate').value       = m.date||'';
+  document.getElementById('fType').value       = m.type||'general';
+  document.getElementById('fVenue').value      = m.venue||'';
+  document.getElementById('fChair').value      = m.chaired_by||'';
   document.getElementById('fAttendees').value  = (m.attendees||[]).join(', ');
-  document.getElementById('fAgenda').value     = m.agenda  || '';
-  document.getElementById('fMinutes').value    = m.minutes || '';
-  document.getElementById('fAob').value        = m.aob     || '';
-  document.getElementById('fRecordedBy').value = m.recorded_by  || '';
-  document.getElementById('fNextDate').value   = m.next_meeting_date || '';
-  // Action items
-  const form = document.getElementById('actionItemsForm');
-  form.innerHTML = '';
-  (m.action_items||[]).forEach(a => addActionRow(a.text, a.assignee));
-  document.getElementById('minutesFormError').textContent = '';
+  document.getElementById('fAgenda').value     = m.agenda||'';
+  document.getElementById('fMinutes').value    = m.minutes||'';
+  document.getElementById('fAob').value        = m.aob||'';
+  document.getElementById('fRecordedBy').value = m.recorded_by||'';
+  document.getElementById('fNextDate').value   = m.next_meeting_date||'';
+  const form=document.getElementById('actionItemsForm'); form.innerHTML='';
+  (m.action_items||[]).forEach(a=>addActionRow(a.text,a.assignee));
+  document.getElementById('minutesFormError').textContent='';
   openModal('minutesModal');
 }
 
 async function saveMinutes() {
-  const title = document.getElementById('fTitle').value.trim();
-  const date  = document.getElementById('fDate').value;
-  if (!title || !date) { document.getElementById('minutesFormError').textContent = 'Title and date are required.'; return; }
-
-  const attendees    = document.getElementById('fAttendees').value.split(',').map(s=>s.trim()).filter(Boolean);
-  const actionRows   = document.querySelectorAll('.action-item-row');
-  const action_items = [];
-  actionRows.forEach(row => {
-    const text     = row.querySelector('.ai-text')?.value.trim();
-    const assignee = row.querySelector('.ai-assign')?.value.trim();
-    if (text) action_items.push({ text, assignee: assignee||'', done: false });
+  const title=document.getElementById('fTitle').value.trim();
+  const date=document.getElementById('fDate').value;
+  if (!title||!date){document.getElementById('minutesFormError').textContent='Title and date required.';return;}
+  const attendees=document.getElementById('fAttendees').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const action_items=[];
+  document.querySelectorAll('.action-item-row').forEach(row=>{
+    const text=row.querySelector('.ai-text')?.value.trim();
+    const assignee=row.querySelector('.ai-assign')?.value.trim();
+    if(text) action_items.push({text,assignee:assignee||'',done:false});
   });
-
-  const payload = {
-    title, date,
-    type:              document.getElementById('fType').value,
-    venue:             document.getElementById('fVenue').value.trim(),
-    chaired_by:        document.getElementById('fChair').value.trim(),
-    attendees,
-    agenda:            document.getElementById('fAgenda').value.trim(),
-    minutes:           document.getElementById('fMinutes').value.trim(),
-    aob:               document.getElementById('fAob').value.trim(),
-    recorded_by:       document.getElementById('fRecordedBy').value.trim(),
-    next_meeting_date: document.getElementById('fNextDate').value || null,
-    action_items,
+  const payload={
+    title, date, type:document.getElementById('fType').value,
+    venue:document.getElementById('fVenue').value.trim(),
+    chaired_by:document.getElementById('fChair').value.trim(),
+    attendees, agenda:document.getElementById('fAgenda').value.trim(),
+    minutes:document.getElementById('fMinutes').value.trim(),
+    aob:document.getElementById('fAob').value.trim(),
+    recorded_by:document.getElementById('fRecordedBy').value.trim(),
+    next_meeting_date:document.getElementById('fNextDate').value||null,
+    action_items
   };
-
-  const btn = document.getElementById('minutesFormSave');
-  btn.disabled = true; btn.textContent = 'Saving…';
-
+  const btn=document.getElementById('minutesFormSave');
+  btn.disabled=true; btn.textContent='Saving…';
   try {
     if (editingId) {
-      const { error } = await supabaseClient.from('meeting_minutes').update(payload).eq('id', editingId);
-      if (error) throw error;
-      const idx = allMinutes.findIndex(m => m.id === editingId);
-      if (idx > -1) allMinutes[idx] = { ...allMinutes[idx], ...payload };
-      toast('Minutes updated ✓', 'success');
+      const {error}=await supabaseClient.from('meeting_minutes').update(payload).eq('id',editingId);
+      if(error) throw error;
+      const idx=allMinutes.findIndex(m=>m.id===editingId);
+      if(idx>-1) allMinutes[idx]={...allMinutes[idx],...payload};
+      toast('Minutes updated ✓','success');
     } else {
-      const { data, error } = await supabaseClient.from('meeting_minutes').insert([payload]).select().single();
-      if (error) throw error;
+      const {data,error}=await supabaseClient.from('meeting_minutes').insert([payload]).select().single();
+      if(error) throw error;
       allMinutes.unshift(data);
-      toast('Minutes saved ✓', 'success');
+      toast('Minutes saved ✓','success');
     }
-    closeModal('minutesModal');
-    renderMinutes(allMinutes);
-    updateStats();
+    closeModal('minutesModal'); renderMinutes(); updateStats();
   } catch(err) {
-    document.getElementById('minutesFormError').textContent = err.message;
-  } finally {
-    btn.disabled = false; btn.textContent = 'Save Minutes';
-  }
+    document.getElementById('minutesFormError').textContent=err.message;
+  } finally { btn.disabled=false; btn.textContent='Save Minutes'; }
 }
 
-async function deleteMinute(e, id) {
+async function deleteMinute(e,id) {
   e.stopPropagation();
-  if (!confirm('Delete these minutes? This cannot be undone.')) return;
+  if(!confirm('Delete these minutes?')) return;
   try {
-    const { error } = await supabaseClient.from('meeting_minutes').delete().eq('id', id);
-    if (error) throw error;
-    allMinutes = allMinutes.filter(m => m.id !== id);
-    renderMinutes(allMinutes);
-    updateStats();
-    toast('Deleted', 'info');
-  } catch(err) { toast(err.message, 'error'); }
+    const {error}=await supabaseClient.from('meeting_minutes').delete().eq('id',id);
+    if(error) throw error;
+    allMinutes=allMinutes.filter(m=>m.id!==id);
+    renderMinutes(); updateStats(); toast('Deleted','info');
+  } catch(err) { toast(err.message,'error'); }
 }
 
-async function toggleActionDone(minuteId, idx, done) {
-  const m = allMinutes.find(x => x.id === minuteId);
-  if (!m) return;
-  m.action_items[idx].done = done;
-  try {
-    await supabaseClient.from('meeting_minutes').update({ action_items: m.action_items }).eq('id', minuteId);
-    updateStats();
-  } catch(e) { console.warn(e); }
+async function toggleActionDone(minuteId,idx,done) {
+  const m=allMinutes.find(x=>x.id===minuteId); if(!m) return;
+  m.action_items[idx].done=done;
+  try { await supabaseClient.from('meeting_minutes').update({action_items:m.action_items}).eq('id',minuteId); updateStats(); } catch(e){}
 }
 
-// Action item rows in form
-function addActionRow(text='', assignee='') {
-  const form = document.getElementById('actionItemsForm');
-  const row  = document.createElement('div');
-  row.className = 'action-item-row';
-  row.innerHTML = `
+function addActionRow(text='',assignee='') {
+  const form=document.getElementById('actionItemsForm');
+  const row=document.createElement('div'); row.className='action-item-row';
+  row.innerHTML=`
     <input class="ai-text" type="text" placeholder="Action item…" value="${esc(text)}"
       style="padding:.6rem .875rem;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:.88rem;background:var(--cream);outline:none;flex:1;">
     <input class="ai-assign" type="text" placeholder="Assignee" value="${esc(assignee)}"
@@ -319,110 +252,52 @@ function addActionRow(text='', assignee='') {
   form.appendChild(row);
 }
 
-// ============================================================
-//  EXPORT CSV
-// ============================================================
 function exportCSV() {
-  const rows = [['Title','Date','Type','Venue','Chaired By','Attendees','Recorded By','Next Meeting']];
-  allMinutes.forEach(m => rows.push([
-    m.title, m.date, m.type, m.venue||'', m.chaired_by||'',
-    (m.attendees||[]).join('; '), m.recorded_by||'', m.next_meeting_date||''
-  ]));
-  const csv  = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a    = document.createElement('a');
-  a.href     = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = `minutes_${new Date().toISOString().split('T')[0]}.csv`;
+  const rows=[['Title','Date','Type','Venue','Chaired By','Attendees','Recorded By','Next Meeting']];
+  allMinutes.forEach(m=>rows.push([m.title,m.date,m.type,m.venue||'',m.chaired_by||'',(m.attendees||[]).join('; '),m.recorded_by||'',m.next_meeting_date||'']));
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`minutes_${new Date().toISOString().split('T')[0]}.csv`;
   a.click();
 }
 
-// ============================================================
-//  PIN / ADMIN
-// ============================================================
-function openPinModal() {
-  document.getElementById('pinInput').value = '';
-  document.getElementById('pinError').textContent = '';
-  openModal('pinModal');
-  setTimeout(() => document.getElementById('pinInput')?.focus(), 60);
-}
+function openModal(id){document.getElementById(id).classList.add('active');document.body.style.overflow='hidden';}
+function closeModal(id){document.getElementById(id).classList.remove('active');document.body.style.overflow='';}
 
-function attemptPin() {
-  if (document.getElementById('pinInput').value.trim() === ADMIN_PIN) {
-    isAdmin = true;
-    sessionStorage.setItem('sec_admin','1');
-    closeModal('pinModal');
-    document.getElementById('adminBar').style.display = 'flex';
-    renderMinutes(allMinutes);
-    toast('Admin mode enabled ✓', 'success');
-  } else {
-    document.getElementById('pinError').textContent = 'Incorrect PIN.';
-    document.getElementById('pinInput').value = '';
-    document.getElementById('pinInput').focus();
-  }
-}
-
-function adminLogout() {
-  isAdmin = false;
-  sessionStorage.removeItem('sec_admin');
-  document.getElementById('adminBar').style.display = 'none';
-  renderMinutes(allMinutes);
-  toast('Logged out');
-}
-
-// ============================================================
-//  MODAL HELPERS
-// ============================================================
-function openModal(id) { document.getElementById(id).classList.add('active'); document.body.style.overflow='hidden'; }
-function closeModal(id) { document.getElementById(id).classList.remove('active'); document.body.style.overflow=''; }
-
-// ============================================================
-//  INIT
-// ============================================================
-document.addEventListener('DOMContentLoaded', async () => {
-  document.querySelectorAll('.current-year').forEach(el => el.textContent = new Date().getFullYear());
-
-  if (sessionStorage.getItem('sec_admin') === '1') {
-    isAdmin = true;
-    document.getElementById('adminBar').style.display = 'flex';
-  }
+async function initSecretary() {
+  document.querySelectorAll('.current-year').forEach(el=>el.textContent=new Date().getFullYear());
 
   await loadMinutes();
   await loadOfficers();
 
-  // Search
-  document.getElementById('minutesSearch')?.addEventListener('input', () => renderMinutes(allMinutes));
+  // Admin bar — show/hide based on role
+  const adminBar=document.getElementById('adminBar');
+  if (adminBar) adminBar.style.display=window.isAdmin?'flex':'none';
 
-  // Filter chips
-  document.getElementById('filterChips')?.addEventListener('click', e => {
-    const chip = e.target.closest('.filter-chip');
-    if (!chip) return;
-    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    activeFilter = chip.dataset.filter;
-    renderMinutes(allMinutes);
-  });
+  // Replace admin login button with sign-in redirect
+  const loginBtn=document.getElementById('adminLoginBtn');
+  if (loginBtn) {
+    if (window.isAdmin) { loginBtn.style.display='none'; }
+    else { loginBtn.addEventListener('click',()=>window.location.href='auth.html'); }
+  }
 
-  // Admin bar
   document.getElementById('adminAddBtn')?.addEventListener('click', openAdd);
-  document.getElementById('adminLogoutBtn')?.addEventListener('click', adminLogout);
-  document.getElementById('adminLoginBtn')?.addEventListener('click', openPinModal);
-
-  // Minutes modal
-  document.getElementById('minutesModalClose')?.addEventListener('click', () => closeModal('minutesModal'));
-  document.getElementById('minutesFormCancel')?.addEventListener('click', () => closeModal('minutesModal'));
-  document.getElementById('minutesFormSave')?.addEventListener('click', saveMinutes);
-  document.getElementById('addActionBtn')?.addEventListener('click', () => addActionRow());
-
-  // PIN modal
-  document.getElementById('pinClose')?.addEventListener('click', () => closeModal('pinModal'));
-  document.getElementById('pinOverlay')?.addEventListener('click', () => closeModal('pinModal'));
-  document.getElementById('pinSubmit')?.addEventListener('click', attemptPin);
-  document.getElementById('pinInput')?.addEventListener('keydown', e => { if(e.key==='Enter') attemptPin(); });
-
-  // Export
-  document.getElementById('exportBtn')?.addEventListener('click', exportCSV);
-
-  // Keyboard close
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeModal('minutesModal'); closeModal('pinModal'); }
+  document.getElementById('adminLogoutBtn')?.addEventListener('click', async()=>{
+    await supabaseClient.auth.signOut(); window.location.href='auth.html';
   });
-});
+  document.getElementById('minutesSearch')?.addEventListener('input', ()=>renderMinutes());
+  document.getElementById('filterChips')?.addEventListener('click', e=>{
+    const chip=e.target.closest('.filter-chip'); if(!chip) return;
+    document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active'); activeFilter=chip.dataset.filter; renderMinutes();
+  });
+  document.getElementById('minutesModalClose')?.addEventListener('click',()=>closeModal('minutesModal'));
+  document.getElementById('minutesFormCancel')?.addEventListener('click',()=>closeModal('minutesModal'));
+  document.getElementById('minutesFormSave')?.addEventListener('click',saveMinutes);
+  document.getElementById('addActionBtn')?.addEventListener('click',()=>addActionRow());
+  document.getElementById('exportBtn')?.addEventListener('click',exportCSV);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal('minutesModal');});
+}
+
+document.addEventListener('adminReady', initSecretary);

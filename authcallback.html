@@ -20,6 +20,8 @@
     <p>Completing sign-in…</p>
   </div>
   <script src="js/supabase-config.js"></script>
+  <script src="js/shared-auth.js"></script>
+  <script src="js/newsletter-widget.js"></script>
   <script>
     supabaseClient.auth.onAuthStateChange(async (event, session) => {
       if (!session) return;
