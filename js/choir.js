@@ -80,14 +80,14 @@ function renderPanel(voice) {
       ? `<div class="vp-avatar"><img src="${escHtml(m.avatarUrl)}" alt="${escHtml(m.firstName)}" loading="lazy" onerror="this.parentElement.innerHTML='${escHtml(initials)}'"></div>`
       : `<div class="vp-avatar">${escHtml(initials)}</div>`;
     return `
-      <div class="vp-member-row" data-id="${m.id}">
+      <div class="vp-member-row" data-id="${escHtml(m.id)}">
         ${avatarHtml}
         <div style="flex:1;min-width:0;">
           <div class="vp-name">${escHtml(m.firstName)} ${escHtml(m.lastName)}</div>
           <div class="vp-role">${escHtml(m.role||'Member')}</div>
         </div>
         ${isLeader?'<div class="section-leader-dot" title="Section Leader"></div>':''}
-        ${window.isAdmin?`<button class="vp-edit-btn" onclick="openEditFromRow(event,${m.id})" title="Edit">
+        ${window.isAdmin?`<button class="vp-edit-btn" onclick="openEditFromRow(event,'${escHtml(m.id)}')" title="Edit">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -149,14 +149,14 @@ function closeVoiceAssignForm() { document.getElementById('voiceAssignModal')?.c
 
 function openEditFromRow(event, choirMemberId) {
   event.stopPropagation();
-  const m = flatRoster().find(x=>x.id===choirMemberId);
+  const m = flatRoster().find(x=>String(x.id)===String(choirMemberId));
   openVoiceAssignForm(m?.memberId||null);
 }
 
 async function saveVoiceAssign() {
   const memberSelect=document.getElementById('vaMember');
   const selectedOpt=memberSelect.options[memberSelect.selectedIndex];
-  const memberId=parseInt(memberSelect.value);
+  const memberId=memberSelect.value;
   const voice=document.getElementById('vaVoice').value;
   const role=document.getElementById('vaRole').value||'Member';
   const errEl=document.getElementById('vaError');
@@ -167,8 +167,17 @@ async function saveVoiceAssign() {
   errEl.textContent=''; saveBtn.disabled=true; saveBtn.textContent='Saving…';
   try {
     if (hasSupabase()) {
-      const { data: existing } = await supabaseClient.from('choir_members').select('id')
-        .or(`member_id.eq.${memberId},and(first_name.eq.${firstName},last_name.eq.${lastName})`).maybeSingle();
+      let existing = null;
+      if (memberId) {
+        const { data } = await supabaseClient.from('choir_members').select('id')
+          .eq('member_id', memberId).maybeSingle();
+        existing = data;
+      }
+      if (!existing) {
+        const { data } = await supabaseClient.from('choir_members').select('id')
+          .eq('first_name', firstName).eq('last_name', lastName).maybeSingle();
+        existing = data;
+      }
       if (existing) {
         const { error } = await supabaseClient.from('choir_members')
           .update({ voice_part:voice, role, member_id:memberId, avatar_url:avatarUrl }).eq('id',existing.id);
@@ -178,11 +187,13 @@ async function saveVoiceAssign() {
           .insert([{ first_name:firstName, last_name:lastName, voice_part:voice, role, member_id:memberId, avatar_url:avatarUrl }]);
         if (error) throw error;
       }
+      await loadChoir();
+    } else {
+      VOICE_PARTS.forEach(p => { choirRoster[p]=choirRoster[p].filter(x=>!(x.memberId===memberId||(x.firstName===firstName&&x.lastName===lastName))); });
+      if (!choirRoster[voice]) choirRoster[voice]=[];
+      choirRoster[voice].push({ id:Date.now(), firstName, lastName, voicePart:voice, role, avatarUrl, memberId });
+      localStorage.setItem(CHOIR_STORAGE_KEY, JSON.stringify(VOICE_PARTS.flatMap(p=>choirRoster[p])));
     }
-    VOICE_PARTS.forEach(p => { choirRoster[p]=choirRoster[p].filter(x=>!(x.memberId===memberId||(x.firstName===firstName&&x.lastName===lastName))); });
-    if (!choirRoster[voice]) choirRoster[voice]=[];
-    choirRoster[voice].push({ id:Date.now(), firstName, lastName, voicePart:voice, role, avatarUrl, memberId });
-    localStorage.setItem(CHOIR_STORAGE_KEY, JSON.stringify(VOICE_PARTS.flatMap(p=>choirRoster[p])));
     saveBtn.disabled=false; saveBtn.textContent='Save';
     closeVoiceAssignForm(); renderAllPanels();
     showToast(`${firstName} ${lastName} → ${voicePartLabels[voice]} ✓`, 'success');
@@ -192,26 +203,274 @@ async function saveVoiceAssign() {
   }
 }
 
-// ---- REPERTOIRE ----
-const repertoireData = [
-  { title:"Nikikumbuka",            typeLabel:"Album-1" },
-  { title:"Mungu ni wa namna gani", typeLabel:"Album-1" },
-  { title:"Katika Pande Zote",      typeLabel:"Album-1" },
-  { title:"Waseol",                 typeLabel:"Album-1" },
-  { title:"Toiroka",                typeLabel:"Album-1" },
-  { title:"Kati ya wenye Dhambi",   typeLabel:"Album-1" },
-  { title:"Lakini Sasa",            typeLabel:"Album-1" },
-];
+// ---- REPERTOIRE (songs table + song-audio storage bucket) ----
+const SONGS_STORAGE_KEY = 'sda_songs_data';
+const SONG_TYPE_LABELS = { hymn:'Hymn', praise:'Praise', special:'Special', worship:'Worship' };
+
+let songsData = [];
+let expandedSong = null;
+let editingSongId = null;
+
+async function loadSongs() {
+  if (hasSupabase()) {
+    try {
+      const { data, error } = await supabaseClient.from('songs').select('*').order('created_at',{ascending:true});
+      if (error) throw error;
+      songsData = (data||[]).map(s => ({
+        id:s.id, title:s.title||'', type:s.type||'hymn',
+        lyrics:s.lyrics||'', audioUrl:s.audio_url||null,
+      }));
+      localStorage.setItem(SONGS_STORAGE_KEY, JSON.stringify(songsData));
+      return;
+    } catch(err) { console.warn('Songs load failed:', err.message); }
+  }
+  try {
+    const cached = localStorage.getItem(SONGS_STORAGE_KEY);
+    if (cached) { songsData = JSON.parse(cached); return; }
+  } catch {}
+  songsData = [];
+}
 
 function renderRepertoire() {
   const container = document.getElementById('repertoireList');
   if (!container) return;
-  container.innerHTML = repertoireData.map((s,i) => `
-    <div class="repertoire-item">
-      <span class="rep-num">${String(i+1).padStart(2,'0')}</span>
-      <div class="rep-title">${escHtml(s.title)}</div>
-      <span class="rep-type">${escHtml(s.typeLabel)}</span>
-    </div>`).join('');
+
+  const addBtnHtml = window.isAdmin ? `
+    <div class="repertoire-item repertoire-add-row" id="addSongRow">
+      <span class="rep-num">＋</span>
+      <div class="rep-title" style="color:var(--gold);">Add a Song</div>
+      <span class="rep-type">Upload</span>
+    </div>` : '';
+
+  if (!songsData.length) {
+    container.innerHTML = addBtnHtml + `
+      <div class="repertoire-item"><div class="rep-title" style="color:var(--text-3);font-style:italic;">No songs added yet.</div></div>`;
+    document.getElementById('addSongRow')?.addEventListener('click', () => openSongForm());
+    return;
+  }
+
+  container.innerHTML = songsData.map((s,i) => {
+    const isOpen = expandedSong === s.id;
+    return `
+    <div class="repertoire-item-wrap">
+      <div class="repertoire-item" data-song-toggle="${escHtml(s.id)}">
+        <span class="rep-num">${String(i+1).padStart(2,'0')}</span>
+        <div class="rep-title">${escHtml(s.title)}</div>
+        <span class="rep-type">${escHtml(SONG_TYPE_LABELS[s.type]||s.type)}</span>
+        ${window.isAdmin ? `
+        <button class="rep-edit-btn" data-song-edit="${escHtml(s.id)}" title="Edit song">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="rep-delete-btn" data-song-delete="${escHtml(s.id)}" title="Delete song">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+        </button>` : ''}
+        <svg class="rep-chevron ${isOpen?'open':''}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div class="repertoire-detail" style="display:${isOpen?'block':'none'};">
+        ${s.audioUrl ? `<audio controls src="${escHtml(s.audioUrl)}" style="width:100%;margin-bottom:1rem;"></audio>` : `<p class="rep-no-audio">No audio uploaded yet.</p>`}
+        ${s.lyrics ? `<div class="rep-lyrics">${escHtml(s.lyrics).replace(/\n/g,'<br>')}</div>` : `<p class="rep-no-audio">No lyrics added yet.</p>`}
+      </div>
+    </div>`;
+  }).join('') + addBtnHtml;
+
+  document.getElementById('addSongRow')?.addEventListener('click', () => openSongForm());
+  container.querySelectorAll('[data-song-toggle]').forEach(el => el.addEventListener('click', () => toggleSong(el.dataset.songToggle)));
+  container.querySelectorAll('[data-song-edit]').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); openSongForm(el.dataset.songEdit); }));
+  container.querySelectorAll('[data-song-delete]').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); deleteSong(el.dataset.songDelete); }));
+}
+
+function toggleSong(id) {
+  const wasOpen = expandedSong === id;
+  const prevId = expandedSong;
+  expandedSong = wasOpen ? null : id;
+  const container = document.getElementById('repertoireList');
+  if (!container) return;
+
+  if (prevId && prevId !== id) {
+    const prevRow = container.querySelector(`[data-song-toggle="${prevId}"]`);
+    const prevDetail = prevRow?.closest('.repertoire-item-wrap')?.querySelector('.repertoire-detail');
+    prevRow?.querySelector('.rep-chevron')?.classList.remove('open');
+    if (prevDetail) prevDetail.style.display = 'none';
+  }
+  const row = container.querySelector(`[data-song-toggle="${id}"]`);
+  const detail = row?.closest('.repertoire-item-wrap')?.querySelector('.repertoire-detail');
+  row?.querySelector('.rep-chevron')?.classList.toggle('open', !wasOpen);
+  if (detail) detail.style.display = wasOpen ? 'none' : 'block';
+}
+
+function openSongForm(songId = null) {
+  editingSongId = songId;
+  const existing = songId ? songsData.find(s=>s.id===songId) : null;
+
+  let modal = document.getElementById('songModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'songModal';
+    modal.innerHTML = `
+      <div class="modal-overlay" id="songModalOverlay"></div>
+      <div class="modal-content">
+        <button class="modal-close" id="songModalClose" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+        <div class="modal-header"><h3 id="songModalTitle">Add a Song</h3><p id="songModalSubtitle">Upload lyrics and/or audio for the repertoire</p></div>
+        <div class="modal-body">
+          <div class="form-group"><label>Title</label><input type="text" id="songTitle" placeholder="Song title"></div>
+          <div class="form-group"><label>Type</label>
+            <select id="songType">
+              <option value="hymn">Hymn</option><option value="praise">Praise</option>
+              <option value="special">Special</option><option value="worship">Worship</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Lyrics <span style="text-transform:none;font-weight:400;">(optional)</span></label>
+            <textarea id="songLyrics" rows="6" placeholder="Paste lyrics here…" style="padding:0.75rem 1rem;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.9rem;color:var(--text-1);background:var(--cream);outline:none;resize:vertical;"></textarea>
+          </div>
+          <div class="form-group"><label>Audio file <span id="songAudioHint" style="text-transform:none;font-weight:400;">(optional, mp3/m4a/wav)</span></label>
+            <input type="file" id="songAudio" accept="audio/*">
+          </div>
+          <p class="form-error" id="songError"></p>
+          <div class="form-actions">
+            <button class="btn btn-ghost-dark" id="songCancel">Cancel</button>
+            <button class="btn btn-gold" id="songSave">Save Song</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    document.getElementById('songModalOverlay').addEventListener('click', closeSongForm);
+    document.getElementById('songModalClose').addEventListener('click', closeSongForm);
+    document.getElementById('songCancel').addEventListener('click', closeSongForm);
+    document.getElementById('songSave').addEventListener('click', saveSong);
+  }
+
+  const titleInput = document.getElementById('songTitle');
+  const typeSelect = document.getElementById('songType');
+  const lyricsInput = document.getElementById('songLyrics');
+  const audioInput = document.getElementById('songAudio');
+  const audioHint = document.getElementById('songAudioHint');
+  const errEl = document.getElementById('songError');
+  const saveBtn = document.getElementById('songSave');
+
+  audioInput.value = '';
+  errEl.textContent = '';
+  saveBtn.disabled = false;
+
+  if (existing) {
+    document.getElementById('songModalTitle').textContent = 'Edit Song';
+    document.getElementById('songModalSubtitle').textContent = 'Update details, or replace the audio file';
+    titleInput.value = existing.title;
+    typeSelect.value = existing.type;
+    lyricsInput.value = existing.lyrics || '';
+    audioHint.textContent = existing.audioUrl ? '(leave empty to keep current audio)' : '(optional, mp3/m4a/wav)';
+    saveBtn.textContent = 'Save Changes';
+  } else {
+    document.getElementById('songModalTitle').textContent = 'Add a Song';
+    document.getElementById('songModalSubtitle').textContent = 'Upload lyrics and/or audio for the repertoire';
+    titleInput.value = '';
+    typeSelect.value = 'hymn';
+    lyricsInput.value = '';
+    audioHint.textContent = '(optional, mp3/m4a/wav)';
+    saveBtn.textContent = 'Save Song';
+  }
+
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function resetSongForm() {
+  const ids = ['songTitle','songType','songLyrics','songAudio','songError'];
+  const t=document.getElementById('songTitle'), ty=document.getElementById('songType'),
+        l=document.getElementById('songLyrics'), a=document.getElementById('songAudio'),
+        e=document.getElementById('songError');
+  if (t) t.value=''; if (ty) ty.value='hymn'; if (l) l.value=''; if (a) a.value=''; if (e) e.textContent='';
+  editingSongId = null;
+}
+
+function closeSongForm() {
+  document.getElementById('songModal')?.classList.remove('active');
+  document.body.style.overflow = '';
+  resetSongForm();
+}
+
+async function saveSong() {
+  const title = document.getElementById('songTitle').value.trim();
+  const type = document.getElementById('songType').value;
+  const lyrics = document.getElementById('songLyrics').value.trim();
+  const fileInput = document.getElementById('songAudio');
+  const file = fileInput.files[0] || null;
+  const errEl = document.getElementById('songError');
+  const saveBtn = document.getElementById('songSave');
+  const isEdit = !!editingSongId;
+
+  if (!title) { errEl.textContent = 'Please enter a song title.'; return; }
+  if (file && file.size > 15*1024*1024) { errEl.textContent = 'Audio file must be under 15MB.'; return; }
+
+  errEl.textContent = '';
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving…';
+
+  try {
+    let audioUrl = isEdit ? (songsData.find(s=>s.id===editingSongId)?.audioUrl || null) : null;
+
+    if (file && hasSupabase()) {
+      const ext = file.name.split('.').pop();
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: upErr } = await supabaseClient.storage.from('song-audio').upload(path, file);
+      if (upErr) throw new Error('Audio upload failed: ' + upErr.message);
+      const { data: urlData } = supabaseClient.storage.from('song-audio').getPublicUrl(path);
+      audioUrl = urlData.publicUrl;
+    }
+
+    if (hasSupabase()) {
+      if (isEdit) {
+        const { error } = await supabaseClient.from('songs')
+          .update({ title, type, lyrics: lyrics||null, audio_url: audioUrl }).eq('id', editingSongId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabaseClient.from('songs')
+          .insert([{ title, type, lyrics: lyrics||null, audio_url: audioUrl }]);
+        if (error) throw error;
+      }
+      await loadSongs();
+    } else {
+      if (isEdit) {
+        const idx = songsData.findIndex(s=>s.id===editingSongId);
+        if (idx!==-1) songsData[idx] = { ...songsData[idx], title, type, lyrics, audioUrl };
+      } else {
+        songsData.push({ id:'local-'+Date.now(), title, type, lyrics, audioUrl });
+      }
+      localStorage.setItem(SONGS_STORAGE_KEY, JSON.stringify(songsData));
+    }
+
+    closeSongForm();
+    renderRepertoire();
+    showToast(isEdit ? `"${title}" updated ✓` : `"${title}" added ✓`, 'success');
+  } catch(err) {
+    console.error('Save song failed:', err);
+    errEl.textContent = err.message || 'Failed to save song.';
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = isEdit ? 'Save Changes' : 'Save Song';
+  }
+}
+
+async function deleteSong(id) {
+  if (!confirm('Delete this song? This cannot be undone.')) return;
+  try {
+    if (hasSupabase() && !String(id).startsWith('local-')) {
+      const { error } = await supabaseClient.from('songs').delete().eq('id', id);
+      if (error) throw error;
+      await loadSongs();
+    } else {
+      songsData = songsData.filter(s=>s.id!==id);
+      localStorage.setItem(SONGS_STORAGE_KEY, JSON.stringify(songsData));
+    }
+    if (expandedSong === id) expandedSong = null;
+    renderRepertoire();
+    showToast('Song deleted', 'success');
+  } catch(err) {
+    console.error('Delete song failed:', err);
+    showToast('Delete failed: ' + err.message, 'error');
+  }
 }
 
 function animateCounter(el, target, duration=1200) {
@@ -227,6 +486,7 @@ function animateCounter(el, target, duration=1200) {
 // ---- INIT ----
 async function initChoir() {
   await loadChoir();
+  await loadSongs();
   renderAllPanels();
   renderRepertoire();
   updateAdminUI();
