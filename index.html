@@ -264,7 +264,7 @@
           showMsg('signinMsg','Your account is pending admin approval.');
           btn.disabled=false; btn.textContent='Sign In'; return;
         }
-        window.location.href = 'members.html';
+        globalThis.location.href = 'members.html';
       } catch(err) {
         showMsg('signinMsg', err.message || 'Sign in failed.');
         btn.disabled=false; btn.textContent='Sign In';
@@ -357,7 +357,7 @@
       try {
         const { error } = await supabaseClient.auth.signInWithOAuth({
           provider: 'google',
-          options: { redirectTo: window.location.origin + '/authcallback.html' }
+          options: { redirectTo: globalThis.location.origin + '/authcallback.html' }
         });
         if (error) throw error;
       } catch(err) {
@@ -372,7 +372,7 @@
       if (!email) { showMsg('signinMsg','Enter your email above first.'); return; }
       try {
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email,
-          { redirectTo: window.location.origin + '/auth.html' });
+          { redirectTo: globalThis.location.origin + '/auth.html' });
         if (error) throw error;
         showMsg('signinMsg','Reset email sent! Check your inbox.','success');
       } catch(err) { showMsg('signinMsg', err.message); }
@@ -389,7 +389,7 @@
     supabaseClient.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return;
       const { data: p } = await supabaseClient.from('profiles').select('approved').eq('id', session.user.id).single();
-      if (p?.approved) window.location.href = 'members.html';
+      if (p?.approved) globalThis.location.href = 'members.html';
     });
   </script>
 </body>
