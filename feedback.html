@@ -163,13 +163,6 @@
   .inbox-search:focus-within { border-color: var(--gold); }
   .inbox-search input { border: none; outline: none; background: none; font-family: var(--font-body); font-size: 0.9rem; width: 100%; color: var(--text-1); }
   .inbox-search svg   { color: var(--text-3); flex-shrink: 0; }
-  .admin-login-link {
-    font-size: 0.75rem; color: var(--text-3); background: none; border: none;
-    cursor: pointer; font-family: var(--font-body); text-decoration: underline;
-    padding: 0.25rem; transition: color 0.2s; margin-left: auto;
-  }
-  .admin-login-link:hover { color: var(--navy); }
-
   .inbox-list   { display: flex; flex-direction: column; gap: 0.75rem; }
   .inbox-locked {
     text-align: center; padding: 3.5rem 2rem; color: var(--text-3);
@@ -242,9 +235,6 @@
   .modal-header h3 { font-family:var(--font-display); color:var(--navy); font-size:1.4rem; margin-bottom:0.2rem; }
   .modal-header p  { color:var(--text-3); font-size:0.88rem; }
   .modal-body { padding:1.5rem 2rem 2rem; }
-  .pin-input { width:100%; padding:0.85rem 1rem; border:2px solid var(--border); border-radius:10px; font-size:1.5rem; letter-spacing:0.5rem; text-align:center; font-family:var(--font-body); color:var(--text-1); background:var(--cream); transition:border-color 0.2s; outline:none; }
-  .pin-input:focus { border-color:var(--gold); }
-  .pin-error { color:#dc2626; font-size:0.82rem; text-align:center; min-height:1.2em; margin-top:0.5rem; }
 
   /* Responsive */
   @media (max-width:1024px) { .feedback-inner { grid-template-columns:1fr; gap:2.5rem; } }
@@ -423,20 +413,16 @@
       <div class="inbox-toolbar">
         <div class="inbox-search">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input type="text" id="inboxSearch" placeholder="Search feedback…" autocomplete="off" oninput="renderInbox()">
+          <input type="text" id="inboxSearch" placeholder="Search feedback…" autocomplete="off">
         </div>
-        <button class="admin-login-link" id="inboxAdminBtn">Admin</button>
-        <span id="inboxAdminStatus" style="display:none;font-size:0.78rem;color:var(--text-3);">
-          🔐 Admin ·
-          <button onclick="inboxLogout()" style="background:none;border:none;cursor:pointer;font-size:0.78rem;color:var(--crimson);font-family:var(--font-body);text-decoration:underline;">Log out</button>
-        </span>
+        <span class="admin-only" id="inboxAdminBadge" style="display:none;font-size:0.78rem;color:var(--gold);border:1px solid rgba(201,162,39,0.4);border-radius:50px;padding:0.3rem 0.8rem;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.06em;margin-left:auto;">🔓 Admin Mode</span>
       </div>
 
       <div id="inboxContainer">
         <div class="inbox-locked">
           <div class="inbox-locked-icon">🔒</div>
           <h4>Admin Access Required</h4>
-          <p>Click <strong>Admin</strong> above and enter your PIN to view submitted feedback.</p>
+          <p>Sign in with an admin account to view submitted feedback.</p>
         </div>
       </div>
     </div>
@@ -495,20 +481,6 @@
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
   </button>
 
-  <!-- PIN MODAL -->
-  <div class="modal" id="pinModal">
-    <div class="modal-overlay" id="pinOverlay"></div>
-    <div class="modal-content">
-      <button class="modal-close" id="pinClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-      <div class="modal-header"><h3>Admin Access</h3><p>Enter your PIN to view the feedback inbox</p></div>
-      <div class="modal-body">
-        <input type="password" id="pinInput" class="pin-input" placeholder="••••" maxlength="8" autocomplete="off">
-        <p class="pin-error" id="pinError"></p>
-        <button class="btn btn-gold" id="pinSubmit" style="width:100%;margin-top:.75rem;justify-content:center;">Unlock</button>
-      </div>
-    </div>
-  </div>
-
   <script src="js/supabase-config.js"></script>
   <script src="js/shared-auth.js"></script>
   <script src="js/newsletter-widget.js"></script>
@@ -516,9 +488,8 @@
   <script>
   // ============================================================
   //  FEEDBACK.JS — inline
+  //  Admin detected automatically via shared-auth.js (globalThis.isAdmin)
   // ============================================================
-  const FB_ADMIN_PIN = '0000';
-  let fbIsAdmin      = false;
   let selectedType   = 'suggestion';
   let allFeedback    = [];
 
@@ -628,8 +599,8 @@
 
   function renderInbox() {
     const container = document.getElementById('inboxContainer');
-    if (!fbIsAdmin) {
-      container.innerHTML = `<div class="inbox-locked"><div class="inbox-locked-icon">🔒</div><h4>Admin Access Required</h4><p>Click <strong>Admin</strong> above and enter your PIN to view submitted feedback.</p></div>`;
+    if (!globalThis.isAdmin) {
+      container.innerHTML = `<div class="inbox-locked"><div class="inbox-locked-icon">🔒</div><h4>Admin Access Required</h4><p>Sign in with an admin account to view submitted feedback.</p></div>`;
       return;
     }
     const q = (document.getElementById('inboxSearch')?.value || '').toLowerCase();
@@ -662,7 +633,7 @@
     const stars   = f.rating ? '★'.repeat(f.rating) + '☆'.repeat(5 - f.rating) : '';
     const unread  = !f.is_read;
     return `
-      <div class="fb-card ${unread?'unread':''}" data-id="${f.id}">
+      <div class="fb-card ${unread?'unread':''}" data-id="${esc(f.id)}">
         <div class="fb-card-header">
           <div class="fb-type-dot ${esc(f.type)}">${TYPE_ICONS[f.type]||'💬'}</div>
           <div class="fb-meta">
@@ -677,8 +648,8 @@
           <p>${esc(f.message).replace(/\n/g,'<br>')}</p>
           ${f.email ? `<p style="margin-top:.75rem;font-size:.8rem;color:var(--text-3);">Reply to: <a href="mailto:${esc(f.email)}" style="color:var(--gold);">${esc(f.email)}</a></p>` : ''}
           <div class="fb-card-footer">
-            ${unread ? `<button class="fb-mark-read" onclick="markRead('${f.id}',true)">✓ Mark Read</button>` : `<span style="font-size:0.78rem;color:var(--text-3);">✓ Read</span>`}
-            <button class="fb-delete-btn" onclick="deleteFb('${f.id}')">Delete</button>
+            ${unread ? `<button class="fb-mark-read" onclick="markRead('${esc(f.id)}',true)">✓ Mark Read</button>` : `<span style="font-size:0.78rem;color:var(--text-3);">✓ Read</span>`}
+            <button class="fb-delete-btn" onclick="deleteFb('${esc(f.id)}')">Delete</button>
           </div>
         </div>
       </div>`;
@@ -702,62 +673,30 @@
     } catch(e) { toast(e.message, 'error'); }
   }
 
-  // ---- PIN ----
-  function openPin() {
-    document.getElementById('pinInput').value = '';
-    document.getElementById('pinError').textContent = '';
-    document.getElementById('pinModal').classList.add('active');
-    document.body.style.overflow = 'hidden';
-    setTimeout(() => document.getElementById('pinInput').focus(), 60);
-  }
-  function closePin() {
-    document.getElementById('pinModal').classList.remove('active');
-    document.body.style.overflow = '';
-  }
-  function attemptPin() {
-    if (document.getElementById('pinInput').value.trim() === FB_ADMIN_PIN) {
-      fbIsAdmin = true;
-      sessionStorage.setItem('fb_admin','1');
-      closePin();
-      document.getElementById('inboxAdminBtn').style.display    = 'none';
-      document.getElementById('inboxAdminStatus').style.display = 'flex';
-      loadInbox();
-      toast('Admin mode enabled ✓', 'success');
-    } else {
-      document.getElementById('pinError').textContent = 'Incorrect PIN.';
-      document.getElementById('pinInput').value = '';
-      document.getElementById('pinInput').focus();
-    }
-  }
-  function inboxLogout() {
-    fbIsAdmin = false;
-    sessionStorage.removeItem('fb_admin');
-    document.getElementById('inboxAdminBtn').style.display    = 'inline';
-    document.getElementById('inboxAdminStatus').style.display = 'none';
-    renderInbox();
+  // ---- ADMIN UI ----
+  function applyAdminUI() {
+    document.querySelectorAll('.admin-only').forEach(el => {
+      el.style.display = globalThis.isAdmin ? '' : 'none';
+    });
   }
 
   // ---- INIT ----
-  document.addEventListener('DOMContentLoaded', () => {
+  function initFeedbackPage() {
+    if (globalThis.__feedbackInited) return;
+    globalThis.__feedbackInited = true;
+
     document.querySelectorAll('.current-year').forEach(el => el.textContent = new Date().getFullYear());
     renderFaqs();
+    applyAdminUI();
 
-    if (sessionStorage.getItem('fb_admin') === '1') {
-      fbIsAdmin = true;
-      document.getElementById('inboxAdminBtn').style.display    = 'none';
-      document.getElementById('inboxAdminStatus').style.display = 'flex';
-      loadInbox();
-    } else {
-      renderInbox();
-    }
+    if (globalThis.isAdmin) loadInbox();
+    else renderInbox();
 
-    document.getElementById('inboxAdminBtn')?.addEventListener('click', openPin);
-    document.getElementById('pinSubmit')?.addEventListener('click', attemptPin);
-    document.getElementById('pinInput')?.addEventListener('keydown', e => { if(e.key==='Enter') attemptPin(); });
-    document.getElementById('pinClose')?.addEventListener('click', closePin);
-    document.getElementById('pinOverlay')?.addEventListener('click', closePin);
-    document.addEventListener('keydown', e => { if(e.key==='Escape') closePin(); });
-  });
+    document.getElementById('inboxSearch')?.addEventListener('input', renderInbox);
+  }
+
+  document.addEventListener('DOMContentLoaded', initFeedbackPage);
+  document.addEventListener('adminReady', initFeedbackPage);
   </script>
 </body>
 </html>
