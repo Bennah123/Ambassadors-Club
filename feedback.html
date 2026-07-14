@@ -163,7 +163,6 @@
   .inbox-search:focus-within { border-color: var(--gold); }
   .inbox-search input { border: none; outline: none; background: none; font-family: var(--font-body); font-size: 0.9rem; width: 100%; color: var(--text-1); }
   .inbox-search svg   { color: var(--text-3); flex-shrink: 0; }
-
   .inbox-list   { display: flex; flex-direction: column; gap: 0.75rem; }
   .inbox-locked {
     text-align: center; padding: 3.5rem 2rem; color: var(--text-3);
@@ -223,6 +222,19 @@
     margin-left: auto;
   }
   .fb-delete-btn:hover { border-color: #dc2626; color: #dc2626; }
+
+  /* PIN Modal */
+  .modal { display:none; position:fixed; inset:0; z-index:2000; align-items:center; justify-content:center; padding:2rem; }
+  .modal.active { display:flex; }
+  .modal-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); }
+  .modal-content { background:white; border-radius:20px; max-width:420px; width:100%; position:relative; box-shadow:0 25px 50px rgba(0,0,0,0.2); border:1px solid var(--border); animation:modalIn 0.25s var(--ease); }
+  @keyframes modalIn { from{opacity:0;transform:translateY(16px) scale(0.97);}to{opacity:1;transform:none;} }
+  .modal-close { position:absolute; top:1.25rem; right:1.25rem; width:36px; height:36px; border-radius:50%; border:none; background:var(--cream); color:var(--text-3); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
+  .modal-close:hover { background:var(--crimson); color:white; transform:rotate(90deg); }
+  .modal-header { padding:2rem 2rem 0; }
+  .modal-header h3 { font-family:var(--font-display); color:var(--navy); font-size:1.4rem; margin-bottom:0.2rem; }
+  .modal-header p  { color:var(--text-3); font-size:0.88rem; }
+  .modal-body { padding:1.5rem 2rem 2rem; }
 
   /* Responsive */
   @media (max-width:1024px) { .feedback-inner { grid-template-columns:1fr; gap:2.5rem; } }
@@ -361,7 +373,7 @@
             <input id="fbName" type="text" placeholder="Anonymous (optional)">
           </div>
           <div class="form-group">
-            <label>Email <span style="font-weight:400;color:var(--text-3);">(optional — for a reply)</span></label>
+            <label id="fbEmailLabel">Email <span style="font-weight:400;color:var(--text-3);">(optional — for a reply)</span></label>
             <input id="fbEmail" type="email" placeholder="your@email.com">
           </div>
           <div class="form-group">
@@ -392,27 +404,21 @@
     </div>
   </section>
 
-  <!-- ADMIN INBOX -->
-  <section class="inbox-section">
+  <!-- ADMIN INBOX (admin-only, hidden entirely for normal users) -->
+  <section class="inbox-section admin-only" id="inboxSection" style="display:none;">
     <div class="inbox-inner">
       <p class="section-label">Leadership</p>
       <h2 class="section-heading">Feedback Inbox</h2>
+
       <div class="inbox-toolbar">
         <div class="inbox-search">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <input type="text" id="inboxSearch" placeholder="Search feedback…" autocomplete="off">
         </div>
-        <span id="inboxAdminStatus" style="display:none;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text-3);">
-          Leadership Mode active ·
-        </span>
+        <span style="font-size:0.78rem;color:var(--gold);border:1px solid rgba(201,162,39,0.4);border-radius:50px;padding:0.3rem 0.8rem;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.06em;margin-left:auto;">🔓 Admin Mode</span>
       </div>
-            <div id="inboxContainer">
-        <div class="inbox-locked">
-          <div class="inbox-locked-icon">🔒</div>
-          <h4>Leadership Access Only</h4>
-          <p>Submitted feedback will be visible here once you have leadership access.</p>
-        </div>
-      </div>
+
+      <div id="inboxContainer"></div>
     </div>
   </section>
 
@@ -475,10 +481,12 @@
   <script src="js/main.js"></script>
   <script>
   // ============================================================
-  //  FEEDBACK — inline script (role-based admin via shared-auth.js)
+  //  FEEDBACK.JS — inline
+  //  Admin detected automatically via shared-auth.js (globalThis.isAdmin)
   // ============================================================
-  let selectedType = 'suggestion';
-  let allFeedback  = [];
+  let selectedType   = 'suggestion';
+  let allFeedback    = [];
+  const EMAIL_REQUIRED_TYPES = ['suggestion', 'question', 'prayer'];
 
   const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
@@ -488,15 +496,30 @@
     t.textContent = msg;
     document.body.appendChild(t);
     requestAnimationFrame(() => t.classList.add('toast-visible'));
-    setTimeout(() => { t.classList.remove('toast-visible'); setTimeout(()=>t.remove(),350); }, 3200);
+    setTimeout(() => { t.classList.remove('toast-visible'); setTimeout(() => t.remove(), 350); }, 3200);
   }
 
+  // ---- TYPE SELECTOR ----
   function selectType(btn) {
     document.querySelectorAll('.fb-type-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     selectedType = btn.dataset.type;
+    updateEmailRequirement();
   }
 
+  function updateEmailRequirement() {
+    const emailInput = document.getElementById('fbEmail');
+    const emailLabel = document.getElementById('fbEmailLabel');
+    const required = EMAIL_REQUIRED_TYPES.includes(selectedType);
+    if (emailInput) emailInput.required = required;
+    if (emailLabel) {
+      emailLabel.innerHTML = required
+        ? 'Email <span style="font-weight:400;color:#dc2626;">(required for this type)</span>'
+        : 'Email <span style="font-weight:400;color:var(--text-3);">(optional — for a reply)</span>';
+    }
+  }
+
+  // ---- FAQ ----
   const FAQS = [
     { q: 'How do I become a member of the Ambassadors Club?', a: 'Attend any of our Sabbath meetings or contact us on WhatsApp. You can also sign up on this website and your membership request will be reviewed by leadership.' },
     { q: 'When and where does the club meet?', a: 'We meet every Sabbath (Saturday) at SDA Church Embakasi Central, starting at 8:00 AM. Midweek activities vary — check the Schedule page for current events.' },
@@ -507,7 +530,7 @@
   ];
 
   function renderFaqs() {
-    document.getElementById('faqList').innerHTML = FAQS.map((f,i) => `
+    document.getElementById('faqList').innerHTML = FAQS.map((f, i) => `
       <div class="faq-item" id="faq${i}">
         <button class="faq-question" onclick="toggleFaq(${i})">
           ${esc(f.q)}
@@ -517,44 +540,60 @@
       </div>`).join('');
   }
 
-  function toggleFaq(i) { document.getElementById('faq'+i).classList.toggle('open'); }
+  function toggleFaq(i) {
+    const item = document.getElementById('faq' + i);
+    item.classList.toggle('open');
+  }
 
+  // ---- SUBMIT FEEDBACK ----
   async function submitFeedback() {
     const subject = document.getElementById('fbSubject').value.trim();
     const message = document.getElementById('fbMessage').value.trim();
+    const email   = document.getElementById('fbEmail').value.trim();
     const errEl   = document.getElementById('fbError');
     const btn     = document.getElementById('fbSubmitBtn');
     const rating  = document.querySelector('input[name="rating"]:checked')?.value || null;
-    if (!subject) { errEl.textContent='Please enter a subject.'; return; }
-    if (!message) { errEl.textContent='Please write your message.'; return; }
-    errEl.textContent=''; btn.disabled=true; btn.textContent='Sending…';
+
+    if (!subject) { errEl.textContent = 'Please enter a subject.'; return; }
+    if (!message) { errEl.textContent = 'Please write your message.'; return; }
+    if (EMAIL_REQUIRED_TYPES.includes(selectedType) && !email) {
+      errEl.textContent = 'Email is required for this feedback type so we can respond to you.';
+      return;
+    }
+    errEl.textContent = '';
+
+    btn.disabled = true; btn.textContent = 'Sending…';
+
     const payload = {
-      type: selectedType,
-      name: document.getElementById('fbName').value.trim() || 'Anonymous',
-      email: document.getElementById('fbEmail').value.trim() || null,
-      subject, message, rating: rating ? parseInt(rating) : null, is_read: false
+      type:    selectedType,
+      name:    document.getElementById('fbName').value.trim()  || 'Anonymous',
+      email:   email || null,
+      subject, message,
+      rating:  rating ? parseInt(rating) : null,
+      is_read: false,
     };
+
     try {
       if (typeof supabaseClient !== 'undefined') {
         const { error } = await supabaseClient.from('feedback').insert([payload]);
         if (error) throw error;
       }
-      document.getElementById('feedbackFormInner').style.display='none';
-      document.getElementById('formSuccess').style.display='block';
+      document.getElementById('feedbackFormInner').style.display = 'none';
+      document.getElementById('formSuccess').style.display = 'block';
     } catch(err) {
-      errEl.textContent='Send failed: '+err.message;
-      btn.disabled=false; btn.textContent='Send Message';
+      errEl.textContent = 'Send failed: ' + err.message;
+      btn.disabled = false; btn.textContent = 'Send Message';
     }
   }
 
   function resetForm() {
-    document.getElementById('feedbackFormInner').style.display='block';
-    document.getElementById('formSuccess').style.display='none';
-    ['fbName','fbEmail','fbSubject','fbMessage'].forEach(id=>document.getElementById(id).value='');
-    document.querySelectorAll('input[name="rating"]').forEach(r=>r.checked=false);
+    document.getElementById('feedbackFormInner').style.display = 'block';
+    document.getElementById('formSuccess').style.display = 'none';
+    ['fbName','fbEmail','fbSubject','fbMessage'].forEach(id => document.getElementById(id).value = '');
+    document.querySelectorAll('input[name="rating"]').forEach(r => r.checked = false);
     selectType(document.querySelector('.fb-type-btn[data-type="suggestion"]'));
-    document.getElementById('fbSubmitBtn').disabled=false;
-    document.getElementById('fbSubmitBtn').textContent='Send Message';
+    document.getElementById('fbSubmitBtn').disabled = false;
+    document.getElementById('fbSubmitBtn').textContent = 'Send Message';
   }
 
   // ---- ADMIN INBOX ----
@@ -563,7 +602,8 @@
   async function loadInbox() {
     if (typeof supabaseClient === 'undefined') { renderInbox(); return; }
     try {
-      const { data, error } = await supabaseClient.from('feedback').select('*').order('created_at',{ascending:false});
+      const { data, error } = await supabaseClient
+        .from('feedback').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       allFeedback = data || [];
     } catch(e) { allFeedback = []; }
@@ -572,101 +612,153 @@
 
   function renderInbox() {
     const container = document.getElementById('inboxContainer');
-    if (!window.isAdmin) {
-      container.innerHTML = `<div class="inbox-locked"><div class="inbox-locked-icon">🔒</div><h4>Admin Access Required</h4><p>Sign in with your admin account to view submitted feedback.</p><a href="auth.html" class="btn btn-gold" style="margin-top:1rem;display:inline-flex;">Sign In →</a></div>`;
-      return;
-    }
-    const q = (document.getElementById('inboxSearch')?.value||'').toLowerCase();
+    if (!globalThis.isAdmin || !container) return;
+    const q = (document.getElementById('inboxSearch')?.value || '').toLowerCase();
     const filtered = allFeedback.filter(f =>
       !q || f.subject?.toLowerCase().includes(q) || f.name?.toLowerCase().includes(q)
         || f.message?.toLowerCase().includes(q) || f.type?.toLowerCase().includes(q));
+
     if (!filtered.length) {
-      container.innerHTML=`<div class="inbox-locked"><div class="inbox-locked-icon">📭</div><h4>No feedback yet</h4><p>Submitted messages will appear here.</p></div>`;
+      container.innerHTML = `<div class="inbox-locked"><div class="inbox-locked-icon">📭</div><h4>No feedback yet</h4><p>Submitted messages will appear here.</p></div>`;
       return;
     }
-    const unread = filtered.filter(f=>!f.is_read).length;
-    container.innerHTML=`
+
+    const unread = filtered.filter(f => !f.is_read).length;
+    container.innerHTML = `
       <p style="font-size:0.82rem;color:var(--text-3);margin-bottom:1rem;">${filtered.length} message${filtered.length!==1?'s':''} · <strong style="color:var(--navy);">${unread} unread</strong></p>
-      <div class="inbox-list">${filtered.map(f=>buildFbCard(f)).join('')}</div>`;
-    container.querySelectorAll('.fb-card-header').forEach(h=>{
-      h.addEventListener('click',()=>{
-        const card=h.closest('.fb-card');
+      <div class="inbox-list">${filtered.map(f => buildFbCard(f)).join('')}</div>`;
+
+    container.querySelectorAll('.fb-card-header').forEach(h => {
+      h.addEventListener('click', () => {
+        const card = h.closest('.fb-card');
         card.classList.toggle('expanded');
-        if (card.classList.contains('expanded')) markRead(card.dataset.id);
+        const id = card.dataset.id;
+        if (card.classList.contains('expanded')) markRead(id);
       });
+    });
+
+    container.querySelectorAll('[data-save-reply]').forEach(btn => {
+      btn.addEventListener('click', e => { e.stopPropagation(); saveReply(btn.dataset.saveReply); });
+    });
+    container.querySelectorAll('[data-mailto-reply]').forEach(btn => {
+      btn.addEventListener('click', e => { e.stopPropagation(); openMailtoReply(btn.dataset.mailtoReply); });
+    });
+    container.querySelectorAll('.fb-reply-input').forEach(ta => {
+      ta.addEventListener('click', e => e.stopPropagation());
     });
   }
 
   function buildFbCard(f) {
-    const date  = f.created_at?new Date(f.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'';
-    const stars = f.rating?'★'.repeat(f.rating)+'☆'.repeat(5-f.rating):'';
-    const unread= !f.is_read;
+    const date    = f.created_at ? new Date(f.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
+    const stars   = f.rating ? '★'.repeat(f.rating) + '☆'.repeat(5 - f.rating) : '';
+    const unread  = !f.is_read;
+    const hasReply = !!f.admin_reply;
     return `
-      <div class="fb-card ${unread?'unread':''}" data-id="${f.id}">
+      <div class="fb-card ${unread?'unread':''}" data-id="${esc(f.id)}">
         <div class="fb-card-header">
           <div class="fb-type-dot ${esc(f.type)}">${TYPE_ICONS[f.type]||'💬'}</div>
           <div class="fb-meta">
             <div class="fb-name">${esc(f.name||'Anonymous')}</div>
             <div class="fb-subject">${esc(f.subject)}</div>
           </div>
-          ${stars?`<div class="fb-stars">${stars}</div>`:''}
+          ${stars ? `<div class="fb-stars">${stars}</div>` : ''}
           <div class="fb-date">${date}</div>
-          ${unread?'<div class="fb-unread-dot"></div>':''}
+          ${unread ? '<div class="fb-unread-dot"></div>' : ''}
         </div>
         <div class="fb-card-body">
           <p>${esc(f.message).replace(/\n/g,'<br>')}</p>
-          ${f.email?`<p style="margin-top:.75rem;font-size:.8rem;color:var(--text-3);">Reply to: <a href="mailto:${esc(f.email)}" style="color:var(--gold);">${esc(f.email)}</a></p>`:''}
+          ${f.email ? `<p style="margin-top:.75rem;font-size:.8rem;color:var(--text-3);">Reply to: <a href="mailto:${esc(f.email)}" style="color:var(--gold);">${esc(f.email)}</a></p>` : `<p style="margin-top:.75rem;font-size:.8rem;color:var(--text-3);font-style:italic;">No email provided — this person can't be replied to directly.</p>`}
+
+          ${hasReply ? `
+          <div style="margin-top:1rem;padding:0.85rem 1rem;background:var(--cream);border-left:3px solid var(--gold);border-radius:6px;">
+            <p style="font-size:0.7rem;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.06em;color:var(--gold);margin-bottom:0.3rem;">Your Reply</p>
+            <p style="font-size:0.85rem;color:var(--text-1);white-space:pre-wrap;">${esc(f.admin_reply)}</p>
+          </div>` : ''}
+
+          ${f.email ? `
+          <div class="fb-reply-box" style="margin-top:1rem;">
+            <textarea class="fb-reply-input" data-reply-for="${esc(f.id)}" placeholder="${hasReply ? 'Update your reply…' : 'Type a reply…'}" style="width:100%;min-height:70px;padding:0.6rem 0.8rem;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.85rem;color:var(--text-1);background:white;resize:vertical;outline:none;">${hasReply ? esc(f.admin_reply) : ''}</textarea>
+            <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+              <button class="fb-mark-read" data-save-reply="${esc(f.id)}">${hasReply ? 'Update Reply' : 'Save Reply'}</button>
+              <button class="fb-mark-read" data-mailto-reply="${esc(f.id)}" style="background:var(--gold);color:var(--navy);border-color:var(--gold);">✉️ Open in Email</button>
+            </div>
+          </div>` : ''}
+
           <div class="fb-card-footer">
-            ${unread?`<button class="fb-mark-read" onclick="markRead('${f.id}',true)">✓ Mark Read</button>`:`<span style="font-size:0.78rem;color:var(--text-3);">✓ Read</span>`}
-            <button class="fb-delete-btn" onclick="deleteFb('${f.id}')">Delete</button>
+            ${unread ? `<button class="fb-mark-read" onclick="markRead('${esc(f.id)}',true)">✓ Mark Read</button>` : `<span style="font-size:0.78rem;color:var(--text-3);">✓ Read</span>`}
+            <button class="fb-delete-btn" onclick="deleteFb('${esc(f.id)}')">Delete</button>
           </div>
         </div>
       </div>`;
   }
 
+  async function saveReply(id) {
+    const ta = document.querySelector(`[data-reply-for="${id}"]`);
+    const reply = ta?.value.trim();
+    if (!reply) { toast('Write a reply first.', 'error'); return; }
+    try {
+      const { error } = await supabaseClient.from('feedback')
+        .update({ admin_reply: reply, replied_at: new Date().toISOString() }).eq('id', id);
+      if (error) throw error;
+      const item = allFeedback.find(f => String(f.id) === String(id));
+      if (item) item.admin_reply = reply;
+      renderInbox();
+      toast('Reply saved ✓', 'success');
+    } catch(e) { toast('Failed to save reply: ' + e.message, 'error'); }
+  }
+
+  function openMailtoReply(id) {
+    const f = allFeedback.find(x => String(x.id) === String(id));
+    if (!f?.email) return;
+    const ta = document.querySelector(`[data-reply-for="${id}"]`);
+    const body = ta?.value.trim() || '';
+    const subject = `Re: ${f.subject || 'Your feedback'}`;
+    const mailBody = `Hi ${f.name || 'there'},\n\n${body}\n\n— SDA Ambassadors Club`;
+    globalThis.location.href = `mailto:${encodeURIComponent(f.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(mailBody)}`;
+  }
+
   async function markRead(id, rerender=false) {
-    const item=allFeedback.find(f=>String(f.id)===String(id));
-    if (!item||item.is_read) return;
-    item.is_read=true;
-    try { await supabaseClient.from('feedback').update({is_read:true}).eq('id',id); } catch(e){}
+    const item = allFeedback.find(f => String(f.id) === String(id));
+    if (!item || item.is_read) return;
+    item.is_read = true;
+    try { await supabaseClient.from('feedback').update({ is_read: true }).eq('id', id); } catch(e) {}
     if (rerender) renderInbox();
   }
 
   async function deleteFb(id) {
-    if (!confirm('Delete this feedback?')) return;
+    if (!confirm('Delete this feedback? Cannot be undone.')) return;
     try {
-      await supabaseClient.from('feedback').delete().eq('id',id);
-      allFeedback=allFeedback.filter(f=>String(f.id)!==String(id));
-      renderInbox(); toast('Deleted','info');
-    } catch(e) { toast(e.message,'error'); }
+      await supabaseClient.from('feedback').delete().eq('id', id);
+      allFeedback = allFeedback.filter(f => String(f.id) !== String(id));
+      renderInbox();
+      toast('Deleted', 'info');
+    } catch(e) { toast(e.message, 'error'); }
   }
 
-  // ---- ADMIN TOOLBAR ----
-  function updateAdminToolbar() {
-    const adminBtn    = document.getElementById('inboxAdminBtn');
-    const adminStatus = document.getElementById('inboxAdminStatus');
-    if (window.isAdmin) {
-      if (adminBtn)    adminBtn.style.display    = 'none';
-      if (adminStatus) adminStatus.style.display = 'flex';
-    } else {
-      if (adminBtn)    adminBtn.style.display    = 'inline';
-      if (adminStatus) adminStatus.style.display = 'none';
-    }
+  // ---- ADMIN UI ----
+  function applyAdminUI() {
+    document.querySelectorAll('.admin-only').forEach(el => {
+      el.style.display = globalThis.isAdmin ? '' : 'none';
+    });
   }
 
   // ---- INIT ----
-  document.addEventListener('adminReady', () => {
-    document.querySelectorAll('.current-year').forEach(el=>el.textContent=new Date().getFullYear());
+  function initFeedbackPage() {
+    if (globalThis.__feedbackInited) return;
+    globalThis.__feedbackInited = true;
+
+    document.querySelectorAll('.current-year').forEach(el => el.textContent = new Date().getFullYear());
     renderFaqs();
-    updateAdminToolbar();
-    if (window.isAdmin) loadInbox();
-    else renderInbox();
-    document.getElementById('inboxAdminBtn')?.addEventListener('click',()=>window.location.href='auth.html');
-    document.getElementById('inboxLogoutBtn')?.addEventListener('click', async()=>{
-      await supabaseClient.auth.signOut(); window.location.href='auth.html';
-    });
+    applyAdminUI();
+    updateEmailRequirement();
+
+    if (globalThis.isAdmin) loadInbox();
+
     document.getElementById('inboxSearch')?.addEventListener('input', renderInbox);
-  });
+  }
+
+  document.addEventListener('DOMContentLoaded', initFeedbackPage);
+  document.addEventListener('adminReady', initFeedbackPage);
   </script>
 </body>
 </html>
