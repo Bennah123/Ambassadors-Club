@@ -99,6 +99,44 @@
   background: var(--surface-2);
 }
 
+/* Additional white surfaces found on members/activities/treasury/schedule/about pages */
+[data-theme="dark"] .members-search-box,
+[data-theme="dark"] .filter-chip,
+[data-theme="dark"] .cat-card,
+[data-theme="dark"] .calendar-nav-group,
+[data-theme="dark"] .calendar-card,
+[data-theme="dark"] .event-timeline-item,
+[data-theme="dark"] .no-events-msg,
+[data-theme="dark"] .highlight-card,
+[data-theme="dark"] .cat-tab,
+[data-theme="dark"] .filter-group select,
+[data-theme="dark"] .page-btn,
+[data-theme="dark"] .chip,
+[data-theme="dark"] .sched-card,
+[data-theme="dark"] .qi-card,
+[data-theme="dark"] .story-stat,
+[data-theme="dark"] .belief-item,
+[data-theme="dark"] .leader-card,
+[data-theme="dark"] .contact-card {
+  background: var(--surface-1);
+  color: var(--text-1);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .filter-chip.active,
+[data-theme="dark"] .cat-tab.active,
+[data-theme="dark"] .page-btn.active,
+[data-theme="dark"] .chip.chip-active {
+  background: var(--navy-mid);
+  color: white;
+}
+
+[data-theme="dark"] .cal-day:hover,
+[data-theme="dark"] .sched-card:hover,
+[data-theme="dark"] .belief-item:hover {
+  background: var(--surface-2);
+}
+
 /* Smooth theme transition — apply to common surfaces so switching
    doesn't feel jarring. Kept short so it doesn't feel laggy. */
 body,
