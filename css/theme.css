@@ -49,6 +49,56 @@
   --shadow-gold: 0 8px 32px rgba(212,175,55,0.20);
 }
 
+/* =====================================================
+   HARDCODED WHITE SURFACES
+   Many components use `background: white` literally instead of
+   a variable, so the variable overrides above don't reach them.
+   Force them dark here.
+   ===================================================== */
+[data-theme="dark"] .member-card,
+[data-theme="dark"] .t-card,
+[data-theme="dark"] .fb-card,
+[data-theme="dark"] .voice-panel,
+[data-theme="dark"] .cat-card,
+[data-theme="dark"] .rehearsal-card,
+[data-theme="dark"] .highlight-card,
+[data-theme="dark"] .help-card,
+[data-theme="dark"] .chart-box,
+[data-theme="dark"] .table-container,
+[data-theme="dark"] .repertoire-item,
+[data-theme="dark"] .repertoire-item-wrap,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .feedback-form-card,
+[data-theme="dark"] .card,
+[data-theme="dark"] .data-table td,
+[data-theme="dark"] .inbox-search,
+[data-theme="dark"] .members-search-box,
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .form-group textarea,
+[data-theme="dark"] .auth-input,
+[data-theme="dark"] .fb-reply-input {
+  background: var(--surface-1);
+  color: var(--text-1);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .data-table th {
+  background: var(--navy-mid);
+}
+
+[data-theme="dark"] .member-avatar-initials,
+[data-theme="dark"] .modal-member-avatar-initials,
+[data-theme="dark"] .vp-avatar {
+  background: linear-gradient(135deg, var(--navy-mid), var(--navy-light));
+}
+
+/* Cards that used a light "cream" background for inner rows */
+[data-theme="dark"] .vp-member-row,
+[data-theme="dark"] .avatar-upload-row {
+  background: var(--surface-2);
+}
+
 /* Smooth theme transition — apply to common surfaces so switching
    doesn't feel jarring. Kept short so it doesn't feel laggy. */
 body,
