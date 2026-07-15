@@ -640,9 +640,6 @@
     container.querySelectorAll('[data-save-reply]').forEach(btn => {
       btn.addEventListener('click', e => { e.stopPropagation(); saveReply(btn.dataset.saveReply); });
     });
-    container.querySelectorAll('[data-mailto-reply]').forEach(btn => {
-      btn.addEventListener('click', e => { e.stopPropagation(); openMailtoReply(btn.dataset.mailtoReply); });
-    });
     container.querySelectorAll('[data-gmail-reply]').forEach(btn => {
       btn.addEventListener('click', e => { e.stopPropagation(); openGmailReply(btn.dataset.gmailReply); });
     });
@@ -681,11 +678,10 @@
           ${f.email ? `
           <div class="fb-reply-box" style="margin-top:1rem;">
             <textarea class="fb-reply-input" data-reply-for="${esc(f.id)}" placeholder="${hasReply ? 'Update your reply…' : 'Type a reply…'}" style="width:100%;min-height:70px;padding:0.6rem 0.8rem;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.85rem;color:var(--text-1);background:white;resize:vertical;outline:none;">${hasReply ? esc(f.admin_reply) : ''}</textarea>
-            <p style="font-size:0.72rem;color:var(--text-3);margin-top:0.35rem;">"Save Reply" only stores this note here for your records — it does not email the person. Use "Open in Mail App" or "Open in Gmail" to actually send it.</p>
+            <p style="font-size:0.72rem;color:var(--text-3);margin-top:0.35rem;">"Save Reply" stores this note here for your records only. Use "Reply via Gmail" to actually send it to them.</p>
             <div style="display:flex;gap:0.5rem;margin-top:0.5rem;flex-wrap:wrap;">
               <button class="fb-mark-read" data-save-reply="${esc(f.id)}">${hasReply ? 'Update Reply' : 'Save Reply'}</button>
-              <button class="fb-mark-read" data-mailto-reply="${esc(f.id)}" style="background:var(--gold);color:var(--navy);border-color:var(--gold);">✉️ Open in Mail App</button>
-              <button class="fb-mark-read" data-gmail-reply="${esc(f.id)}">Open in Gmail</button>
+              <button class="fb-mark-read" data-gmail-reply="${esc(f.id)}" style="background:var(--gold);color:var(--navy);border-color:var(--gold);">✉️ Reply via Gmail</button>
             </div>
           </div>` : ''}
 
@@ -712,26 +708,6 @@
     } catch(e) { toast('Failed to save reply: ' + e.message, 'error'); }
   }
 
-  function openMailtoReply(id) {
-    const f = allFeedback.find(x => String(x.id) === String(id));
-    if (!f?.email) return;
-    const ta = document.querySelector(`[data-reply-for="${id}"]`);
-    const body = ta?.value.trim() || '';
-    const subject = `Re: ${f.subject || 'Your feedback'}`;
-    const mailBody = `Hi ${f.name || 'there'},\n\n${body}\n\n— SDA Ambassadors Club`;
-    const mailtoUrl = `mailto:${encodeURIComponent(f.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(mailBody)}`;
-
-    // Use a temporary anchor with target=_blank so this opens the mail client
-    // without navigating the admin away from the inbox page.
-    const a = document.createElement('a');
-    a.href = mailtoUrl;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  }
-
   function openGmailReply(id) {
     const f = allFeedback.find(x => String(x.id) === String(id));
     if (!f?.email) return;
@@ -740,7 +716,14 @@
     const subject = `Re: ${f.subject || 'Your feedback'}`;
     const mailBody = `Hi ${f.name || 'there'},\n\n${body}\n\n— SDA Ambassadors Club`;
     const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(f.email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(mailBody)}`;
-    globalThis.open(url, '_blank', 'noopener');
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
   async function markRead(id, rerender=false) {
