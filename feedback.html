@@ -759,6 +759,20 @@
 
   document.addEventListener('DOMContentLoaded', initFeedbackPage);
   document.addEventListener('adminReady', initFeedbackPage);
+
+  // Defensive fallback: if isAdmin becomes true after our init already ran
+  // (e.g. shared-auth.js resolves late, or adminReady fired before this
+  // script attached its listener), re-check a few times and re-apply.
+  let __adminPollCount = 0;
+  const __adminPoll = setInterval(() => {
+    __adminPollCount++;
+    if (globalThis.isAdmin) {
+      applyAdminUI();
+      loadInbox();
+      clearInterval(__adminPoll);
+    }
+    if (__adminPollCount > 20) clearInterval(__adminPoll); // stop after ~10s
+  }, 500);
   </script>
 </body>
 </html>
