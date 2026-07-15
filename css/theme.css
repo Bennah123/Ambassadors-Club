@@ -137,6 +137,51 @@
   background: var(--surface-2);
 }
 
+/* Headings/labels that use var(--navy) for TEXT color (not background) —
+   navy reads fine on white but is invisible on dark backgrounds */
+[data-theme="dark"] .section-heading,
+[data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
+[data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6,
+[data-theme="dark"] .member-name,
+[data-theme="dark"] .cat-body h3,
+[data-theme="dark"] .t-amount,
+[data-theme="dark"] .chart-header h3,
+[data-theme="dark"] .toolbar-left h2,
+[data-theme="dark"] .modal-header h3,
+[data-theme="dark"] .day-name,
+[data-theme="dark"] .sched-details h3,
+[data-theme="dark"] .time-num,
+[data-theme="dark"] .qi-card h4,
+[data-theme="dark"] .story-stat .ss-num,
+[data-theme="dark"] .belief-text h4,
+[data-theme="dark"] .leader-card h4,
+[data-theme="dark"] .contact-card h4,
+[data-theme="dark"] .et-details h4,
+[data-theme="dark"] .highlight-body h4,
+[data-theme="dark"] .rep-title,
+[data-theme="dark"] .no-results h3,
+[data-theme="dark"] .cal-month-label,
+[data-theme="dark"] .fb-name,
+[data-theme="dark"] .voice-panel-title,
+[data-theme="dark"] .detail-value,
+[data-theme="dark"] .detail-amount {
+  color: var(--text-1);
+}
+
+/* Secondary/body text that hardcodes var(--text-2)/(--text-3) is already
+   handled by the variable overrides at the top of this file, so most
+   paragraph text auto-corrects. Only literal var(--navy) text needed this. */
+[data-theme="dark"] .cat-body p,
+[data-theme="dark"] .belief-text p,
+[data-theme="dark"] .leader-desc,
+[data-theme="dark"] .contact-card p,
+[data-theme="dark"] .qi-card p,
+[data-theme="dark"] .sched-details p,
+[data-theme="dark"] .et-details p,
+[data-theme="dark"] .highlight-body p {
+  color: var(--text-2);
+}
+
 /* Smooth theme transition — apply to common surfaces so switching
    doesn't feel jarring. Kept short so it doesn't feel laggy. */
 body,
