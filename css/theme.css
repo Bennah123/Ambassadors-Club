@@ -227,6 +227,45 @@ body,
 [data-theme="dark"] .theme-toggle .icon-moon { display: none; }
 
 /* Mobile nav placement */
+/* FEEDBACK PAGE */
+[data-theme="dark"] .help-card,
+[data-theme="dark"] .faq-item,
+[data-theme="dark"] .contact-pill,
+[data-theme="dark"] .feedback-form-card,
+[data-theme="dark"] .fb-card {
+  background: var(--surface-1);
+  color: var(--text-1);
+  border-color: var(--border);
+}
+[data-theme="dark"] .contact-pill strong,
+[data-theme="dark"] .inbox-locked h4,
+[data-theme="dark"] .feedback-form-card h3 {
+  color: var(--text-1);
+}
+[data-theme="dark"] .faq-answer {
+  color: var(--text-2);
+}
+
+/* SECRETARY PAGE */
+[data-theme="dark"] .sec-search-box,
+[data-theme="dark"] .minute-card,
+[data-theme="dark"] .action-checkbox,
+[data-theme="dark"] .sidebar-card {
+  background: var(--surface-1);
+  color: var(--text-1);
+  border-color: var(--border);
+}
+[data-theme="dark"] .action-item,
+[data-theme="dark"] .sec-stat,
+[data-theme="dark"] .officer-row {
+  background: var(--surface-2);
+}
+[data-theme="dark"] .minute-title,
+[data-theme="dark"] .sec-stat-num,
+[data-theme="dark"] .officer-name {
+  color: var(--text-1);
+}
+
 @media (max-width: 768px) {
   .theme-toggle {
     margin: 0.5rem 1rem 0.5rem auto;
