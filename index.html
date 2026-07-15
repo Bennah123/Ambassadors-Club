@@ -385,7 +385,7 @@
       if (!email) { showMsg('signinMsg','Enter your email above first.'); return; }
       try {
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email,
-          { redirectTo: globalThis.location.origin + '/auth.html' });
+          { redirectTo: globalThis.location.origin + '/index.html' });
         if (error) throw error;
         showMsg('signinMsg','Reset email sent! Check your inbox.','success');
       } catch(err) { showMsg('signinMsg', err.message); }

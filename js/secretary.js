@@ -278,12 +278,12 @@ async function initSecretary() {
   const loginBtn=document.getElementById('adminLoginBtn');
   if (loginBtn) {
     if (globalThis.isAdmin) { loginBtn.style.display='none'; }
-    else { loginBtn.addEventListener('click',()=>globalThis.location.href='auth.html'); }
+    else { loginBtn.addEventListener('click',()=>globalThis.location.href='index.html'); }
   }
 
   document.getElementById('adminAddBtn')?.addEventListener('click', openAdd);
   document.getElementById('adminLogoutBtn')?.addEventListener('click', async()=>{
-    await supabaseClient.auth.signOut(); globalThis.location.href='auth.html';
+    await supabaseClient.auth.signOut(); globalThis.location.href='index.html';
   });
   document.getElementById('minutesSearch')?.addEventListener('input', ()=>renderMinutes());
   document.getElementById('filterChips')?.addEventListener('click', e=>{
