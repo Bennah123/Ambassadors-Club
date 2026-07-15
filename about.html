@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    (function() {
+      try {
+        var stored = localStorage.getItem('sda_theme_preference');
+        var theme = stored || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="About the Ambassadors Club - SDA Church Embakasi Central. Our history, beliefs, leadership, and vision.">
@@ -9,6 +19,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/about.css">
 </head>
@@ -172,42 +183,56 @@
       <p class="section-label">The Team</p>
       <h2 class="section-heading">Club Leadership</h2>
       <div class="leaders-grid">
+        
         <div class="leader-card reveal-child">
           <div class="leader-avatar">P</div>
-          <h4>President</h4>
-          <p class="leader-role">Club President</p>
+          <h4>Chairperson</h4>
+          <p class="leader-role">Club Chairperson</p>
           <p class="leader-desc">Leads the overall vision and direction of the Ambassadors Club.</p>
         </div>
+
         <div class="leader-card reveal-child">
           <div class="leader-avatar">VP</div>
-          <h4>Vice President</h4>
+          <h4>Vice Chair</h4>
           <p class="leader-role">Programs & Events</p>
           <p class="leader-desc">Coordinates activities, events, and member engagement.</p>
         </div>
+
+        <div class="leader-card reveal-child">
+          <div class="leader-avatar">VP</div>
+          <h4>Ambassadors Leader</h4>
+          <p class="leader-role">Overall</p>
+          <p class="leader-desc">Coordinates everything under Chairperson's Instructions.</p>
+        </div>
+
         <div class="leader-card reveal-child">
           <div class="leader-avatar">S</div>
           <h4>Secretary</h4>
           <p class="leader-role">Administration</p>
           <p class="leader-desc">Manages records, communications, and club documentation.</p>
         </div>
+
         <div class="leader-card reveal-child">
           <div class="leader-avatar">T</div>
           <h4>Treasurer</h4>
           <p class="leader-role">Finance & Stewardship</p>
           <p class="leader-desc">Oversees contributions, expenses, and transparent financial reporting.</p>
         </div>
+
         <div class="leader-card reveal-child">
           <div class="leader-avatar">CM</div>
-          <h4>Choir Master</h4>
+          <h4>Choir Director</h4>
           <p class="leader-role">Music Ministry</p>
           <p class="leader-desc">Leads choir rehearsals, voice training, and special music programs.</p>
         </div>
+
         <div class="leader-card reveal-child">
           <div class="leader-avatar">YL</div>
-          <h4>Youth Leader</h4>
+          <h4>Devotional Leader</h4>
           <p class="leader-role">Spiritual Guidance</p>
           <p class="leader-desc">Mentors members and provides pastoral support to the club.</p>
         </div>
+
       </div>
     </div>
   </section>
@@ -312,6 +337,7 @@
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
   </button>
 
+  <script src="js/theme-toggle.js"></script>
   <script src="js/main.js"></script>
   <script src="js/about.js"></script>
 </body>

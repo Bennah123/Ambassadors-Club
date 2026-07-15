@@ -1,0 +1,101 @@
+/* =====================================================
+   THEME.CSS — Dark Mode
+   SDA Ambassadors Club
+   Include this AFTER main.css on every page.
+   ===================================================== */
+
+/* Prevents a flash of unstyled color transitions when the
+   theme is toggled — everything using these vars transitions smoothly. */
+:root {
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Brand palette — kept mostly the same, gold/crimson/sage stay
+     as accents since they already read well on dark backgrounds */
+  --navy:        #0c1428;
+  --navy-mid:    #13203f;
+  --navy-light:  #1a2c52;
+  --gold:        #d4af37;
+  --gold-light:  #e8c94a;
+  --gold-dim:    rgba(212, 175, 55, 0.18);
+  --crimson:     #a83a54;
+  --sage:        #6a9a7d;
+  --cream:       #1a1f2e;
+  --cream-dark:  #12161f;
+  --off-white:   #0e1219;
+
+  /* Text — inverted scale */
+  --text-1: #e8e9ed;
+  --text-2: #a8afc4;
+  --text-3: #6b7390;
+  --text-inv: rgba(15,20,35,0.90);
+  --text-inv-dim: rgba(15,20,35,0.55);
+
+  /* Surfaces */
+  --surface-0: #161b26;
+  --surface-1: #1a1f2e;
+  --surface-2: #222838;
+  --border:    rgba(255,255,255,0.09);
+  --border-light: rgba(255,255,255,0.14);
+
+  /* Shadows — darker/softer, since dark backgrounds don't need
+     heavy drop shadows the way white cards do */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.35);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.45);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.55);
+  --shadow-gold: 0 8px 32px rgba(212,175,55,0.20);
+}
+
+/* Smooth theme transition — apply to common surfaces so switching
+   doesn't feel jarring. Kept short so it doesn't feel laggy. */
+body,
+.navbar,
+.card, .t-card, .cat-card, .member-card, .voice-panel,
+.fb-card, .rehearsal-card, .highlight-card, .help-card,
+.modal-content, .chart-box, .table-container,
+.footer, .site-footer {
+  transition: background-color 0.25s var(--ease, ease), color 0.25s var(--ease, ease), border-color 0.25s var(--ease, ease);
+}
+
+/* =====================================================
+   THEME TOGGLE BUTTON
+   ===================================================== */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.85);
+  cursor: pointer;
+  transition: all 0.2s var(--ease, ease);
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+.theme-toggle:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(201,162,39,0.10);
+}
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.3s var(--ease-spring, ease);
+}
+.theme-toggle .icon-sun  { display: none; }
+.theme-toggle .icon-moon { display: block; }
+[data-theme="dark"] .theme-toggle .icon-sun  { display: block; }
+[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+/* Mobile nav placement */
+@media (max-width: 768px) {
+  .theme-toggle {
+    margin: 0.5rem 1rem 0.5rem auto;
+  }
+}
