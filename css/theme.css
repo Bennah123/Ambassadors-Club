@@ -262,7 +262,8 @@ body,
 }
 [data-theme="dark"] .minute-title,
 [data-theme="dark"] .sec-stat-num,
-[data-theme="dark"] .officer-name {
+[data-theme="dark"] .officer-name,
+[data-theme="dark"] .faq-question {
   color: var(--text-1);
 }
 
