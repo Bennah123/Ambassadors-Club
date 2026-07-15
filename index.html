@@ -10,400 +10,282 @@
       } catch (e) {}
     })();
   </script>
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign In | SDA Ambassadors Club</title>
+  <meta name="description" content="Ambassadors Club - Seventh Day Adventist Church Embakasi Central. Youth ministry, choir, activities, and community.">
+  <title>Ambassadors Club | SDA Church Embakasi Central</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/theme.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body { background: var(--navy); min-height: 100vh; display: flex; flex-direction: column; }
-    .auth-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-    .auth-orb { position: absolute; border-radius: 50%; filter: blur(90px); }
-    .auth-orb-1 { width:600px;height:600px;top:-150px;left:-100px;background:radial-gradient(circle,rgba(201,162,39,0.10) 0%,transparent 65%);animation:orb-drift 20s ease-in-out infinite; }
-    .auth-orb-2 { width:400px;height:400px;bottom:-80px;right:-60px;background:radial-gradient(circle,rgba(123,18,48,0.10) 0%,transparent 65%);animation:orb-drift 25s ease-in-out infinite reverse; }
-    .auth-grid { position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);background-size:60px 60px; }
-    @keyframes orb-drift { 0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(40px,-30px) scale(1.08);}66%{transform:translate(-25px,25px) scale(0.93);} }
-    .auth-wrapper { position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;padding:2rem 1rem; }
-    .auth-card { background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:24px;padding:3rem 2.5rem;width:100%;max-width:460px;backdrop-filter:blur(16px);box-shadow:0 32px 64px rgba(0,0,0,0.4); }
-    .auth-brand { text-align:center;margin-bottom:2.5rem; }
-    .auth-brand-mark { width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,var(--gold),#a07a1a);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:1.4rem;color:var(--navy);margin:0 auto 1rem; }
-    .auth-brand h1 { font-family:var(--font-display);font-size:1.8rem;font-weight:700;color:white;margin-bottom:0.25rem; }
-    .auth-brand p { font-family:var(--font-mono);font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold); }
-    .auth-tabs { display:flex;gap:0;margin-bottom:2rem;background:rgba(255,255,255,0.05);border-radius:10px;padding:4px; }
-    .auth-tab { flex:1;padding:0.65rem;border:none;border-radius:7px;font-family:var(--font-body);font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.2s;background:none;color:rgba(255,255,255,0.45); }
-    .auth-tab.active { background:var(--gold);color:var(--navy); }
-    .auth-panel { display:none; }
-    .auth-panel.active { display:block; }
-    .auth-form-group { display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1.1rem; }
-    .auth-form-group label { font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:rgba(255,255,255,0.55); }
-    .auth-input { padding:0.8rem 1rem;border:1.5px solid rgba(255,255,255,0.10);border-radius:10px;background:rgba(255,255,255,0.06);font-family:var(--font-body);font-size:0.9rem;color:white;outline:none;transition:border-color 0.2s,background 0.2s;width:100%; }
-    .auth-input::placeholder { color:rgba(255,255,255,0.25); }
-    .auth-input:focus { border-color:var(--gold);background:rgba(255,255,255,0.09); }
-    .auth-input-row { position:relative; }
-    .auth-input-row .auth-input { padding-right:3rem; }
-    .toggle-pw { position:absolute;right:0.875rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.35);transition:color 0.2s;padding:0;display:flex;align-items:center; }
-    .toggle-pw:hover { color:var(--gold); }
-    .auth-name-row { display:grid;grid-template-columns:1fr 1fr;gap:0.75rem; }
-    .auth-forgot { text-align:right;margin-top:-0.6rem;margin-bottom:1rem; }
-    .auth-forgot button { background:none;border:none;cursor:pointer;font-size:0.78rem;color:rgba(255,255,255,0.4);font-family:var(--font-body);transition:color 0.2s; }
-    .auth-forgot button:hover { color:var(--gold); }
-    .auth-submit { width:100%;padding:0.9rem;background:var(--gold);color:var(--navy);border:none;border-radius:10px;font-family:var(--font-body);font-size:0.95rem;font-weight:700;cursor:pointer;transition:all 0.22s var(--ease);margin-top:0.5rem; }
-    .auth-submit:hover:not(:disabled) { background:var(--gold-light);transform:translateY(-2px);box-shadow:0 8px 24px rgba(201,162,39,0.3); }
-    .auth-submit:disabled { opacity:0.55;cursor:not-allowed;transform:none; }
-    .auth-divider { display:flex;align-items:center;gap:1rem;margin:1.5rem 0;color:rgba(255,255,255,0.2);font-size:0.78rem; }
-    .auth-divider::before,.auth-divider::after { content:'';flex:1;height:1px;background:rgba(255,255,255,0.10); }
-    .auth-google { width:100%;padding:0.8rem;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.80);border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;font-family:var(--font-body);font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:0.625rem; }
-    .auth-google:hover { background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.25); }
-    .auth-msg { font-size:0.82rem;min-height:1.2em;margin-bottom:0.75rem;text-align:center;border-radius:8px;padding:0.5rem 0.75rem;display:none; }
-    .auth-msg.error   { display:block;background:rgba(123,18,48,0.25);color:#f87171; }
-    .auth-msg.success { display:block;background:rgba(77,114,89,0.25);color:#86efac; }
-
-    /* Voice selector */
-    .voice-select-wrap { margin-bottom:1.1rem; }
-    .voice-select-label { font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:rgba(255,255,255,0.55);display:block;margin-bottom:0.6rem; }
-    .voice-optional { font-size:0.65rem;color:rgba(255,255,255,0.3);margin-left:0.4rem;text-transform:none;letter-spacing:0; }
-    .voice-grid { display:grid;grid-template-columns:1fr 1fr;gap:0.5rem; }
-    .voice-chip { display:flex;align-items:center;justify-content:center;gap:0.4rem;padding:0.65rem;border-radius:10px;border:1.5px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.04);cursor:pointer;transition:all 0.18s;font-family:var(--font-body);font-size:0.85rem;font-weight:500;color:rgba(255,255,255,0.55); }
-    .voice-chip:hover { border-color:rgba(201,162,39,0.4);color:rgba(255,255,255,0.8); }
-    .voice-chip.selected { border-color:var(--gold);background:rgba(201,162,39,0.12);color:var(--gold); }
-    .voice-chip.none-chip { grid-column:1/-1;background:rgba(255,255,255,0.02); }
-
-    .auth-terms { font-size:0.74rem;color:rgba(255,255,255,0.30);text-align:center;margin-top:1.25rem;line-height:1.5; }
-    .auth-bottom { text-align:center;margin-top:1.5rem;font-size:0.82rem;color:rgba(255,255,255,0.35); }
-    .auth-bottom button { background:none;border:none;cursor:pointer;color:var(--gold);font-family:var(--font-body);font-size:0.82rem;font-weight:600;text-decoration:underline; }
-    .auth-footer-note { text-align:center;padding:1.5rem;font-family:var(--font-mono);font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.15);position:relative;z-index:1; }
-    .auth-footer-note a { color:rgba(201,162,39,0.5);text-decoration:none; }
-    .auth-pending { display:none;text-align:center;padding:1rem; }
-    .auth-pending-icon { font-size:3rem;margin-bottom:0.75rem; }
-    .auth-pending h3 { font-family:var(--font-display);font-size:1.4rem;color:white;margin-bottom:0.5rem; }
-    .auth-pending p { color:rgba(255,255,255,0.5);font-size:0.88rem;line-height:1.6; }
-    @media (max-width:480px) { .auth-card{padding:2rem 1.5rem;} .auth-name-row{grid-template-columns:1fr;} .voice-grid{grid-template-columns:1fr 1fr;} }
-  </style>
+  <link rel="stylesheet" href="css/home.css">
 </head>
 <body>
-  <div class="auth-bg">
-    <div class="auth-orb auth-orb-1"></div>
-    <div class="auth-orb auth-orb-2"></div>
-    <div class="auth-grid"></div>
-  </div>
 
-  <div class="auth-wrapper">
-    <div class="auth-card">
-      <div class="auth-brand">
-        <a href="index.html" style="text-decoration:none;">
-          <div class="auth-brand-mark">AC</div>
-          <h1>Ambassadors Club</h1>
-          <p>SDA Embakasi Central</p>
+  <!-- ==================== NAVIGATION ==================== -->
+  <nav class="navbar" id="navbar">
+    <a href="home.html" class="nav-brand">
+      <div class="nav-brand-mark">AC</div>
+      <div class="nav-brand-text">
+        <span>Ambassadors Club</span>
+        <small>SDA Embakasi Central</small>
+      </div>
+    </a>
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="home.html" class="active">Home</a></li>
+      <li><a href="members.html">Members</a></li>
+      <li><a href="choir.html">Choir</a></li>
+      <li><a href="activities.html">Activities</a></li>
+      <li><a href="secretary.html">Secretary</a></li>
+      <li><a href="treasury.html">Treasury</a></li>
+      <li><a href="schedule.html">Schedule</a></li>
+      <li><a href="feedback.html">Feedback</a></li>
+      <li><a href="about.html">About</a></li>
+    </ul>
+  </nav>
+
+  <!-- ==================== HERO ==================== -->
+  <section class="hero" id="home">
+    <div class="hero-canvas">
+      <div class="hero-orb hero-orb-1"></div>
+      <div class="hero-orb hero-orb-2"></div>
+      <div class="hero-grid"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">
+        <span class="eyebrow-dot"></span>
+        <span>Est. 2023 · Nairobi, Kenya</span>
+      </div>
+      <h1 class="hero-headline">
+        <span class="hero-headline-sub">We Are</span>
+        <span class="hero-headline-main">Embakasi Central<br>Ambassadors</span>
+        <span class="hero-headline-verse">One for Christ</span>
+      </h1>
+      <p class="hero-body">
+        A community of young people called to serve, worship, and lead. 
+        Rooted in Scripture. Alive in fellowship. Ready for the world.
+      </p>
+      <div class="hero-cta">
+        <a href="members.html" class="btn btn-gold">
+          Meet the Team
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
+        <a href="activities.html" class="btn btn-ghost">See Events</a>
       </div>
-
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="tabSignIn" onclick="switchTab('signin')">Sign In</button>
-        <button class="auth-tab" id="tabSignUp" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+    <div class="hero-stats-bar">
+      <div class="stat-item">
+        <span class="stat-num" id="statMembers" data-count="45">0</span>
+        <span class="stat-label">Ambassadors</span>
       </div>
-
-      <!-- SIGN IN -->
-      <div class="auth-panel active" id="panelSignin">
-        <p class="auth-msg" id="signinMsg"></p>
-        <div class="auth-form-group">
-          <label>Email</label>
-          <input class="auth-input" type="email" id="siEmail" placeholder="your@email.com" autocomplete="email">
-        </div>
-        <div class="auth-form-group">
-          <label>Password</label>
-          <div class="auth-input-row">
-            <input class="auth-input" type="password" id="siPassword" placeholder="••••••••" autocomplete="current-password">
-            <button class="toggle-pw" onclick="togglePw('siPassword',this)" tabindex="-1" type="button">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
-          </div>
-        </div>
-        <div class="auth-forgot"><button onclick="handleForgotPassword()" type="button">Forgot password?</button></div>
-        <button class="auth-submit" id="signinBtn" onclick="handleSignIn()">Sign In</button>
-        <div class="auth-divider">or</div>
-        <button class="auth-google" onclick="handleGoogleAuth()">
-          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-          Continue with Google
-        </button>
-        <div class="auth-bottom">Don't have an account? <button onclick="switchTab('signup')">Sign Up</button></div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-num" id="statChoir" data-count="24">0</span>
+        <span class="stat-label">Choir Members</span>
       </div>
-
-      <!-- SIGN UP -->
-      <div class="auth-panel" id="panelSignup">
-        <p class="auth-msg" id="signupMsg"></p>
-
-        <div class="auth-pending" id="signupPending">
-          <div class="auth-pending-icon">⏳</div>
-          <h3>Request Sent!</h3>
-          <p>Your account is pending admin approval. You'll get an email once approved.</p>
-          <br>
-          <a href="index.html" class="btn btn-ghost" style="margin:0 auto;">Back to Home</a>
-        </div>
-
-        <div id="signupForm">
-          <div class="auth-name-row">
-            <div class="auth-form-group">
-              <label>First Name</label>
-              <input class="auth-input" type="text" id="suFirstName" placeholder="John" autocomplete="given-name">
-            </div>
-            <div class="auth-form-group">
-              <label>Last Name</label>
-              <input class="auth-input" type="text" id="suLastName" placeholder="Kamau" autocomplete="family-name">
-            </div>
-          </div>
-          <div class="auth-form-group">
-            <label>Email</label>
-            <input class="auth-input" type="email" id="suEmail" placeholder="your@email.com" autocomplete="email">
-          </div>
-          <div class="auth-form-group">
-            <label>Phone</label>
-            <input class="auth-input" type="tel" id="suPhone" placeholder="+254 7XX XXX XXX" autocomplete="tel">
-          </div>
-          <div class="auth-form-group">
-            <label>Role / Position in Club</label>
-            <input class="auth-input" type="text" id="suRole" placeholder="e.g. Member, Treasurer…">
-          </div>
-          <div class="auth-form-group">
-            <label>Password</label>
-            <div class="auth-input-row">
-              <input class="auth-input" type="password" id="suPassword" placeholder="Min. 8 characters" autocomplete="new-password">
-              <button class="toggle-pw" onclick="togglePw('suPassword',this)" tabindex="-1" type="button">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              </button>
-            </div>
-          </div>
-          <div class="auth-form-group">
-            <label>Confirm Password</label>
-            <div class="auth-input-row">
-              <input class="auth-input" type="password" id="suConfirm" placeholder="Re-enter password" autocomplete="new-password">
-              <button class="toggle-pw" onclick="togglePw('suConfirm',this)" tabindex="-1" type="button">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- VOICE PART (optional) -->
-          <div class="voice-select-wrap">
-            <span class="voice-select-label">Choir Voice Part <span class="voice-optional">(optional — skip if you don't sing)</span></span>
-            <div class="voice-grid" id="voiceGrid">
-              <button type="button" class="voice-chip" data-voice="soprano" onclick="selectVoice(this)">🎶 Soprano</button>
-              <button type="button" class="voice-chip" data-voice="alto"    onclick="selectVoice(this)">🎵 Alto</button>
-              <button type="button" class="voice-chip" data-voice="tenor"   onclick="selectVoice(this)">🎼 Tenor</button>
-              <button type="button" class="voice-chip" data-voice="bass"    onclick="selectVoice(this)">🎹 Bass</button>
-              <button type="button" class="voice-chip none-chip selected" data-voice="" onclick="selectVoice(this)">I don't sing in the choir</button>
-            </div>
-          </div>
-
-          <button class="auth-submit" id="signupBtn" onclick="handleSignUp()">Create Account</button>
-          <div class="auth-divider">or</div>
-          <button class="auth-google" onclick="handleGoogleAuth()">
-            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-            Continue with Google
-          </button>
-          <p class="auth-terms">By signing up you agree to be a member in good standing of the SDA Embakasi Central Ambassadors Club.</p>
-          <div class="auth-bottom">Already have an account? <button onclick="switchTab('signin')">Sign In</button></div>
-        </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-num" data-count="12">0</span>
+        <span class="stat-label">Annual Events</span>
       </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-num" data-count="3">0</span>
+        <span class="stat-label">Years Strong</span>
+      </div>
+    </div>
+    <div class="hero-scroll-cue" aria-hidden="true">
+      <div class="scroll-line"></div>
+    </div>
+  </section>
 
+  <!-- ==================== VERSE RIBBON ==================== -->
+  <div class="verse-ribbon">
+    <div class="verse-ribbon-track">
+      <span>"We are therefore Christ's ambassadors, as though God were making his appeal through us." — 2 Corinthians 5:20</span>
+      <span aria-hidden="true">&nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;</span>
+      <span>"Let no one despise your youth, but be an example to the believers." — 1 Timothy 4:12</span>
+      <span aria-hidden="true">&nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;</span>
+      <span>"Go ye into all the world and preach the gospel to every creature." — Mark 16:15</span>
+      <span aria-hidden="true">&nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;</span>
+      <span>"We are therefore Christ's ambassadors, as though God were making his appeal through us." — 2 Corinthians 5:20</span>
+      <span aria-hidden="true">&nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;</span>
+      <span>"Let no one despise your youth, but be an example to the believers." — 1 Timothy 4:12</span>
+      <span aria-hidden="true">&nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;</span>
+      <span>"Go ye into all the world and preach the gospel to every creature." — Mark 16:15</span>
+      <span aria-hidden="true">&nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;</span>
     </div>
   </div>
 
-  <p class="auth-footer-note">
-    <a href="index.html">← Back to Home</a> &nbsp;·&nbsp; SDA Church Embakasi Central © <span class="current-year"></span>
-  </p>
+  <!-- ==================== MISSION ==================== -->
+  <section class="mission-section reveal-section">
+    <div class="mission-inner">
+      <div class="mission-left">
+        <p class="section-label">Our Calling</p>
+        <h2 class="section-heading">Built on a<br><em>living word</em></h2>
+        <p class="mission-body">
+          The Ambassadors Club exists to empower young people at SDA Embakasi Central 
+          to live out their faith boldly — through worship, service, and community. 
+          We are not spectators. We are participants in something eternal.
+        </p>
+        <a href="about.html" class="btn btn-navy">Our Story →</a>
+      </div>
+      <div class="mission-right">
+        <div class="pillar-grid">
+          <div class="pillar reveal-child">
+            <div class="pillar-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <h3>Leadership</h3>
+            <p>Developing youth leaders for church and community through mentorship and practice.</p>
+          </div>
+          <div class="pillar reveal-child">
+            <div class="pillar-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            </div>
+            <h3>Service</h3>
+            <p>Outreach programs across Embakasi and beyond — health, welfare, and the gospel.</p>
+          </div>
+          <div class="pillar reveal-child">
+            <div class="pillar-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            </div>
+            <h3>Worship</h3>
+            <p>Music ministry and spiritual growth that lifts hearts and honours God.</p>
+          </div>
+          <div class="pillar reveal-child">
+            <div class="pillar-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <h3>Fellowship</h3>
+            <p>Building lasting friendships in Christ across generations and backgrounds.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-  
+  <!-- ==================== FULL-BLEED VERSE ==================== -->
+  <section class="verse-section">
+    <div class="verse-inner">
+      <div class="verse-cross" aria-hidden="true">✦</div>
+      <blockquote class="verse-quote">
+        "Let no one despise your youth, but be an example to the believers 
+        in word, in conduct, in love, in spirit, in faith, in purity."
+      </blockquote>
+      <cite class="verse-cite">1 Timothy 4:12</cite>
+    </div>
+  </section>
+
+
+  <!-- ==================== NEWSLETTER ==================== -->
+  <section class="newsletter-section">
+    <div class="newsletter-inner">
+      <div class="newsletter-left">
+        <h3>Stay Connected</h3>
+        <p>Weekly updates on events, devotionals, and club news — straight to your inbox.</p>
+      </div>
+      <form class="newsletter-form" id="newsletterForm" novalidate>
+        <div class="newsletter-field">
+          <input type="email" id="newsletterEmail" placeholder="your@email.com" required autocomplete="email">
+          <button type="submit" class="btn btn-gold">Subscribe</button>
+        </div>
+        <p class="newsletter-note">No spam. Unsubscribe anytime.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand-col">
+        <div class="footer-mark">AC</div>
+        <p class="footer-brand-name">SDA Church Embakasi Central</p>
+        <p class="footer-brand-sub">Ambassadors Club Youth Ministry</p>
+        <p class="footer-motto">"Go ye into all the world and preach the gospel"</p>
+        <div class="footer-socials">
+          <a href="https://www.tiktok.com/@embakasi.central?_r=1&_t=ZS-97RNHsU6ztQ" class="social-btn" target="_blank" rel="noopener" aria-label="TikTok">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+          </a>
+          <a href="#" class="social-btn" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+          </a>
+          <a href="https://youtube.com/@embakasicentralsdachurch2858" class="social-btn" target="_blank" rel="noopener" aria-label="YouTube">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          </a>
+          <a href="https://chat.whatsapp.com/Ir49xa1Gvu8HYFnD82CthV" class="social-btn" target="_blank" rel="noopener" aria-label="WhatsApp">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="footer-links-col">
+        <h5>Quick Links</h5>
+        <ul>
+          <li><a href="members.html">Members</a></li>
+          <li><a href="choir.html">Choir</a></li>
+          <li><a href="activities.html">Activities</a></li>
+          <li><a href="treasury.html">Treasury</a></li>
+          <li><a href="schedule.html">Schedule</a></li>
+        </ul>
+      </div>
+      <div class="footer-links-col">
+        <h5>Resources</h5>
+        <ul>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="https://wa.me/254726473887">Contact</a></li>
+          <li><a href="https://wa.me/254726473887">Prayer Request</a></li>
+          <li><a href="https://youtube.com/@embakasicentralsdachurch2858">Bible Study</a></li>
+          <li><a href="https://youtube.com/@embakasicentralsdachurch2858">Sermons</a></li>
+        </ul>
+      </div>
+      <div class="footer-contact-col">
+        <h5>Visit Us</h5>
+        <div class="contact-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span>Embakasi, Nairobi, Kenya</span>
+        </div>
+        <div class="contact-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.85a16 16 0 0 0 6 6l.9-.9a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/></svg>
+          <span>+254 726 473 887</span>
+        </div>
+        <div class="contact-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span>giftben593@gmail.com</span>
+        </div>
+        <div class="contact-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <span>Sabbath: 8:00 AM – 5:00 PM</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© <span class="current-year"></span> SDA Church Embakasi Central. All rights reserved.</p>
+      <div class="footer-bottom-links">
+        <a href="#">Privacy</a>
+        <span>·</span>
+        <a href="#">Terms</a>
+        <span>·</span>
+        <a href="#">Accessibility</a>
+      </div>
+      <p class="footer-credit">Built with <span class="heart">♥</span> by the Ambassadors Club</p>
+    </div>
+  </footer>
+
+  <!-- Back to Top -->
+  <button class="back-to-top" id="backToTop" aria-label="Back to top">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
+  </button>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/theme-toggle.js"></script>
   <script src="js/supabase-config.js"></script>
   <script src="js/shared-auth.js"></script>
   <script src="js/newsletter-widget.js"></script>
-  <script>
-    document.querySelector('.current-year').textContent = new Date().getFullYear();
-    let selectedVoice = ''; // empty = not a choir member
-
-    // ── VOICE SELECTION ──
-    function selectVoice(btn) {
-      document.querySelectorAll('.voice-chip').forEach(c => c.classList.remove('selected'));
-      btn.classList.add('selected');
-      selectedVoice = btn.dataset.voice;
-    }
-
-    // ── TAB SWITCH ──
-    function switchTab(tab) {
-      document.getElementById('panelSignin').classList.toggle('active', tab === 'signin');
-      document.getElementById('panelSignup').classList.toggle('active', tab === 'signup');
-      document.getElementById('tabSignIn').classList.toggle('active', tab === 'signin');
-      document.getElementById('tabSignUp').classList.toggle('active', tab === 'signup');
-      clearMsgs();
-    }
-    function clearMsgs() {
-      ['signinMsg','signupMsg'].forEach(id => { const el=document.getElementById(id); el.className='auth-msg'; el.textContent=''; });
-    }
-    function showMsg(id, text, type='error') {
-      const el=document.getElementById(id); el.textContent=text; el.className=`auth-msg ${type}`;
-    }
-
-    // ── PASSWORD TOGGLE ──
-    function togglePw(inputId, btn) {
-      const inp = document.getElementById(inputId);
-      const show = inp.type === 'password';
-      inp.type = show ? 'text' : 'password';
-      btn.innerHTML = show
-        ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
-        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
-    }
-
-    // ── SIGN IN ──
-    async function handleSignIn() {
-      const email    = document.getElementById('siEmail').value.trim();
-      const password = document.getElementById('siPassword').value;
-      const btn      = document.getElementById('signinBtn');
-      if (!email || !password) { showMsg('signinMsg','Please fill in all fields.'); return; }
-      btn.disabled=true; btn.textContent='Signing in…';
-      try {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-
-        const { data: profile } = await supabaseClient
-          .from('profiles').select('approved,role').eq('id', data.user.id).single();
-
-        if (!profile?.approved) {
-          await supabaseClient.auth.signOut();
-          showMsg('signinMsg','Your account is pending admin approval.');
-          btn.disabled=false; btn.textContent='Sign In'; return;
-        }
-        globalThis.location.href = 'members.html';
-      } catch(err) {
-        showMsg('signinMsg', err.message || 'Sign in failed.');
-        btn.disabled=false; btn.textContent='Sign In';
-      }
-    }
-
-    // ── SIGN UP ──
-    async function handleSignUp() {
-      const firstName = document.getElementById('suFirstName').value.trim();
-      const lastName  = document.getElementById('suLastName').value.trim();
-      const email     = document.getElementById('suEmail').value.trim();
-      const phone     = document.getElementById('suPhone').value.trim();
-      const role      = document.getElementById('suRole').value.trim() || 'Member';
-      const password  = document.getElementById('suPassword').value;
-      const confirm   = document.getElementById('suConfirm').value;
-      const btn       = document.getElementById('signupBtn');
-
-      if (!firstName||!lastName||!email||!password) { showMsg('signupMsg','Please fill in all required fields.'); return; }
-      if (password.length < 8) { showMsg('signupMsg','Password must be at least 8 characters.'); return; }
-      if (password !== confirm) { showMsg('signupMsg','Passwords do not match.'); return; }
-
-      btn.disabled=true; btn.textContent='Creating account…';
-
-      try {
-        // 1. Create auth user
-        const { data, error } = await supabaseClient.auth.signUp({
-          email, password,
-          options: { data: { first_name: firstName, last_name: lastName } }
-        });
-        if (error) throw error;
-        const userId = data.user.id;
-
-        // If email confirmation is required, there's no active session yet —
-        // RLS will block the profiles/members inserts below, so stop here
-        // and tell the user instead of failing silently.
-        if (!data.session) {
-          document.getElementById('signupForm').style.display = 'none';
-          document.getElementById('signupPending').style.display = 'block';
-          document.querySelector('#signupPending h3').textContent = 'Check your email!';
-          document.querySelector('#signupPending p').textContent =
-            'We sent a confirmation link to ' + email + '. Click it, then sign in to finish creating your profile.';
-          btn.disabled=false; btn.textContent='Create Account';
-          return;
-        }
-
-        // 2. Insert into profiles
-        const { error: profErr } = await supabaseClient.from('profiles').upsert({
-          id: userId, first_name: firstName, last_name: lastName,
-          email, phone: phone||null, role: 'member', approved: false
-        });
-        if (profErr) throw new Error('Profile creation failed: ' + profErr.message);
-
-        // 3. Insert into members table (will appear on members page after admin approves)
-        const departments = selectedVoice ? ['choir'] : [];
-        const { data: memberRow, error: mErr } = await supabaseClient
-          .from('members')
-          .insert([{
-            first_name: firstName, last_name: lastName,
-            role, phone: phone||null, email,
-            departments,
-            joined_year: new Date().getFullYear(),
-          }])
-          .select('id').single();
-        if (mErr) throw new Error('Member record failed: ' + mErr.message);
-
-        // 4. If voice selected → insert into choir_members
-        if (selectedVoice && memberRow) {
-          const { error: cErr } = await supabaseClient.from('choir_members').insert([{
-            member_id:  memberRow.id,
-            first_name: firstName,
-            last_name:  lastName,
-            voice_part: selectedVoice,
-            role:       'Member',
-          }]);
-          if (cErr) console.warn('choir_members insert:', cErr.message);
-        }
-
-        // 5. Show pending screen
-        document.getElementById('signupForm').style.display = 'none';
-        document.getElementById('signupPending').style.display = 'block';
-
-      } catch(err) {
-        showMsg('signupMsg', err.message || 'Sign up failed.');
-        btn.disabled=false; btn.textContent='Create Account';
-      }
-    }
-
-    // ── GOOGLE ──
-    async function handleGoogleAuth() {
-      try {
-        const { error } = await supabaseClient.auth.signInWithOAuth({
-          provider: 'google',
-          options: { redirectTo: globalThis.location.origin + '/authcallback.html' }
-        });
-        if (error) throw error;
-      } catch(err) {
-        showMsg('signinMsg', err.message);
-        showMsg('signupMsg', err.message);
-      }
-    }
-
-    // ── FORGOT PASSWORD ──
-    async function handleForgotPassword() {
-      const email = document.getElementById('siEmail').value.trim();
-      if (!email) { showMsg('signinMsg','Enter your email above first.'); return; }
-      try {
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(email,
-          { redirectTo: globalThis.location.origin + '/index.html' });
-        if (error) throw error;
-        showMsg('signinMsg','Reset email sent! Check your inbox.','success');
-      } catch(err) { showMsg('signinMsg', err.message); }
-    }
-
-    // ── ENTER KEY ──
-    document.addEventListener('keydown', e => {
-      if (e.key !== 'Enter') return;
-      if (document.getElementById('panelSignin').classList.contains('active')) handleSignIn();
-      else handleSignUp();
-    });
-
-    // ── ALREADY LOGGED IN ──
-    supabaseClient.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) return;
-      const { data: p } = await supabaseClient.from('profiles').select('approved').eq('id', session.user.id).single();
-      if (p?.approved) globalThis.location.href = 'members.html';
-    });
-  </script>
+  <script src="js/main.js"></script>
+  <script src="js/home.js"></script>
 </body>
 </html>

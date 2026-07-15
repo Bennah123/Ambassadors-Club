@@ -1,8 +1,3 @@
-// ============================================
-// MAIN.JS - Shared functionality, all pages
-// SDA Embakasi Central – Ambassadors Club
-// ============================================
-
 document.addEventListener('DOMContentLoaded', () => {
 
   // ---- ACTIVE NAV LINK ----
