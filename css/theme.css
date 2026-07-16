@@ -282,6 +282,13 @@ body,
   background: var(--surface-2);
 }
 
+/* MEMBERS PAGE — admin edit/delete buttons */
+[data-theme="dark"] .admin-card-btn {
+  background: var(--surface-2);
+  color: var(--text-1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
 @media (max-width: 768px) {
   .theme-toggle {
     margin: 0.5rem 1rem 0.5rem auto;
