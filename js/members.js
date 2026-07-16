@@ -31,13 +31,15 @@ async function loadMembers() {
   if (grid) grid.innerHTML='<div class="members-loading"><div class="spinner"></div><p>Loading members…</p></div>';
   if (typeof supabaseClient !== 'undefined') {
     try {
-      const {data,error}=await supabaseClient.from('members').select('*').order('first_name',{ascending:true});
+      const table = globalThis.isAdmin ? 'members' : 'members_public';
+      const {data,error}=await supabaseClient.from(table).select('*').order('first_name',{ascending:true});
       if (error) throw error;
       membersData=(data||[]).map(fromRow);
       sortMembers();
-      // Only cache locally for admins — this table holds phone/email,
-      // and RLS now restricts it to admins. Caching it for non-admins
-      // would leak PII on a shared/public browser.
+      // Only cache locally for admins — the 'members' table has
+      // phone/email. Caching it for non-admins (or leaving an old
+      // admin-session cache around) can leak PII to whoever next
+      // opens this browser. Non-admins always clear any old cache.
       if (globalThis.isAdmin) {
         localStorage.setItem(STORAGE_KEY,JSON.stringify(membersData));
       } else {
@@ -46,7 +48,8 @@ async function loadMembers() {
       renderMembers(); return;
     } catch(err) { console.warn('Load failed:',err.message); }
   }
-  // Cached fallback is only meaningful for admins (see above).
+  // Cached fallback is only safe for admins — see above. Non-admins
+  // get an empty state instead of risking a stale PII-bearing cache.
   if (globalThis.isAdmin) {
     try {
       const cached=localStorage.getItem(STORAGE_KEY);
