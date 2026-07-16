@@ -267,6 +267,21 @@ body,
   color: var(--text-1);
 }
 
+/* COMPONENTS.CSS */
+[data-theme="dark"] .badge-navy {
+  color: var(--text-1);
+}
+
+/* HOME.CSS */
+[data-theme="dark"] .verse-ribbon-track span,
+[data-theme="dark"] .pillar h3,
+[data-theme="dark"] .event-info h4 {
+  color: var(--text-1);
+}
+[data-theme="dark"] .event-row:hover {
+  background: var(--surface-2);
+}
+
 @media (max-width: 768px) {
   .theme-toggle {
     margin: 0.5rem 1rem 0.5rem auto;
