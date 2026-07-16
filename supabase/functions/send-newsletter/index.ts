@@ -16,6 +16,7 @@ const RESEND_API_KEY  = Deno.env.get('RESEND_API_KEY')!
 const SUPABASE_URL    = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_KEY    = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const FROM_EMAIL = 'Ambassadors Club <onboarding@resend.dev>'
+const SITE_URL   = Deno.env.get('SITE_URL') || 'https://ambassadors-club.vercel.app'
 serve(async (req) => {
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
 
@@ -75,7 +76,7 @@ serve(async (req) => {
         </table>
       </div>
       ${event.description?`<p style="color:#3d4a6b;font-size:0.95rem;line-height:1.7;margin:0 0 1.5rem;">${event.description}</p>`:''}
-      <a href="https://yourdomain.com/activities.html" style="display:inline-block;background:#c9a227;color:#162040;padding:0.8rem 1.75rem;border-radius:8px;font-weight:700;font-size:0.9rem;text-decoration:none;">View All Events →</a>
+      <a href="${SITE_URL}/activities.html" style="display:inline-block;background:#c9a227;color:#162040;padding:0.8rem 1.75rem;border-radius:8px;font-weight:700;font-size:0.9rem;text-decoration:none;">View All Events →</a>
     </div>
     <!-- Footer -->
     <div style="background:#f5f2eb;padding:1.25rem 2rem;text-align:center;border-top:1px solid rgba(0,0,0,0.06);">

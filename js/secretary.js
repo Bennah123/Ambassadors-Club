@@ -3,9 +3,6 @@
 //  Admin via shared-auth.js (globalThis.isAdmin)
 // ============================================================
 
-import { error } from "node:console";
-
-
 const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
 function toast(msg, type='info') {
@@ -155,7 +152,7 @@ function openAdd() {
   openModal('minutesModal');
 }
 
-function _openEdit(e,id) {
+function openEdit(e,id) {
   e.stopPropagation();
   const m=allMinutes.find(x=>x.id===id); if(!m) return;
   editingId=id;
@@ -220,7 +217,7 @@ async function saveMinutes() {
   } finally { btn.disabled=false; btn.textContent='Save Minutes'; }
 }
 
-async function _deleteMinute(e,id) {
+async function deleteMinute(e,id) {
   e.stopPropagation();
   if(!confirm('Delete these minutes?')) return;
   try {
@@ -234,7 +231,8 @@ async function _deleteMinute(e,id) {
 async function toggleActionDone(minuteId,idx,done) {
   const m=allMinutes.find(x=>x.id===minuteId); if(!m) return;
   m.action_items[idx].done=done;
-  try { await supabaseClient.from('meeting_minutes').update({action_items:m.action_items}).eq('id',minuteId); updateStats(); } catch{error('Failed to update action item status');}
+  try { await supabaseClient.from('meeting_minutes').update({action_items:m.action_items}).eq('id',minuteId); updateStats(); }
+  catch(err) { console.error('Failed to update action item status:', err.message); toast('Failed to update action item status', 'error'); }
 }
 
 function addActionRow(text='',assignee='') {

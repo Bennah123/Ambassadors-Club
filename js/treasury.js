@@ -7,6 +7,7 @@
 const methodLabels = { mpesa: 'M-Pesa', cash: 'Cash', bank: 'Bank Transfer' };
 
 let contributionsData   = [];
+let contributionTotalsData = [];
 let categoriesData      = [];
 let membersData         = [];
 let isSupabaseConnected = false;
@@ -49,6 +50,19 @@ async function loadCategories() {
 
 async function loadContributions() {
   if (typeof supabaseClient === 'undefined') return;
+
+  // Non-admins are blocked by RLS from reading raw contribution rows.
+  // They get category/month totals only, via the contribution_totals view.
+  if (!globalThis.isAdmin) {
+    try {
+      const { data, error } = await supabaseClient.from('contribution_totals').select('*');
+      if (error) throw error;
+      contributionTotalsData = data || [];
+      isSupabaseConnected = true;
+    } catch (err) { console.warn('Contribution totals fetch failed:', err.message); }
+    return;
+  }
+
   try {
     const { data, error } = await supabaseClient.from('contributions')
       .select('*').order('contribution_date', { ascending: false });
@@ -97,6 +111,22 @@ function formatDate(dateStr) {
 //  SUMMARY CARDS
 // ============================================================
 function updateSummaryCards() {
+  if (!globalThis.isAdmin) {
+    const total = contributionTotalsData.reduce((s, t) => s + Number(t.total_amount || 0), 0);
+    const now = new Date();
+    const thisMonthKey = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 7);
+    const thisMonthIn = contributionTotalsData
+      .filter(t => (t.month || '').startsWith(thisMonthKey))
+      .reduce((s, t) => s + Number(t.total_amount || 0), 0);
+
+    set('currentBalance', `KES ${total.toLocaleString()}`);
+    set('monthIncome', `KES ${thisMonthIn.toLocaleString()}`);
+    set('activeContributors', '—'); // per-person counts aren't in the aggregate view
+    const trendEl = document.getElementById('incomeTrend');
+    if (trendEl) { trendEl.textContent = 'Confirmed contributions'; trendEl.className = 't-trend'; }
+    return;
+  }
+
   const now = new Date();
   const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -121,6 +151,34 @@ function updateSummaryCards() {
 }
 
 function set(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+
+function renderContributionTotalsOnly(tbody) {
+  updateSummaryCards();
+
+  if (!contributionTotalsData.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No contribution data available.</td></tr>`;
+    renderPagination(0, 1);
+    return;
+  }
+
+  const sorted = [...contributionTotalsData].sort((a, b) => (b.month || '').localeCompare(a.month || ''));
+
+  tbody.innerHTML = sorted.map(t => {
+    const catName = categoriesData.find(cat => cat.id === t.category)?.name || t.category;
+    const monthLabel = t.month
+      ? new Date(t.month).toLocaleDateString('en-KE', { month: 'long', year: 'numeric' })
+      : '—';
+    return `
+    <tr>
+      <td colspan="2">${esc(monthLabel)}</td>
+      <td><span class="type-badge">${esc(catName)}</span></td>
+      <td colspan="2">${t.contribution_count} contribution${t.contribution_count === 1 ? '' : 's'}</td>
+      <td class="text-right"><strong>KES ${Number(t.total_amount).toLocaleString()}</strong></td>
+    </tr>`;
+  }).join('');
+
+  renderPagination(sorted.length, 1);
+}
 
 // ============================================================
 //  CATEGORY TABS
@@ -160,6 +218,11 @@ function getFilteredContributions() {
 function renderContributions() {
   const tbody = document.getElementById('contribTableBody');
   if (!tbody) return;
+
+  if (!globalThis.isAdmin) {
+    renderContributionTotalsOnly(tbody);
+    return;
+  }
 
   const filtered = getFilteredContributions();
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;

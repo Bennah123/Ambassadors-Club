@@ -1,3 +1,8 @@
+// ============================================
+// MAIN.JS - Shared functionality, all pages
+// SDA Embakasi Central – Ambassadors Club
+// ============================================
+
 document.addEventListener('DOMContentLoaded', () => {
 
   // ---- ACTIVE NAV LINK ----
@@ -79,20 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => globalThis.scrollTo({ top: 0, behavior: 'smooth' }));
   }
 
-  // ---- NEWSLETTER ----
-  const form = document.getElementById('newsletterForm');
-  if (form) {
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const email = document.getElementById('newsletterEmail')?.value || '';
-      if (email.includes('@')) {
-        showToast('Thank you for subscribing!', 'success');
-        form.reset();
-      } else {
-        showToast('Please enter a valid email address.', 'error');
-      }
-    });
-  }
+  // NOTE: Newsletter form submission is handled by newsletter-widget.js
+  // (writes to Supabase). Do not add a duplicate handler here.
 
   // ---- MODALS ----
   document.querySelectorAll('.modal').forEach(modal => {

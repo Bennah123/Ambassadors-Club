@@ -35,14 +35,24 @@ async function loadMembers() {
       if (error) throw error;
       membersData=(data||[]).map(fromRow);
       sortMembers();
-      localStorage.setItem(STORAGE_KEY,JSON.stringify(membersData));
+      // Only cache locally for admins — this table holds phone/email,
+      // and RLS now restricts it to admins. Caching it for non-admins
+      // would leak PII on a shared/public browser.
+      if (globalThis.isAdmin) {
+        localStorage.setItem(STORAGE_KEY,JSON.stringify(membersData));
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
       renderMembers(); return;
     } catch(err) { console.warn('Load failed:',err.message); }
   }
-  try {
-    const cached=localStorage.getItem(STORAGE_KEY);
-    if (cached) { membersData=JSON.parse(cached); sortMembers(); renderMembers(); return; }
-  } catch (error) { console.warn('Load failed:', error.message); }
+  // Cached fallback is only meaningful for admins (see above).
+  if (globalThis.isAdmin) {
+    try {
+      const cached=localStorage.getItem(STORAGE_KEY);
+      if (cached) { membersData=JSON.parse(cached); sortMembers(); renderMembers(); return; }
+    } catch (error) { console.warn('Load failed:', error.message); }
+  }
   membersData=[]; renderMembers();
 }
 
