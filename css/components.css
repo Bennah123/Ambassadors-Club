@@ -186,7 +186,7 @@
 
 .footer-brand-sub {
   font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--gold); margin-bottom: 0.75rem;
+  text-transform: uppercase; color: #e8c94a; margin-bottom: 0.75rem;
 }
 
 .footer-motto {
@@ -237,11 +237,11 @@
 }
 
 a.contact-row {
-  color: var(--gold, #d4af37);
+  color: #e8c94a;
   transition: color 0.2s var(--ease, ease);
 }
 a.contact-row:hover {
-  color: var(--gold-light, #e8c94a);
+  color: #f2dc7a;
   text-decoration: underline;
 }
 
