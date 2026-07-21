@@ -70,13 +70,6 @@
     </div>
     <div class="footer-bottom">
       <p>© <span class="current-year"></span> SDA Church Embakasi Central. All rights reserved.</p>
-      <div class="footer-bottom-links">
-        <a href="#">Privacy</a>
-        <span>·</span>
-        <a href="#">Terms</a>
-        <span>·</span>
-        <a href="#">Accessibility</a>
-      </div>
       <p class="footer-credit">Built with <span class="heart">♥</span> by the Ambassadors Club</p>
     </div>
   `;
