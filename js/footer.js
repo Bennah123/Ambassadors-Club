@@ -10,7 +10,7 @@
     <div class="footer-inner">
       <div class="footer-brand-col">
         <div class="footer-mark">AC</div>
-        <p class="footer-brand-name">SDA Church Embakasi Central</p>
+        <a href="https://maps.app.goo.gl/gr6uEF3o98TWexVm9" target="_blank" rel="noopener" class="footer-brand-name" style="text-decoration:none;color:inherit;display:block;">SDA Church Embakasi Central</a>
         <p class="footer-brand-sub">Ambassadors Club Youth Ministry</p>
         <p class="footer-motto">"Go ye into all the world and preach the gospel"</p>
         <div class="footer-socials">
@@ -50,10 +50,10 @@
       </div>
       <div class="footer-contact-col">
         <h5>Visit Us</h5>
-        <div class="contact-row">
+        <a href="https://maps.app.goo.gl/gr6uEF3o98TWexVm9" class="contact-row" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           <span>Embakasi, Nairobi, Kenya</span>
-        </div>
+        </a>
         <div class="contact-row">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.85a16 16 0 0 0 6 6l.9-.9a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/></svg>
           <span>+254 726 473 887</span>
