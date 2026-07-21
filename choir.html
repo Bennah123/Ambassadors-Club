@@ -76,6 +76,15 @@
       <p class="section-label">Roster</p>
       <h2 class="section-heading">Voice Sections</h2>
 
+      <div class="voice-admin-bar" id="voiceAdminBar">
+        <button id="adminLoginBtn" class="admin-login-link">Admin</button>
+        <span id="adminStatus" style="display:none;align-items:center;gap:0.75rem;">
+          🔐 Admin Mode ·
+          <button id="assignVoiceBtn" class="btn btn-gold" style="font-size:0.78rem;padding:0.35rem 0.9rem;">✏ Assign Voice</button>
+          · <button id="adminLogoutBtn" class="admin-login-link">Log out</button>
+        </span>
+      </div>
+
       <!-- 4-column voice panels -->
       <div class="voice-panels-grid" id="voicePanelsGrid">
         <!-- Soprano -->
@@ -177,6 +186,51 @@
 
 
 
+
+  <!-- Voice Assign Modal (admin) -->
+  <div class="modal" id="voiceAssignModal">
+    <div class="modal-overlay" id="vaOverlay"></div>
+    <div class="modal-content modal-sm">
+      <button class="modal-close" id="vaClose" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <div class="modal-header">
+        <h3>Assign Voice Part</h3>
+        <p>Pick a member from the members list and set their voice.</p>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Member *</label>
+          <select id="vaMember"><option value="">— Loading… —</option></select>
+        </div>
+        <div class="form-group">
+          <label>Voice Part *</label>
+          <select id="vaVoice">
+            <option value="">— Select —</option>
+            <option value="soprano">🎶 Soprano</option>
+            <option value="alto">🎵 Alto</option>
+            <option value="tenor">🎼 Tenor</option>
+            <option value="bass">🎹 Bass</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select id="vaRole">
+            <option value="Member">Member</option>
+            <option value="Section Leader">Section Leader</option>
+            <option value="Choir Director">Choir Director</option>
+            <option value="Assistant Director">Assistant Director</option>
+            <option value="Accompanist">Accompanist</option>
+          </select>
+        </div>
+        <p class="form-error" id="vaError"></p>
+        <div class="form-actions">
+          <button class="btn btn-ghost-dark" id="vaCancel">Cancel</button>
+          <button class="btn btn-gold" id="vaSave">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <footer class="footer">
     <div class="footer-inner">
