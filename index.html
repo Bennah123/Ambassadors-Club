@@ -1,16 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>
-    (function() {
-      try {
-        var stored = localStorage.getItem('sda_theme_preference');
-        var theme = stored || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        document.documentElement.setAttribute('data-theme', theme);
-      } catch (e) {}
-    })();
-  </script>
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In | SDA Ambassadors Club</title>
@@ -18,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/main.css">
-  <link rel="stylesheet" href="css/theme.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { background: var(--navy); min-height: 100vh; display: flex; flex-direction: column; }
@@ -163,6 +152,7 @@
           <div class="auth-form-group">
             <label>Phone</label>
             <input class="auth-input" type="tel" id="suPhone" placeholder="+254 7XX XXX XXX" autocomplete="tel">
+            <p style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:0.3rem;line-height:1.4;">📅 We'll use this to notify you about upcoming club events.</p>
           </div>
           <div class="auth-form-group">
             <label>Role / Position in Club</label>
@@ -217,8 +207,6 @@
     <a href="index.html">← Back to Home</a> &nbsp;·&nbsp; SDA Church Embakasi Central © <span class="current-year"></span>
   </p>
 
-  
-  <script src="js/theme-toggle.js"></script>
   <script src="js/supabase-config.js"></script>
   <script src="js/shared-auth.js"></script>
   <script src="js/newsletter-widget.js"></script>
@@ -355,7 +343,14 @@
           if (cErr) console.warn('choir_members insert:', cErr.message);
         }
 
-        // 5. Show pending screen
+        // 5. Auto-subscribe to event notifications (no separate newsletter opt-in needed)
+        const { error: subErr } = await supabaseClient.from('newsletter_subscribers').upsert(
+          [{ email, name: `${firstName} ${lastName}`, phone: phone||null, subscribed: true }],
+          { onConflict: 'email' }
+        );
+        if (subErr) console.warn('Newsletter subscribe failed:', subErr.message);
+
+        // 6. Show pending screen
         document.getElementById('signupForm').style.display = 'none';
         document.getElementById('signupPending').style.display = 'block';
 
@@ -385,7 +380,7 @@
       if (!email) { showMsg('signinMsg','Enter your email above first.'); return; }
       try {
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email,
-          { redirectTo: globalThis.location.origin + '/index.html' });
+          { redirectTo: globalThis.location.origin + '/auth.html' });
         if (error) throw error;
         showMsg('signinMsg','Reset email sent! Check your inbox.','success');
       } catch(err) { showMsg('signinMsg', err.message); }
@@ -404,14 +399,6 @@
       const { data: p } = await supabaseClient.from('profiles').select('approved').eq('id', session.user.id).single();
       if (p?.approved) globalThis.location.href = 'members.html';
     });
-
-    // ── PENDING APPROVAL REDIRECT ──
-    // authcallback.html sends unapproved Google sign-ins here as index.html?pending=1
-    if (new URLSearchParams(globalThis.location.search).get('pending') === '1') {
-      switchTab('signup');
-      document.getElementById('signupForm').style.display = 'none';
-      document.getElementById('signupPending').style.display = 'block';
-    }
   </script>
 </body>
 </html>
