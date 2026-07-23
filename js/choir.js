@@ -509,10 +509,10 @@ async function initChoir() {
   if (heroEl) animateCounter(heroEl, flatRoster().length);
 
   // Admin login → redirect to auth page
-  document.getElementById('adminLoginBtn')?.addEventListener('click', () => globalThis.location.href='index.html');
+  document.getElementById('adminLoginBtn')?.addEventListener('click', () => globalThis.location.href='auth.html');
   document.getElementById('adminLogoutBtn')?.addEventListener('click', async () => {
     await supabaseClient.auth.signOut();
-    globalThis.location.href = 'index.html';
+    globalThis.location.href = 'auth.html';
   });
 
   document.getElementById('assignVoiceBtn')?.addEventListener('click', () => openVoiceAssignForm());
