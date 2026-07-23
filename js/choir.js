@@ -32,15 +32,24 @@ async function loadChoir() {
         voicePart:(r.voice_part||'').toLowerCase(), role:r.role||'Member',
         avatarUrl:r.avatar_url||null, memberId:r.member_id||null
       })));
-      localStorage.setItem(CHOIR_STORAGE_KEY, JSON.stringify(VOICE_PARTS.flatMap(p=>choirRoster[p])));
+      // Only cache locally for approved members — RLS restricts this
+      // table to them, and caching for anyone else risks leaking
+      // contact info on a shared/public browser.
+      if (globalThis.userProfile?.approved) {
+        localStorage.setItem(CHOIR_STORAGE_KEY, JSON.stringify(VOICE_PARTS.flatMap(p=>choirRoster[p])));
+      } else {
+        localStorage.removeItem(CHOIR_STORAGE_KEY);
+      }
       return;
     } catch(err) { console.warn('Choir load failed:', err.message); }
   }
-  try {
-    const stored = localStorage.getItem(CHOIR_STORAGE_KEY);
-    if (stored) { buildRosterFromArray(JSON.parse(stored)); return; }
-  } catch (error) {
-    console.error('Failed to parse cached choir data:', error);
+  if (globalThis.userProfile?.approved) {
+    try {
+      const stored = localStorage.getItem(CHOIR_STORAGE_KEY);
+      if (stored) { buildRosterFromArray(JSON.parse(stored)); return; }
+    } catch (error) {
+      console.error('Failed to parse cached choir data:', error);
+    }
   }
   buildRosterFromArray([]);
 }
@@ -500,10 +509,10 @@ async function initChoir() {
   if (heroEl) animateCounter(heroEl, flatRoster().length);
 
   // Admin login → redirect to auth page
-  document.getElementById('adminLoginBtn')?.addEventListener('click', () => globalThis.location.href='auth.html');
+  document.getElementById('adminLoginBtn')?.addEventListener('click', () => globalThis.location.href='index.html');
   document.getElementById('adminLogoutBtn')?.addEventListener('click', async () => {
     await supabaseClient.auth.signOut();
-    globalThis.location.href = 'auth.html';
+    globalThis.location.href = 'index.html';
   });
 
   document.getElementById('assignVoiceBtn')?.addEventListener('click', () => openVoiceAssignForm());
