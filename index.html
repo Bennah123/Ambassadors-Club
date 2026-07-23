@@ -397,7 +397,7 @@
     supabaseClient.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return;
       const { data: p } = await supabaseClient.from('profiles').select('approved').eq('id', session.user.id).single();
-      if (p?.approved) globalThis.location.href = 'members.html';
+      if (p?.approved) globalThis.location.href = 'home.html';
     });
   </script>
 </body>
