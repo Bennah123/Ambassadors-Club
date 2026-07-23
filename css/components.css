@@ -370,3 +370,29 @@ a.contact-row:hover {
   .newsletter-field { flex-direction: column; }
   .newsletter-field .btn { width: 100%; }
 }
+/* ---- Guest sign-up prompt card ---- */
+#guestPromptCard {
+  position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999;
+  max-width: 320px; background: var(--navy); color: white;
+  border-radius: 14px; padding: 1.25rem 1.25rem 1.5rem;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+  border: 1px solid rgba(212,175,55,0.25);
+  opacity: 0; transform: translateY(16px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+#guestPromptCard.gp-visible { opacity: 1; transform: translateY(0); }
+#guestPromptClose {
+  position: absolute; top: 0.6rem; right: 0.7rem;
+  background: none; border: none; color: rgba(255,255,255,0.5);
+  font-size: 1.2rem; line-height: 1; cursor: pointer;
+}
+#guestPromptClose:hover { color: white; }
+#guestPromptCard .gp-title { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; margin: 0 0 0.4rem; padding-right: 1rem; }
+#guestPromptCard .gp-body { font-size: 0.85rem; line-height: 1.5; color: rgba(255,255,255,0.75); margin: 0 0 1rem; }
+#guestPromptCard .gp-actions { display: flex; align-items: center; gap: 1rem; }
+#guestPromptCard .gp-actions .btn { padding: 0.55rem 1.25rem; font-size: 0.85rem; }
+#guestPromptLater { background: none; border: none; color: rgba(255,255,255,0.55); font-size: 0.8rem; cursor: pointer; text-decoration: underline; }
+#guestPromptLater:hover { color: white; }
+@media (max-width: 480px) {
+  #guestPromptCard { left: 1rem; right: 1rem; bottom: 1rem; max-width: none; }
+}
