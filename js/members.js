@@ -3,7 +3,7 @@
 // ============================================================
 
 const STORAGE_KEY = 'sda_members_data';
-const deptLabels  = { secretary:'Secretary', treasury:'Treasury', prayer:'Prayer', outreach:'Outreach',  uniform:'Uniform' };
+const deptLabels  = { secretary:'Secretary', treasury:'Treasury', prayer:'Prayer', outreach:'Outreach',  uniform:'Uniform', choir:'Choir' };
 let membersData   = [];
 let activeFilter  = 'all';
 let editingId     = null;
