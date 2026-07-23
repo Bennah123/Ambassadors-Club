@@ -6,9 +6,31 @@
 document.addEventListener('DOMContentLoaded', () => {
   fetchAndAnimateStats();
   populateUpcomingEvents();
+  loadGalleryHighlights();
   initScrollReveal();
   initHeroParallax();
 });
+
+// =====================================================
+// GALLERY HIGHLIGHTS (latest 4 photos)
+// =====================================================
+async function loadGalleryHighlights() {
+  const container = document.getElementById('homeGalleryHighlights');
+  if (!container || typeof supabaseClient === 'undefined') return;
+  try {
+    const { data, error } = await supabaseClient.from('gallery_photos')
+      .select('id,image_url,caption').order('created_at', { ascending: false }).limit(4);
+    if (error) throw error;
+    if (!data || !data.length) { container.closest('.gallery-highlights').style.display = 'none'; return; }
+    container.innerHTML = data.map(p => `
+      <a class="ghi-item" href="gallery.html">
+        <img src="${p.image_url}" alt="${(p.caption||'').replace(/"/g,'&quot;')}" loading="lazy">
+      </a>`).join('');
+  } catch (e) {
+    console.warn('Gallery highlights failed:', e.message);
+    container.closest('.gallery-highlights').style.display = 'none';
+  }
+}
 
 // =====================================================
 // LIVE STATS FROM SUPABASE
