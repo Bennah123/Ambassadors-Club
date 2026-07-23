@@ -173,6 +173,10 @@ async function deletePhoto(id, fromLightbox=false) {
       if (path) await supabaseClient.storage.from('gallery').remove([`gallery/${path}`]);
     }
     galleryPhotos = galleryPhotos.filter(p => String(p.id) !== String(id));
+    // Keep lightboxIndex in range now that the list is one shorter,
+    // in case anything reopens the lightbox without a fresh index.
+    const filteredLen = getFiltered().length;
+    if (lightboxIndex >= filteredLen) lightboxIndex = Math.max(0, filteredLen - 1);
     renderGallery();
     if (fromLightbox) closeLightbox();
     toast('Photo deleted', 'info');
